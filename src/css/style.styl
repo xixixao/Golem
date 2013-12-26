@@ -1,0 +1,102 @@
+global-reset()
+
+backgroundColor = #050505
+
+body
+  background-color backgroundColor
+  padding 0px
+  margin 0px
+  font-family Monaco, Consolas, "Lucida Console", monospace
+
+  textarea
+    font-family Monaco, Consolas, "Lucida Console", monospace
+
+  #leftColumn
+    width 400px
+    float left
+    margin 15px 5px 5px 15px
+
+  #centerBar
+    float left
+    width 20px
+    height 40px
+    cursor col-resize
+
+  #rightColumn
+    float left
+    padding 15px 20px 10px 0px
+    overflow auto
+
+  .areaBorder
+    width 100%
+    border-style none
+    border-radius 5px
+    background-color transparent
+    float left
+    padding 5px
+
+  .CodeMirror
+    border-radius 10px
+    padding 15px 10px 20px 5px
+    box-shadow 0 0 10px -4px #000000 inset
+    cursor text
+
+  .CodeMirror-scroll
+    height auto
+
+  .CodeMirror-gutter
+    height auto !important
+
+  form
+    display block
+
+  #commandWrap
+    .CodeMirror
+      padding-left 15px
+
+    .CodeMirror-scroll
+      height 28px
+      overflow hidden
+
+  infoBar()
+    display inline-block
+    padding-top 7px
+    padding-bottom 7px
+
+  #messages
+    infoBar()
+    border-radius 4px
+    padding-left 10px
+    padding-right 10px
+    box-shadow 0 0 3px 0px backgroundColor inset
+    color backgroundColor
+    max-width 615px
+    z-index 30
+
+    pre
+      font-size 13px
+
+    &.errorMessage
+        background-color #CC3E1E
+
+    &.fileMessage
+        background-color #3E6EcC
+
+  #compilationIndicator
+    infoBar()
+    margin-left 25px
+    color backgroundColor
+    display inline-block
+
+  #output
+    pre
+      background-color #222
+      border-radius 15px
+      padding 14px 20px
+      margin 5px
+      color #fff
+      font-size 13px
+      line-height 18px
+      float left
+      white-space pre-wrap
+      word-wrap break-word

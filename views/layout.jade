@@ -1,0 +1,22 @@
+doctype 5
+html
+  head
+    title TeaTable - Deploy your Coffee here!
+    link(rel='stylesheet', href='/css/style.css' + cachebust)
+    block css
+    link(rel='shortcut icon', href='/img/favicon.ico' + cachebust)
+
+    script(type='text/javascript')
+      if (!window.console) console = {log: function() {}};
+
+    if reload
+      script(src='/socket.io/socket.io.js')
+      script(src='/js/reload-client.js')
+
+    if optimize
+      script(src='/js/main-built.js')
+    else
+      script(src='/js/vendor/require.js', data-main='/js/bootstrap.js')
+
+  body
+    block content

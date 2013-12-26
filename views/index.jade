@@ -1,0 +1,26 @@
+extends layout
+
+block css
+  link(rel='stylesheet', href='css/vendor/codemirror/codemirror.css')
+  link(rel='stylesheet', href='css/vendor/codemirror/coffeescriptdark.css')
+
+block content
+  if optimize
+    p Optimized mode.  You are getting a single RequireJS optimized JavaScript file which includes all the page dependencies.
+
+  #leftColumn
+    form#commandWrap
+      .areaBorder
+        textarea#commandArea(name='commandArea')
+
+    #compilationIndicator &middot;
+    #messages
+      pre
+        // set by script
+
+    form#sourceWrap
+      .areaBorder
+        textarea#sourceArea(name='sourceArea', autofocus='autofocus')
+  #centerBar
+  #rightColumn
+    #output
