@@ -9,18 +9,18 @@ block content
     p Optimized mode.  You are getting a single RequireJS optimized JavaScript file which includes all the page dependencies.
 
   #leftColumn
-    form#commandWrap
+    #commandWrap
       .areaBorder
-        textarea#commandArea(name='commandArea')
+        #commandArea
 
     #compilationIndicator &middot;
     #messages
       pre
         // set by script
 
-    form#sourceWrap
-      .areaBorder
-        textarea#sourceArea(name='sourceArea', autofocus='autofocus')
+    .areaBorder
+      #sourceArea
+        // TODO: autofocus
   #centerBar
   #rightColumn
     #output
