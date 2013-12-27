@@ -4,6 +4,7 @@ require
   paths:
     hyper: 'vendor/hyper/hyper'
     React: 'vendor/react/react'
+    ace: 'vendor/ace/ace'
     jqueryLibs: 'vendor/jquery'
     jquery: 'vendor/jquery/jquery'
     ejquery: 'app/jquery.extended'

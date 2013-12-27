@@ -1,7 +1,8 @@
 {
   "name": "skeleton",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "dependencies": {
+    "ace": "~1.1.1",
     "hyper": "0.0.3",
     "requirejs": "2.1.8"
   }
