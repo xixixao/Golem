@@ -28,35 +28,20 @@ body
     overflow auto
 
   .areaBorder
-    width 100%
+    background-color #222
     border-style none
     border-radius 5px
-    background-color transparent
-    float left
-    padding 5px
-
-  .CodeMirror
-    border-radius 10px
-    padding 15px 10px 20px 5px
     box-shadow 0 0 10px -4px #000000 inset
     cursor text
-
-  .CodeMirror-scroll
-    height auto
-
-  .CodeMirror-gutter
-    height auto !important
-
-  form
-    display block
+    float left
+    padding 10px
+    width calc(100% - 20px)
+    margin 5px 0
 
   #commandWrap
-    .CodeMirror
-      padding-left 15px
-
-    .CodeMirror-scroll
-      height 28px
-      overflow hidden
+    .areaBorder
+      padding-left 50px
+      width calc(100% - 60px)
 
   infoBar()
     display inline-block
@@ -91,7 +76,7 @@ body
   #output
     pre
       background-color #222
-      border-radius 15px
+      border-radius 5px
       padding 14px 20px
       margin 5px
       color #fff
