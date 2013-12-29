@@ -20,7 +20,7 @@ indenter = ///
     )
   )\s*$
 ///
-commentLine = /^(\s*)#/
+commentLine = /^(\s*)# ?/
 hereComment = /^\s*###(?!#)/
 indentation = /^\s*/
 
@@ -48,12 +48,12 @@ exports.Mode = class extends TextMode
         continue
 
       if commentLine.test line
-        line = line.replace commentLine, "$1"
+        line = line.replace commentLine, '$1'
       else
-        line = line.replace indentation, "$&#"
+        line = line.replace indentation, '$&# '
 
       range.end.row = range.start.row = i
-      range.end.column = line.length + 1
+      range.end.column = line.length + 2
       doc.replace range, line
     return
 
