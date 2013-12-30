@@ -35,7 +35,7 @@ var oop = require("../lib/oop");
 var EventEmitter = require("../lib/event_emitter").EventEmitter;
 var config = require("../config");
 
-var WorkerClient = function(topLevelNamespaces, mod, classname) {
+var WorkerClient = function(topLevelNamespaces, mod, classname, aux) {
     this.$sendDeltaQueue = this.$sendDeltaQueue.bind(this);
     this.changeListener = this.changeListener.bind(this);
     this.onMessage = this.onMessage.bind(this);
@@ -63,7 +63,8 @@ var WorkerClient = function(topLevelNamespaces, mod, classname) {
         init : true,
         tlns: tlns,
         module: mod,
-        classname: classname
+        classname: classname,
+        aux: aux
     });
 
     this.callbackId = 1;

@@ -152,7 +152,7 @@ window.onmessage = function(e) {
         require("ace/lib/es5-shim");
         sender = initSender();
         var clazz = require(msg.module)[msg.classname];
-        main = new clazz(sender);
+        main = new clazz(sender, msg.aux);
     } 
     else if (msg.event && sender) {
         sender._emit(msg.event, msg.data);

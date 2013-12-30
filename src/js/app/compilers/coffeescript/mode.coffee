@@ -5,7 +5,6 @@ FoldMode     = require("ace/mode/folding/coffee").FoldMode
 Range        = require("ace/range").Range
 TextMode     = require("ace/mode/text").Mode
 WorkerClient = require("ace/worker/worker_client").WorkerClient
-oop          = require("ace/lib/oop")
 
 indenter = ///
   (?:
@@ -64,7 +63,7 @@ exports.Mode = class extends TextMode
     @$outdent.autoOutdent doc, row
 
   createWorker: (session) ->
-    worker = new WorkerClient ["ace", "compilers", "vendor"], "compilers/coffeescript/worker", "Worker"
+    worker = new WorkerClient ["ace", "compilers"], "compilers/coffeescript/worker", "Worker"
 
     if session
       worker.attachToDocument session.getDocument()

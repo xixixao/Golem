@@ -3,10 +3,6 @@ Mirror = require("ace/worker/mirror").Mirror
 {parser} = require "./coffee-script/parser"
 nodes = require "./coffee-script/nodes"
 helpers = require "./coffee-script/helpers"
-# parser = require "ace/mode/coffee/parser"
-# nodes = require "ace/mode/coffee/nodes"
-# coffee = require "ace/mode/coffee/coffee-script"
-oop = require "ace/lib/oop"
 
 window.addEventListener = ->
 
