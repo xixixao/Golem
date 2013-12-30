@@ -65,11 +65,13 @@ exports.Mode = class extends TextMode
 
   createWorker: (session) ->
     worker = new WorkerClient ["ace", "compilers", "vendor"], "compilers/coffeescript/worker", "Worker"
-    worker.attachToDocument session.getDocument()
-    worker.on "error", (e) ->
-      session.setAnnotations [e.data]
 
-    worker.on "ok", (e) =>
-      session.clearAnnotations()
+    if session
+      worker.attachToDocument session.getDocument()
+      worker.on "error", (e) ->
+        session.setAnnotations [e.data]
+
+      worker.on "ok", (e) =>
+        session.clearAnnotations()
 
     worker
