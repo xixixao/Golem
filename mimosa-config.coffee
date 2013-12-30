@@ -338,7 +338,7 @@ exports.config = {
                                   # files configured in its bower.json will have its entire
                                   # folder contents copied in.
       mainOverrides:
-        "coffee-script": ["src"]         # Occasionally bower packages do not clearly indicate what file
+        "coffee-script": ["src", "lib/coffee-script/parser.js"]         # Occasionally bower packages do not clearly indicate what file
                                   # is the main library file. In those cases, mimosa cannot find
                                   # the main files to copy them to the vendor directory. json2 is
                                   # a good example. mainOverrides allows for setting which files

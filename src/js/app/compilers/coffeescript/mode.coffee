@@ -64,12 +64,12 @@ exports.Mode = class extends TextMode
     @$outdent.autoOutdent doc, row
 
   createWorker: (session) ->
-    worker = new WorkerClient ["ace", "compilers"], "compilers/coffeescript/worker", "Worker"
+    worker = new WorkerClient ["ace", "compilers", "vendor"], "compilers/coffeescript/worker", "Worker"
     worker.attachToDocument session.getDocument()
     worker.on "error", (e) ->
       session.setAnnotations [e.data]
 
-    worker.on "ok", (e) ->
+    worker.on "ok", (e) =>
       session.clearAnnotations()
 
     worker

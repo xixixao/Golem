@@ -2,7 +2,7 @@
   "name": "skeleton",
   "version": "0.1.1",
   "dependencies": {
-    "coffee-script": "1.6.3",
+    "coffee-script": "~1.6.3",
     "hyper": "0.0.3",
     "requirejs": "2.1.8"
   }
