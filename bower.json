@@ -5,6 +5,7 @@
     "coffee-script": "~1.6.3",
     "hyper": "0.0.3",
     "requirejs": "2.1.8",
-    "iced-coffee-script": "~1.6.1"
+    "iced-coffee-script": "~1.6.1",
+    "metacoffee": "~0.3.1"
   }
 }

@@ -59,6 +59,7 @@ window.require = function(parentId, id) {
     var chunks = id.split("/");
     chunks[0] = require.tlns[chunks[0]] || chunks[0];
     var path = chunks.join("/") + ".js";
+    console.log(path, require.tlns);
     
     require.id = id;
     importScripts(path);
@@ -99,6 +100,8 @@ window.define = function(id, deps, factory) {
         }
     };
 };
+
+window.define.amd = {};
 
 window.initBaseUrls  = function initBaseUrls(topLevelNamespaces) {
     require.tlns = topLevelNamespaces;

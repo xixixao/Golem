@@ -6,7 +6,7 @@ module.exports = class CommandMode extends CoffeeMode
     super
 
   createWorker: (session) ->
-    @worker = new WorkerClient ["ace", "compilers", "app", "vendor"],
+    @worker = new WorkerClient ["ace", "compilers", "app", "vendor", "coffee-script"],
       "app/CommandWorker",
       "Worker",
       "#{@sourceModePath}/worker"

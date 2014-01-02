@@ -59,6 +59,7 @@ var WorkerClient = function(topLevelNamespaces, mod, classname, aux) {
     }
 
     this.$worker = new Worker(workerUrl);
+    console.log(tlns);
     this.$worker.postMessage({
         init : true,
         tlns: tlns,
