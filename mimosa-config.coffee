@@ -226,12 +226,12 @@ exports.config = {
                                   # Paths are to compiled files,  so '.css' rather than '.styl'
 
 
-  # jshint:                    # settings for javascript hinting
+  jshint:                    # settings for javascript hinting
     # exclude:[]               # array of strings or regexes that match files to not jshint,
                                # strings are paths that can be relative to the watch.sourceDir
                                # or absolute
-    # compiled: true           # fire jshint on successful compile of meta-language to javascript
-    # copied: true             # fire jshint for copied javascript files
+    compiled: false           # fire jshint on successful compile of meta-language to javascript
+    copied: false             # fire jshint for copied javascript files
     # vendor: false            # fire jshint for copied vendor javascript files (like jquery)
     # jshintrc: ".jshintrc"    # This is the path, either relative to the root of the project or
                                # absolute, to a .jshintrc file. By default mimosa will look at
@@ -241,12 +241,12 @@ exports.config = {
                                # override any settings set up in the jshintrc
       # plusplus: true         # This is an example override, this is not a default
 
-  # csslint:                    # settings for javascript hinting
+  csslint:                    # settings for javascript hinting
     # exclude:[]               # array of strings or regexes that match files to not csslint,
                                # strings are paths that can be relative to the watch.sourceDir
                                # or absolute
-    # compiled: true           # fire csslint on successful compile of meta-language to javascript
-    # copied: true             # fire csslint for copied javascript files
+    compiled: false           # fire csslint on successful compile of meta-language to javascript
+    copied: false             # fire csslint for copied javascript files
     # vendor: false            # fire csslint for copied vendor javascript files (like jquery)
     # rules:                   # Settings: http://www.csslint.com/options/, these settings will
                                # override any settings set up in the csslintrc
