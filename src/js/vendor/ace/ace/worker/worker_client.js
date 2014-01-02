@@ -119,7 +119,8 @@ var WorkerClient = function(topLevelNamespaces, mod, classname, aux) {
         this._emit("terminate", {});
         this.$worker.terminate();
         this.$worker = null;
-        this.$doc.removeEventListener("change", this.changeListener);
+        if(this.$doc)
+            this.$doc.removeEventListener("change", this.changeListener);
         this.$doc = null;
     };
 
