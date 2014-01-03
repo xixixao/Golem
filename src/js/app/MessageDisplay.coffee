@@ -1,14 +1,13 @@
-React = require 'React'
-{_div} = require 'hyper'
+{_div} = hyper = require 'hyper'
 $ = require 'ejquery'
 ace = require 'ace/ace'
 
-module.exports = React.createClass
+module.exports = hyper class MessageDisplay
 
   _getColor: ->
     switch @props.type
-      when 'error' then '#CC3E1E'
-      when 'file' then  '#3E6EcC'
+      when 'compiler', 'runtime', 'command' then '#CC3E1E'
+      when 'file', 'info' then  '#3E6EcC'
 
   componentWillReceiveProps: (nextProps) ->
     $this = $(@.getDOMNode())

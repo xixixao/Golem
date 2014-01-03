@@ -1,5 +1,4 @@
-React = require 'React'
-{_div, _pre} = require 'hyper'
+{_div, _pre} = hyper = require 'hyper'
 $ = require 'ejquery'
 ace = require 'ace/ace'
 
@@ -37,7 +36,7 @@ ace = require 'ace/ace'
 #     scrollTop: 0
 #   , $("#rightColumn").scrollTop() / 10
 
-module.exports = React.createClass
+module.exports = hyper class OutputDisplay
 
   componentDidUpdate: (prevProps, prevState, rootNode) ->
     $this = $ rootNode

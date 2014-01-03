@@ -1,5 +1,4 @@
-React = require 'React'
-{_div} = require 'hyper'
+{_div} = hyper = require 'hyper'
 
 _AdjustableColumns = require './AdjustableColumns'
 _SourceEditor = require './SourceEditor'
@@ -10,8 +9,8 @@ _OutputDisplay = require './OutputDisplay'
 
 TimeLine = require './UniqueTimeLine'
 Commands = require './Commands'
+Modes = require './Modes'
 History = require './History'
-CommandMode = require './CommandMode'
 jsDump = require 'vendor/jsDump'
 
 # Prelude.installPrelude window
@@ -67,18 +66,6 @@ jsDump = require 'vendor/jsDump'
 #   "ph", -> history.print(log)
 # ]
 
-modes =
-  CoffeeScript:
-    id: "coffeescript"
-
-  IcedCoffeeScript:
-    id: "icedcoffeescript"
-
-  Ometa:
-    id: "ometa"
-
-  MetaCoffee:
-    id: "metacoffee"
 
 # modesList = ->
 #   join "\n", map keys(modes), (mode) ->
@@ -87,29 +74,6 @@ modes =
 # displayModes = ->
 #   addMessage modesList(), "modesList"
 
-setNewMode = (name, callback) ->
-  name = 'CoffeeScript' unless name?.length
-  if name isnt currentMode
-    setMode name, callback
-  else
-    callback?()
-
-setMode = (name, callback) ->
-  config = modes[name]
-  if config?
-    modePath = "compilers/#{config.id}/mode"
-    sourceArea.session.setMode modePath
-    commandArea.session.setMode new CommandMode "compilers/#{config.id}"
-    currentMode = name
-    if isCurrentMessage "modesList"
-      setCurrentMessage modesList(), "modesList"
-    else
-      showFileMessage "#{name} compiler loaded"
-    callback?()
-  # , (error) ->
-  #   log "#{name} loading failed"
-  else
-    @_log "Wrong mode name, choose from:\n\n#{modesList()}"
 
 # createCanvas = (width, height) ->
 #   log "#canvas\n<canvas id='canvas' width=#{width} height=#{height}></canvas>"
@@ -140,44 +104,6 @@ setMode = (name, callback) ->
 #     indicateBy endColor
 #     indicateBy normalColor
 
-
-# history = new History
-# sourceChange = (e) ->
-#   sourceCompiled = false
-#   sourceChanged = true
-#   history.add e
-#   return
-
-# TODO: this is not used, it is connected to History
-# printHistory = ->
-#   insert = undefined
-#   point = undefined
-#   text = undefined
-#   _i = undefined
-#   _len = undefined
-#   _results = undefined
-#   text = [""]
-#   insert = (from, to, what) ->
-#     appended = undefined
-#     curr = undefined
-#     newLines = undefined
-#     oldLines = undefined
-#     singleLine = undefined
-#     singleLine = from.line is to.line
-#     if singleLine
-#       curr = text[from.line]
-#       text[from.line] = curr.slice(0, from.ch) + what[0] + curr.slice(to.ch)
-#     else
-#       text[from.line] = text[from.line].slice(0, from.ch) + what[0]
-#       text[to.line] = what[what.length - 1] + text[to.line].slice(to.ch)
-#     newLines = what.length
-#     oldLines = 1 + to.line - from.line
-#     if newLines > 2 or oldLines > 2
-#       appended = (if singleLine then what.slice(1) else what.slice(1, -1))
-#       text.splice.apply text, [
-#         from.line + 1
-#         Math.max(0, oldLines - newLines)
-#       ].concat(__slice_.call(appended))
 
 #   _results = []
 #   _i = 0
@@ -338,17 +264,21 @@ helpDescription = """
 
 
 
-
-
-
-
-module.exports = React.createClass
+module.exports = hyper class EditorMain
 
   getInitialState: ->
     sourceEditorFocus: yes
     timeline: new TimeLine
     logs: []
     sourceEditorHeight: 300
+
+  _setMode: (name) ->
+    config = Modes[name]
+    if config?
+      @setState
+        sourceMode: config
+    else
+      @_log "Wrong mode name, choose from:\n\n#{modesList()}"
 
   _displayMessage: (type, message) ->
     @setState
@@ -360,6 +290,10 @@ module.exports = React.createClass
       hideTypes: types
 
   handleCompilerLoad: (compiler) ->
+    # if isCurrentMessage "modesList"
+    #   @_logCurrent modesList(), "modesList" # update current message
+    # else
+    @_displayMessage 'info', "#{@state.sourceMode.name} compiler loaded"
     @setState
       compiler: compiler
 
@@ -405,9 +339,9 @@ module.exports = React.createClass
     @setState
       sourceEditorFocus: no
 
-  componentDidMount: ->
-    $(window).unload ->
-      memory.save()
+  componentWillMount: ->
+    # $(window).unload ->
+    #   memory.save()
 
     # hash = decodeURIComponent window.location.hash.replace /^#/, ""
     # if hash.indexOf(sourceFragment) is 0
@@ -421,7 +355,10 @@ module.exports = React.createClass
     if @state.timeline.size() < 10
       @_log helpDescription
 
+    @_setMode 'CoffeeScript'
+
   _log: (input...) ->
+    # todo pass in components instead of text
     input = for i in input
       jsDump.parse i ? "Nothing"
     message = input.join ", "
@@ -446,13 +383,13 @@ module.exports = React.createClass
           onLeave: @handleCommandLineLeave
           focus: !@state.sourceEditorFocus
           timeline: @state.timeline
+          sourceMode: @state.sourceMode.id
         # _compilationIndicator to: 0,
         #   '&middot;'
         _MessageDisplay
           type: @state.messageType
           value: @state.message
           hideTypes: @state.hideTypes
-        #   @state.message
         _SourceEditor
           onCompilerLoad: @handleCompilerLoad
           onSourceCompiled: @handleSourceCompiled
@@ -460,9 +397,8 @@ module.exports = React.createClass
           onLeave: @handleSourceEditorLeave
           focus: @state.sourceEditorFocus
           height: @state.sourceEditorHeight
+          mode: @state.sourceMode.id
       ''
       _OutputDisplay values: @state.logs
 
-React.renderComponent (
-  module.exports()
-), document.getElementById 'test'
+hyper.render document.getElementById('test'), module.exports()

@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "dependencies": {
     "coffee-script": "~1.6.3",
-    "hyper": "0.0.3",
+    "hyper": "~0.0.4",
     "requirejs": "2.1.8",
     "iced-coffee-script": "~1.6.1",
     "metacoffee": "~0.3.1"

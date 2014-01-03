@@ -1,9 +1,9 @@
 React = require 'React'
-{_div} = require 'hyper'
+{_div} = hyper = require 'hyper'
 $ = require 'ejquery'
 ace = require 'ace/ace'
 
-module.exports = React.createClass
+module.exports = hyper class SourceEditor
 
   propTypes:
     onCompilerLoad: React.PropTypes.func.isRequired
@@ -19,14 +19,19 @@ module.exports = React.createClass
   _getEditorNode: ->
     @refs.ace.getDOMNode()
 
-  componentWillReceiveProps: (nextProps) ->
-    if nextProps.focus
+  _setMode: (mode) ->
+    @state.editor.session.setMode "compilers/#{mode}/mode"
+
+  componentWillReceiveProps: ({focus, mode}) ->
+    if focus
       @state.editor.focus()
+
+    if mode and mode isnt @props.mode
+      @_setMode()
 
   componentDidMount: ->
     editor = ace.edit @_getEditorNode()
     editor.setTheme "ace/theme/cobalt"
-    editor.session.setMode 'ace/mode/coffee'
     editor.setHighlightActiveLine true
     editor.session.setTabSize 2
     editor.setShowPrintMargin false
@@ -52,6 +57,8 @@ module.exports = React.createClass
 
     @setState
       editor: editor
+
+    @_setMode @props.mode
 
   render: ->
     _div

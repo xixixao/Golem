@@ -571,6 +571,13 @@ define('index',['require', 'exports', 'module', './tags', 'React'], function (re
 var React, domWrapper, tag, tags, _i, _len, __slice = [].slice;
 tags = require("./tags");
 React = require("React");
+module.exports = function (classDeclaration) {
+  classDeclaration.prototype.displayName = classDeclaration.name;
+  return React.createClass(classDeclaration.prototype);
+};
+module.exports.render = function (node, component) {
+  return React.renderComponent(component, node);
+};
 domWrapper = function (tag) {
   return function () {
     var attributes, contents, _ref, _ref1;

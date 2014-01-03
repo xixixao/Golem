@@ -1,10 +1,13 @@
 React = require 'React'
-{_div} = require 'hyper'
+{_div} = hyper = require 'hyper'
+
 $ = require 'ejquery'
 ace = require 'ace/ace'
-Timeline = require './UniqueTimeline'
 
-module.exports = React.createClass
+Timeline = require './UniqueTimeline'
+CommandMode = require './CommandMode'
+
+module.exports = hyper class CommandLine
 
   propTypes:
     timeline: React.PropTypes.object.isRequired
@@ -20,9 +23,14 @@ module.exports = React.createClass
   _getEditorNode: ->
     @refs.ace.getDOMNode()
 
-  componentWillReceiveProps: (nextProps) ->
-    if nextProps.focus
+  _setMode: (sourceMode) ->
+    @state.editor.session.setMode new CommandMode "compilers/#{sourceMode}"
+
+  componentWillReceiveProps: ({focus, sourceMode}) ->
+    if focus
       @state.editor.focus()
+    if sourceMode and sourceMode isnt @props.sourceMode
+      @_setMode sourceMode
 
   componentDidMount: ->
     editor = ace.edit @_getEditorNode()
@@ -62,7 +70,7 @@ module.exports = React.createClass
       bindKey: win: 'Esc', mac: 'Esc'
       exec: @props.onLeave
 
-    editor.session.on 'changeMode', ->
+    editor.session.on 'changeMode', =>
       commandWorker = editor.session.getMode().worker
 
       # CommandWorker only compiles on user enter, hence this is an order to execute
@@ -75,11 +83,13 @@ module.exports = React.createClass
           @props.onCommandExecution result
           editor.setValue ""
 
-      commandWorker.on 'error', ({data: {text}}) ->
+      commandWorker.on 'error', ({data: {text}}) =>
         @props.onCommandFailed text
 
     @setState
       editor: editor
+
+    @_setMode @props.sourceMode
 
   render: ->
     # This wrapper is required for mouseEnter triggering
