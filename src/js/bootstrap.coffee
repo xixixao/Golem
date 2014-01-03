@@ -17,4 +17,4 @@ require
     'vendor/jquery/jquery.select-text': ['jquery']
     'vendor/jquery/jquery.repeat': ['jquery']
     'vendor/jquery/jquery-ui-draggable': ['jquery']
-  , ['app/editor']
+  , ['app/EditorMain']
