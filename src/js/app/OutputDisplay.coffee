@@ -1,6 +1,8 @@
 {_div, _pre} = hyper = require 'hyper'
+
 $ = require 'ejquery'
 ace = require 'ace/ace'
+jsDump = require 'vendor/jsDump'
 
 
 # addMessage = (text, id) ->
@@ -38,6 +40,17 @@ ace = require 'ace/ace'
 
 module.exports = hyper class OutputDisplay
 
+  getInitialState: ->
+    logs: []
+
+  log: (input) ->
+    input = for i in input
+      jsDump.parse i ? "Nothing"
+    message = input.join ", "
+    if message.length > 0
+      @setState
+        logs: [message].concat @state.logs
+
   componentDidUpdate: (prevProps, prevState, rootNode) ->
     $this = $ rootNode
     duration = $this.scrollTop() / 10
@@ -47,6 +60,6 @@ module.exports = hyper class OutputDisplay
 
   render: ->
     _div className: 'output',
-      for value in @props.values
+      for value in @state.logs
         _pre style: 'max-width': @props.width - 45,
           value

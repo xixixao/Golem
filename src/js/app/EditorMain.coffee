@@ -11,7 +11,6 @@ TimeLine = require './UniqueTimeLine'
 Commands = require './Commands'
 Modes = require './Modes'
 History = require './History'
-jsDump = require 'vendor/jsDump'
 
 # Prelude.installPrelude window
 # sourceFragment = "try:"
@@ -269,7 +268,6 @@ module.exports = hyper class EditorMain
   getInitialState: ->
     sourceEditorFocus: yes
     timeline: new TimeLine
-    logs: []
     sourceEditorHeight: 300
 
   _setMode: (name) ->
@@ -352,19 +350,16 @@ module.exports = hyper class EditorMain
     # else
     #   loadFromClient()
     # loadTimeline()
-    if @state.timeline.size() < 10
-      @_log helpDescription
 
     @_setMode 'CoffeeScript'
 
+  componentDidMount: ->
+    console.log @refs
+    if @state.timeline.size() < 10
+      @_log helpDescription
+
   _log: (input...) ->
-    # todo pass in components instead of text
-    input = for i in input
-      jsDump.parse i ? "Nothing"
-    message = input.join ", "
-    if message.length > 0
-      @setState
-        logs: [message].concat @state.logs
+    @refs.output.log input
 
   handleHeightResize: (height) ->
     @setState
@@ -399,6 +394,6 @@ module.exports = hyper class EditorMain
           height: @state.sourceEditorHeight
           mode: @state.sourceMode.id
       ''
-      _OutputDisplay values: @state.logs
+      _OutputDisplay ref: 'output'
 
 hyper.render document.getElementById('test'), module.exports()
