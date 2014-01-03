@@ -12,7 +12,7 @@ module.exports = React.createClass
 
   componentWillReceiveProps: (nextProps) ->
     $this = $(@.getDOMNode())
-    if nextProps.hideType and @props.type in nextProps.hideType
+    if nextProps.hideTypes and @props.type in nextProps.hideTypes
       $this.fadeOut 700
     if nextProps.type
       $this.stop(true, true).fadeIn 200

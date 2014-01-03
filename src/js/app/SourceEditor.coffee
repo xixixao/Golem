@@ -5,38 +5,13 @@ ace = require 'ace/ace'
 
 module.exports = React.createClass
 
-  # propTypes:
-  #   leftColumnWidth: React.PropTypes.number.isRequired
-  #   dividerWidth: React.PropTypes.number.isRequired
+  propTypes:
+    onCompilerLoad: React.PropTypes.func.isRequired
+    onSourceCompiled: React.PropTypes.func.isRequired
+    onSourceFailed: React.PropTypes.func.isRequired
 
   getInitialState: ->
     backgroundColor: '#222'
-
-  # componentWillReceiveProps: (nextProps) ->
-  #   leftColumnWidth: nextProps.leftColumnWidth
-
-  # _getRighColumnWidth: (leftWidth) ->
-  #   @state.width - (leftWidth + @props.dividerWidth)
-
-  # handleDividerDrag: (newWidth) ->
-  #   if newWidth > 20 and (@_getRighColumnWidth newWidth) > 20
-  #     @setState
-  #       leftColumnWidth: newWidth
-
-  # windowResized: ->
-  #   @setState
-  #     height: window.innerHeight
-  #     width: window.innerWidth
-
-  # componentDidMount: ->
-  #   window.addEventListener 'resize', @windowResized
-  #   @windowResized()
-
-  #   $(@refs.divider.getDOMNode()).draggable
-  #     axis: 'x'
-  #     drag: (e, ui) =>
-  #       @handleDividerDrag ui.offset.left
-  #       ui.position = ui.originalPosition
 
   handleMouseEnter: ->
     @state.editor.focus()
@@ -64,11 +39,11 @@ module.exports = React.createClass
     editor.session.on 'changeMode', =>
       @props.onCompilerLoad editor.session.getMode()
 
-      # editor.session.$worker.on 'ok', ({data: {result}}) =>
-      #   @props.onSourceCompiled result
+      editor.session.$worker.on 'ok', ({data: {result}}) =>
+        @props.onSourceCompiled result
 
-      # editor.session.$worker.on 'error', ({data: {text}}) =>
-      #   @props.onSourceFailed text
+      editor.session.$worker.on 'error', ({data: {text}}) =>
+        @props.onSourceFailed text
 
     editor.commands.addCommand
       name: 'leave'

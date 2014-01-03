@@ -2,41 +2,17 @@ React = require 'React'
 {_div} = require 'hyper'
 $ = require 'ejquery'
 ace = require 'ace/ace'
+Timeline = require './UniqueTimeline'
 
 module.exports = React.createClass
 
-  # propTypes:
-  #   leftColumnWidth: React.PropTypes.number.isRequired
-  #   dividerWidth: React.PropTypes.number.isRequired
+  propTypes:
+    timeline: React.PropTypes.object.isRequired
+    onCommandExecution: React.PropTypes.func.isRequired
+    onCommandFailed: React.PropTypes.func.isRequired
 
   getInitialState: ->
     backgroundColor: '#222'
-
-  # componentWillReceiveProps: (nextProps) ->
-  #   leftColumnWidth: nextProps.leftColumnWidth
-
-  # _getRighColumnWidth: (leftWidth) ->
-  #   @state.width - (leftWidth + @props.dividerWidth)
-
-  # handleDividerDrag: (newWidth) ->
-  #   if newWidth > 20 and (@_getRighColumnWidth newWidth) > 20
-  #     @setState
-  #       leftColumnWidth: newWidth
-
-  # windowResized: ->
-  #   @setState
-  #     height: window.innerHeight
-  #     width: window.innerWidth
-
-  # componentDidMount: ->
-  #   window.addEventListener 'resize', @windowResized
-  #   @windowResized()
-
-  #   $(@refs.divider.getDOMNode()).draggable
-  #     axis: 'x'
-  #     drag: (e, ui) =>
-  #       @handleDividerDrag ui.offset.left
-  #       ui.position = ui.originalPosition
 
   handleMouseEnter: ->
     @state.editor.focus()
@@ -59,9 +35,48 @@ module.exports = React.createClass
       @setState backgroundColor: $(@_getEditorNode()).css 'background-color'
 
     editor.commands.addCommand
+      name: 'execute'
+      bindKey: win: 'Enter', mac: 'Enter'
+      exec: ->
+        editor.session.getMode().updateWorker()
+
+    timeline = @props.timeline
+
+    editor.commands.addCommand
+      name: 'previous'
+      bindKey: win: 'Up', mac: 'Up'
+      exec: ->
+        timeline.temp editor.getValue() unless timeline.isInPast()
+        editor.setValue timeline.goBack()
+        editor.clearSelection()
+
+    editor.commands.addCommand
+      name: 'following'
+      bindKey: win: 'Down', mac: 'Down'
+      exec: ->
+        editor.setValue timeline.goForward() if timeline.isInPast()
+        editor.clearSelection()
+
+    editor.commands.addCommand
       name: 'leave'
       bindKey: win: 'Esc', mac: 'Esc'
       exec: @props.onLeave
+
+    editor.session.on 'changeMode', ->
+      commandWorker = editor.session.getMode().worker
+
+      # CommandWorker only compiles on user enter, hence this is an order to execute
+      # the source and the command
+      commandWorker.on 'ok', ({data: {result, type}}) =>
+        # TODO use prelude trim
+        source = $.trim editor.getValue()
+        if source.length > 0
+          timeline.push source
+          @props.onCommandExecution result
+          editor.setValue ""
+
+      commandWorker.on 'error', ({data: {text}}) ->
+        @props.onCommandFailed text
 
     @setState
       editor: editor

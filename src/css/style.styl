@@ -8,72 +8,76 @@ body
   margin 0px
   font-family Monaco, Consolas, "Lucida Console", monospace
 
-  textarea
-    font-family Monaco, Consolas, "Lucida Console", monospace
+textarea
+  font-family Monaco, Consolas, "Lucida Console", monospace
 
-  #leftColumn
-    width 400px
-    float left
-    margin 15px 5px 5px 15px
+#leftColumn
+  width 400px
+  float left
+  margin 15px 5px 5px 15px
 
-  #centerBar, .movableDivider
-    float left
-    width 20px
-    height 40px
-    cursor col-resize
+#centerBar, .movableDivider
+  float left
+  width 20px
+  height 40px
+  cursor col-resize
 
-  #rightColumn
-    float left
-    padding 15px 20px 10px 0px
-    overflow auto
+#rightColumn
+  float left
+  padding 15px 20px 10px 0px
+  overflow auto
 
-  .areaBorder
-    background-color #222
-    border-style none
-    border-radius 5px
-    box-shadow 0 0 10px -4px #000000 inset
-    cursor text
-    float left
-    padding 10px
-    width calc(100% - 20px)
-    margin 5px 0
+.areaBorder
+  background-color #222
+  border-style none
+  border-radius 5px
+  box-shadow 0 0 10px -4px #000000 inset
+  cursor text
+  float left
+  padding 10px
+  width calc(100% - 20px)
+  margin 5px 0
 
+infoBar()
+  display inline-block
+  padding-top 7px
+  padding-bottom 7px
+
+#messages
   infoBar()
-    display inline-block
-    padding-top 7px
-    padding-bottom 7px
+  padding-left 10px
+  padding-right 10px
+  max-width 615px
+  z-index 30
 
-  #messages
-    infoBar()
-    padding-left 10px
-    padding-right 10px
-    max-width 615px
-    z-index 30
+  pre
+    font-size 13px
 
-    pre
-      font-size 13px
+  &.errorMessage
+      color #CC3E1E
 
-    &.errorMessage
-        color #CC3E1E
+  &.fileMessage
+      color #3E6EcC
 
-    &.fileMessage
-        color #3E6EcC
+#compilationIndicator
+  infoBar()
+  margin-left 25px
+  color backgroundColor
+  display inline-block
 
-  #compilationIndicator
-    infoBar()
-    margin-left 25px
-    color backgroundColor
-    display inline-block
+#output, .output
+  pre
+    background-color #222
+    border-radius 5px
+    padding 14px 20px
+    margin 5px
+    color #fff
+    font-size 13px
+    line-height 18px
+    float left
+    white-space pre-wrap
+    word-wrap break-word
 
-  #output
-    pre
-      background-color #222
-      border-radius 5px
-      padding 14px 20px
-      margin 5px
-      color #fff
-      font-size 13px
-      line-height 18px
-      float left
-      white-space pre-wrap
-      word-wrap break-word
+.output
+  padding 15px 20px 10px 0px
+  overflow auto
