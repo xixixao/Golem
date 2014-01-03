@@ -59,7 +59,7 @@ module.exports = React.createClass
       style:
         backgroundColor: @state.backgroundColor
       onMouseEnter: @handleMouseEnter
-      _div ref: 'ace', style: width: '100%', height: '300px'
+      _div ref: 'ace', style: width: '100%', height: @props.height
 
 
 

@@ -4,19 +4,16 @@ $ = require 'ejquery'
 
 module.exports = React.createClass
 
-  getInitialState: ->
-    height: window.innerHeight
-
   windowResized: ->
-    @setState
-      height: window.innerHeight
+    windowHeight = window.innerHeight
+    $lastChild = $(@getDOMNode()).children().last()
+    lastChild = @props.children[@props.children.length - 1]
 
-  componentDidMount: ->
+    @props.onResize windowHeight - $lastChild.offset().top - 40
+
+  componentDidMount: (rootNode) ->
     window.addEventListener 'resize', @windowResized
-
-  componentDidUpdate: (prevProps, prevState, rootNode) ->
-    $lastChild = $(rootNode).children().last()
-    $lastChild.css height: prevState.height - $lastChild.offset().top - 40
+    @windowResized()
 
   render: ->
     _div style: padding: '15px 5px 5px 15px',

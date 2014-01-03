@@ -348,6 +348,7 @@ module.exports = React.createClass
     sourceEditorFocus: yes
     timeline: new TimeLine
     logs: []
+    sourceEditorHeight: 300
 
   _displayMessage: (type, message) ->
     @setState
@@ -428,12 +429,17 @@ module.exports = React.createClass
       @setState
         logs: [message].concat @state.logs
 
+  handleHeightResize: (height) ->
+    @setState
+      sourceEditorHeight: height
+
   render: ->
     windowWidth = Math.floor window.innerWidth
     dividerWidth = 20
+    leftColumnWidth = (windowWidth - dividerWidth) / 2
 
-    _AdjustableColumns leftColumnWidth: (windowWidth - dividerWidth) / 2, dividerWidth: dividerWidth,
-      _FillHeight {},
+    _AdjustableColumns leftColumnWidth: leftColumnWidth, dividerWidth: dividerWidth,
+      _FillHeight onResize: @handleHeightResize,
         _CommandLine
           onCommandExecution: @handleCommandExecution
           onCommandFailed: @handleCommandFailed
@@ -453,6 +459,7 @@ module.exports = React.createClass
           onSourceFailed: @handleSourceFailed
           onLeave: @handleSourceEditorLeave
           focus: @state.sourceEditorFocus
+          height: @state.sourceEditorHeight
       ''
       _OutputDisplay values: @state.logs
 
