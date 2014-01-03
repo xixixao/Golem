@@ -115,88 +115,7 @@ History = require './History'
 #     _i++
 #   _results
 
-# BROWSE_COOKIE = "table"
-# autosave = ->
-#   setTimeout ->
-#     if sourceChanged
-#       saveCurrent()
-#       sourceChanged = false
-#     autosave()
-#   , AUTOSAVE_DELAY
-
-# fileCookie = (name, value) ->
-#   $.totalStorage cookieFilePrefix + name, value
-
 # TODO: for each file, save its non-command executed commands
-# saveCurrent = ->
-#   source = sourceArea.getValue()
-#   value = serializeSource()
-
-#   valueLines = (source.split "\n").length
-#   exists = false
-
-#   ammendClientTable saveName, "#{saveName},#{valueLines}"
-#   fileCookie saveName, value
-#   $.totalStorage LAST_CODE, saveName
-
-# serializeSource = ->
-#   source: sourceArea.getValue()
-#   mode: currentMode
-#   selection: sourceArea.getSelectionRange()
-#   cursor: sourceArea.getCursorPosition()
-#   scroll:
-#     top: sourceArea.session.getScrollTop()
-#     left: sourceArea.session.getScrollLeft()
-
-# deseriazeSource = (serialized, callback) ->
-#   {source, mode, selection, cursor, scroll} = serialized
-#   sourceArea.setValue source
-#   sourceArea.session.selection.setSelectionRange selection
-#   sourceArea.moveCursorToPosition cursor
-#   sourceArea.session.setScrollTop scroll.top
-#   sourceArea.session.setScrollLeft scroll.left
-#   setNewMode mode, callback
-
-# saveTimeline = ->
-#   $.totalStorage TIMELINE_COOKIE, timeline.newest(200)
-
-# loadTimeline = ->
-#   timeline.from ($.totalStorage TIMELINE_COOKIE) ? []
-
-# removeFromClient = (name) ->
-#   return unless name?
-#   fileCookie saveName, null
-#   ammendClientTable name
-#   showFileMessage "#{name} deleted"
-
-# ammendClientTable = (exclude, addition) ->
-#   addition = null unless addition?
-#   table = []
-#   oldTable = $.totalStorage BROWSE_COOKIE
-#   if oldTable?
-#     for pair in oldTable.split ";"
-#       [name, lines] = pair.split ","
-#       table.push pair if name isnt exclude
-
-#   table.push addition if addition
-#   table = table.join ";"
-#   table = null if table.length is 0
-#   $.totalStorage BROWSE_COOKIE, table
-
-# loadFromClient = (name) ->
-#   name = $.totalStorage(LAST_CODE) unless name?
-#   unless name?
-#     setMode "CoffeeScript" unless compiler?
-#     return
-#   stored = fileCookie(name)
-#   if stored?
-#     saveName = name
-
-#     deseriazeSource stored, ->
-#       showFileMessage "" + saveName + " loaded"  if saveName isnt UNNAMED_CODE
-
-#   else
-#     showFileMessage "There is no " + name  if name isnt UNNAMED_CODE
 
 # exitCurrentCode = ->
 #   saveCurrent()
@@ -261,6 +180,19 @@ helpDescription = """
 # sourceArea.session.on 'change', sourceChange
 
 
+  # loadFromClient: (name) ->
+  #   name = @_lastOpenFileStorage() unless name
+  #   stored = fileStorage(name)
+  #   if stored?
+  #     saveName = name
+
+  #     deseriazeSource stored, ->
+  #       showFileMessage "" + saveName + " loaded"  if saveName isnt UNNAMED_CODE
+
+  #   else
+  #     showFileMessage "There is no " + name  if name isnt UNNAMED_CODE
+
+
 
 
 module.exports = hyper class EditorMain
@@ -269,6 +201,7 @@ module.exports = hyper class EditorMain
     sourceEditorFocus: yes
     timeline: new TimeLine
     sourceEditorHeight: 300
+    sourceMode: Modes.CoffeeScript
 
   _setMode: (name) ->
     config = Modes[name]
@@ -354,7 +287,6 @@ module.exports = hyper class EditorMain
     @_setMode 'CoffeeScript'
 
   componentDidMount: ->
-    console.log @refs
     if @state.timeline.size() < 10
       @_log helpDescription
 
