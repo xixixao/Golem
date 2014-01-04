@@ -10,15 +10,18 @@ SetIntervalMixin = require './SetIntervalMixin'
 module.exports = hyper class SourceEditor
 
   save: ->
-    {editor} = @state
-    @props.memory.saveSource @props.fileName,
-      value: editor.getValue()
-      mode: @state.mode
-      selection: editor.getSelectionRange()
-      cursor: editor.getCursorPosition()
-      scroll:
-        top: editor.session.getScrollTop()
-        left: editor.session.getScrollLeft()
+    if not @state.saved
+      {editor} = @state
+      @props.memory.saveSource @props.fileName,
+        value: editor.getValue()
+        mode: @state.mode
+        selection: editor.getSelectionRange()
+        cursor: editor.getCursorPosition()
+        scroll:
+          top: editor.session.getScrollTop()
+          left: editor.session.getScrollLeft()
+      @setState
+        saved: yes
 
   _load: ->
     serialized = @props.memory.loadSource @props.fileName
@@ -104,6 +107,9 @@ module.exports = hyper class SourceEditor
     @setInterval @save, @props.autosaveDelay
     @_load()
     @_setMode @props.mode
+
+    window.addEventListener 'unload', ->
+      @_save()
 
   render: ->
     _div

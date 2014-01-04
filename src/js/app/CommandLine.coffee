@@ -6,6 +6,7 @@ ace = require 'ace/ace'
 
 Timeline = require './UniqueTimeline'
 CommandMode = require './CommandMode'
+Memory = require './Memory'
 
 module.exports = hyper class CommandLine
 
@@ -16,6 +17,9 @@ module.exports = hyper class CommandLine
 
   getInitialState: ->
     backgroundColor: '#222'
+
+  getDefaultProps: ->
+    memory: new Memory
 
   handleMouseEnter: ->
     @state.editor.focus()
@@ -81,6 +85,7 @@ module.exports = hyper class CommandLine
         if source.length > 0
           timeline.push source
           @props.onCommandExecution result
+          @props.memory.saveCommands timeline
           editor.setValue ""
 
       commandWorker.on 'error', ({data: {text}}) =>
@@ -90,6 +95,7 @@ module.exports = hyper class CommandLine
       editor: editor
 
     @_setMode @props.sourceMode
+    @props.memory.loadCommands timeline
 
   render: ->
     # This wrapper is required for mouseEnter triggering

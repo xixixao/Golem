@@ -9,7 +9,7 @@ module.exports = hyper class MessageDisplay
       type: type
       message: message
       opacity: 1
-      transition: 'opacity .2s ease-in'
+      transition: 'opacity .2s ease-out'
 
   hide: (types...) ->
     if @state.type in types
@@ -17,7 +17,7 @@ module.exports = hyper class MessageDisplay
         type: null
         oldType: @state.type
         opacity: 0
-        transition: 'opacity .7s ease-out'
+        transition: 'opacity .7s ease-in'
 
   getInitialState: ->
     opacity: 1
