@@ -3,7 +3,7 @@ require
   urlArgs: "b=#{(new Date()).getTime()}"
   paths:
     hyper: 'vendor/hyper/hyper'
-    React: 'vendor/react/react'
+    React: 'vendor/react/react-with-addons'
     compilers: 'app/compilers'
     ace: 'vendor/ace/ace'
     jqueryLibs: 'vendor/jquery'
@@ -17,4 +17,4 @@ require
     'vendor/jquery/jquery.select-text': ['jquery']
     'vendor/jquery/jquery.repeat': ['jquery']
     'vendor/jquery/jquery-ui-draggable': ['jquery']
-  , ['app/EditorMain']
+  , ['vendor/sugar/sugar', 'app/EditorMain']

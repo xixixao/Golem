@@ -41,6 +41,9 @@ module.exports = hyper class SourceEditor
     onSourceCompiled: React.PropTypes.func.isRequired
     onSourceFailed: React.PropTypes.func.isRequired
 
+  forceResize: ->
+    @state.editor.resize()
+
   mixins: [
     SetIntervalMixin
   ]
@@ -108,8 +111,8 @@ module.exports = hyper class SourceEditor
     @_load()
     @_setMode @props.mode
 
-    window.addEventListener 'unload', ->
-      @_save()
+    window.addEventListener 'unload', =>
+      @save()
 
   render: ->
     _div

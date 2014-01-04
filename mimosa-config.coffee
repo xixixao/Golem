@@ -338,9 +338,13 @@ exports.config = {
                                   # files configured in its bower.json will have its entire
                                   # folder contents copied in.
       mainOverrides:
-        "coffee-script": ["extras/"]
-        "iced-coffee-script": ["lib/": "../app/compilers/icedcoffeescript/"]
-        "metacoffee": ["lib/": "../app/compilers/metacoffee/"]
+        # "coffee-script": ["extras/"]
+        # "iced-coffee-script": ["lib/": "../app/compilers/icedcoffeescript/"]
+        # "metacoffee": ["lib/": "../app/compilers/metacoffee/"]
+        "coffee-script": []
+        "iced-coffee-script": []
+        "metacoffee": []
+        "react": ["react-with-addons.js"]
 
                                   # Occasionally bower packages do not clearly indicate what file
                                   # is the main library file. In those cases, mimosa cannot find

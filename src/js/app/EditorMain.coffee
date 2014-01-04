@@ -8,7 +8,7 @@ _MessageDisplay = require './MessageDisplay'
 _OutputDisplay = require './OutputDisplay'
 
 TimeLine = require './UniqueTimeLine'
-Commands = require './Commands'
+CommandParser = require './CommandParser'
 Modes = require './Modes'
 History = require './History'
 
@@ -193,6 +193,25 @@ helpDescription = """
   #     showFileMessage "There is no " + name  if name isnt UNNAMED_CODE
 
 
+# TODO: create help out of the command definitions, make them pluggable instead of defined here
+# commands = Commands.initialize [
+#   "dump", "d", -> dump()
+#   "run", "r", -> run()
+#   "erase", "e", -> eraseMessages arguments...
+#   "copy", "c", -> selectLastOutput()
+#   "link", "l", -> saveToAdress()
+#   "toggle", "t", -> toggleAutoCompilation()
+#   "save", -> switchCurrentCode arguments...
+#   "load", -> loadFromClient arguments...
+#   "close", -> exitCurrentCode()
+#   "delete", -> removeFromClient arguments...
+#   "modes", "m", -> displayModes()
+#   "mode", -> setMode arguments...
+#   "canvas", -> createCanvas arguments...
+#   "browse", "b", -> displayClient()
+#   "help", "h", -> log(helpDescription)
+#   "ph", -> history.print(log)
+# ]
 
 
 module.exports = hyper class EditorMain
@@ -200,8 +219,14 @@ module.exports = hyper class EditorMain
   getInitialState: ->
     sourceEditorFocus: yes
     timeline: new TimeLine
+    logs: []
+    message: {}
     sourceEditorHeight: 300
     sourceMode: Modes.CoffeeScript
+    commands: [
+      require './commands/builtin/HelpCommand'
+      require './commands/builtin/EraseCommand'
+    ]
 
   _setMode: (name) ->
     config = Modes[name]
@@ -209,49 +234,74 @@ module.exports = hyper class EditorMain
       @setState
         sourceMode: config
     else
-      @_log "Wrong mode name, choose from:\n\n#{modesList()}"
+      @_logAscii "Wrong mode name, choose from:\n\n#{modesList()}"
+
+  _displayMessage: (type, message) ->
+    @setState
+      message:
+        type: type
+        value: message
+
+  _hideMessage: (types...) ->
+    if @state.message.type in types
+      @setState
+        message: {}
 
   handleCompilerLoad: (compiler) ->
     # if isCurrentMessage "modesList"
     #   @_logCurrent modesList(), "modesList" # update current message
     # else
-    @refs.message.display 'info', "#{@state.sourceMode.name} compiler loaded"
+    @_displayMessage 'info', "#{@state.sourceMode.name} compiler loaded"
     @setState
       compiler: compiler
 
   handleSourceCompiled: (js) ->
     # saveCurrent()
-    @refs.message.hide 'compiler', 'runtime'
+    @_hideMessage 'compiler', 'runtime'
 
     @setState
-      compiledJS: js
+      compiledJs: js
       sourceCompiled: yes
 
   handleSourceFailed: (text) ->
-    @refs.message.display 'compiler', "Compiler: #{text}"
+    @_displayMessage 'compiler', "Compiler: #{text}"
 
   _execute: (code) ->
     @state.compiler.preExecute?()
     eval code
 
+  _executeCommand: (command, args) ->
+    @setState command.execute args, @state
+
+  _bindCommands: ->
+    commandMap = {}
+    for command in @state.commands
+      for symbol in command.symbols
+        # TODO: if commandMap[symbol] handle clash
+        commandMap[symbol] = command
+
+    @setState
+      commandMap: commandMap
+
   handleCommandExecution: (result, type) ->
-    @refs.message.hide 'command', 'runtime'
+    @_hideMessage 'command', 'runtime'
     if type is 'command'
-      for command in commands
-        match = command.match result
-        break if match?
-      # saveTimeline()
-      # outputScrollTop()
+      [symbol, args] = CommandParser result
+      command = @state.commandMap[symbol]
+      if !command
+        @_displayMessage 'command',
+          "Command Line: #{symbol} is not a command"
+      else
+        @_executeCommand command, args
     else
       try
-        @_log @_execute @state.compiledJS + result
-        # saveTimeline()
+        @_logResult @_execute @state.compiledJs + result
         # outputScrollTop()
       catch error
-        @refs.message.display 'runtime', "Runtime: #{error}"
+        @_displayMessage 'runtime', "Runtime: #{error}"
 
   handleCommandFailed: (text) ->
-    @refs.message.display 'command', "Command Line: #{text}"
+    @_displayMessage 'command', "Command Line: #{text}"
 
   handleCommandLineLeave: ->
     @setState
@@ -262,8 +312,6 @@ module.exports = hyper class EditorMain
       sourceEditorFocus: no
 
   componentWillMount: ->
-    # $(window).unload ->
-    #   memory.save()
 
     # hash = decodeURIComponent window.location.hash.replace /^#/, ""
     # if hash.indexOf(sourceFragment) is 0
@@ -275,14 +323,26 @@ module.exports = hyper class EditorMain
     #   loadFromClient()
     # loadTimeline()
 
-    @_setMode 'CoffeeScript'
+    # @_setMode 'CoffeeScript'
+
+    @_bindCommands()
 
   componentDidMount: ->
     if @state.timeline.size() < 10
-      @_log helpDescription
+      @_executeCommand @state.commandMap.help
 
-  _log: (input...) ->
-    @refs.output.log input
+  _logAscii: (input) ->
+    @_log input
+
+  _logResult: (input) ->
+    @_log jsDump.parse input ? "Nothing"
+
+  _log: (input) ->
+    @setState
+      logs: [input].concat @state.logs
+
+  handleColumnsResize: ->
+    @refs.sourceEditor.forceResize()
 
   handleHeightResize: (height) ->
     @setState
@@ -293,7 +353,10 @@ module.exports = hyper class EditorMain
     dividerWidth = 20
     leftColumnWidth = (windowWidth - dividerWidth) / 2
 
-    _AdjustableColumns leftColumnWidth: leftColumnWidth, dividerWidth: dividerWidth,
+    _AdjustableColumns
+      leftColumnWidth: leftColumnWidth
+      dividerWidth: dividerWidth
+      onResize: @handleColumnsResize
       _FillHeight onResize: @handleHeightResize,
         _CommandLine
           onCommandExecution: @handleCommandExecution
@@ -304,8 +367,11 @@ module.exports = hyper class EditorMain
           sourceMode: @state.sourceMode.id
         # _compilationIndicator to: 0,
         #   '&middot;'
-        _MessageDisplay ref: 'message'
+        _MessageDisplay
+          ref: 'message'
+          message: @state.message
         _SourceEditor
+          ref: 'sourceEditor'
           onCompilerLoad: @handleCompilerLoad
           onSourceCompiled: @handleSourceCompiled
           onSourceFailed: @handleSourceFailed
@@ -314,6 +380,6 @@ module.exports = hyper class EditorMain
           height: @state.sourceEditorHeight
           mode: @state.sourceMode.id
       ''
-      _OutputDisplay ref: 'output'
+      _OutputDisplay logs: @state.logs
 
 hyper.render document.getElementById('test'), module.exports()

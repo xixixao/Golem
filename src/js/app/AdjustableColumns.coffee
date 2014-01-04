@@ -21,11 +21,13 @@ module.exports = React.createClass
     if newWidth > 20 and (@_getRighColumnWidth newWidth) > 20
       @setState
         leftColumnWidth: newWidth
+      @props.onResize()
+
 
   windowResized: ->
     @setState
-      height: window.innerHeight
       width: window.innerWidth
+      height: window.innerHeight
 
   componentDidMount: ->
     window.addEventListener 'resize', @windowResized

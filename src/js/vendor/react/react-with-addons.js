@@ -10973,14 +10973,11 @@ var ReactTransitionKeySet = require("./ReactTransitionKeySet");
 var ReactTransitionGroup = React.createClass({
 
   propTypes: {
-    transitionName: React.PropTypes.string,
+    transitionName: React.PropTypes.string.isRequired,
     transitionEnter: React.PropTypes.bool,
     transitionLeave: React.PropTypes.bool,
     onTransition: React.PropTypes.func,
-    component: React.PropTypes.func,
-    enterStyle: React.PropTypes.object,
-    activeStyle: React.PropTypes.object,
-    leaveStyle: React.PropTypes.object
+    component: React.PropTypes.func
   },
 
   getDefaultProps: function() {
@@ -11028,9 +11025,6 @@ var ReactTransitionGroup = React.createClass({
         children[key] = ReactTransitionableChild({
           name: this.props.transitionName,
           enter: this.props.transitionEnter,
-          enterStyle: this.props.enterStyle,
-          activeStyle: this.props.activeStyle,
-          leaveStyle: this.props.leaveStyle,
           onDoneLeaving: this._handleDoneLeaving.bind(this, key)
         }, childMapping[key]);
       }
@@ -11049,13 +11043,6 @@ var ReactTransitionGroup = React.createClass({
   },
 
   render: function() {
-    var children = [];
-    if (Array.isArray(this.props.children)) {
-      children = this.props.children;
-    } else if (this.props.children) {
-      children = [this.props.children];
-    }
-
     return this.transferPropsTo(
       this.props.component(
         {
@@ -11064,7 +11051,7 @@ var ReactTransitionGroup = React.createClass({
           transitionLeave: null,
           component: null
         },
-        this.renderTransitionableChildren(children)
+        this.renderTransitionableChildren(this.props.children)
       )
     );
   }

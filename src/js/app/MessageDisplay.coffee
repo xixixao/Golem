@@ -1,29 +1,17 @@
-{_div} = hyper = require 'hyper'
+{_div, _span} = hyper = require 'hyper'
 $ = require 'ejquery'
 ace = require 'ace/ace'
 
+React = require 'React'
+ReactTransitionGroup = React.addons.TransitionGroup
+_TransitionContainer = require './TransitionContainer'
+
+console.log React
+
 module.exports = hyper class MessageDisplay
 
-  display: (type, message) ->
-    @setState
-      type: type
-      message: message
-      opacity: 1
-      transition: 'opacity .2s ease-out'
-
-  hide: (types...) ->
-    if @state.type in types
-      @setState
-        type: null
-        oldType: @state.type
-        opacity: 0
-        transition: 'opacity .7s ease-in'
-
-  getInitialState: ->
-    opacity: 1
-
   _getColor: ->
-    switch @state.type or @state.oldType
+    switch @props.message.type
       when 'compiler', 'runtime', 'command' then '#CC3E1E'
       when 'file', 'info' then  '#3E6EcC'
 
@@ -34,7 +22,12 @@ module.exports = hyper class MessageDisplay
         height: 13
         padding: '7px 10px'
         'font-size': 13
-        color: @_getColor()
-        opacity: @state.opacity
-        transition: @state.transition
-      @state.message
+      _TransitionContainer
+        on:
+          opacity: 1
+          transition: 'opacity .2s ease-out'
+          color: @_getColor()
+        off:
+          opacity: 0
+          transition: 'opacity .7s ease-in'
+        @props.message.value
