@@ -42,7 +42,6 @@ module.exports = hyper class SourceEditor
     SetIntervalMixin
   ]
 
-
   getDefaultProps: ->
     memory = new Memory
 

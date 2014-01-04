@@ -4,17 +4,28 @@ ace = require 'ace/ace'
 
 module.exports = hyper class MessageDisplay
 
+  display: (type, message) ->
+    @setState
+      type: type
+      message: message
+      opacity: 1
+      transition: 'opacity .2s ease-in'
+
+  hide: (types...) ->
+    if @state.type in types
+      @setState
+        type: null
+        oldType: @state.type
+        opacity: 0
+        transition: 'opacity .7s ease-out'
+
+  getInitialState: ->
+    opacity: 1
+
   _getColor: ->
-    switch @props.type
+    switch @state.type or @state.oldType
       when 'compiler', 'runtime', 'command' then '#CC3E1E'
       when 'file', 'info' then  '#3E6EcC'
-
-  componentWillReceiveProps: (nextProps) ->
-    $this = $(@.getDOMNode())
-    if nextProps.hideTypes and @props.type in nextProps.hideTypes
-      $this.fadeOut 700
-    if nextProps.type
-      $this.stop(true, true).fadeIn 200
 
   render: ->
     _div
@@ -24,4 +35,6 @@ module.exports = hyper class MessageDisplay
         padding: '7px 10px'
         'font-size': 13
         color: @_getColor()
-      @props.value
+        opacity: @state.opacity
+        transition: @state.transition
+      @state.message

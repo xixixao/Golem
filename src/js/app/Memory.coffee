@@ -3,19 +3,13 @@ module.exports = class Memory
   saveSource: (fileName, serialized) ->
     numLines = (serialized.value.split "\n").length
 
-    console.log "saving #{fileName}"
-
     @fileTable fileName, numLines: numLines
     @_fileStorage fileName, serialized
     @_lastOpenFileStorage fileName
     return
 
   loadSource: (fileName) ->
-    console.log "loading #{fileName}"
-
-    out = @_fileStorage fileName
-    console.log out
-    out
+    @_fileStorage fileName
 
   saveCommands: (timeline) ->
     @_timelineStorage timeline.newest(200)

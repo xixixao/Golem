@@ -211,40 +211,31 @@ module.exports = hyper class EditorMain
     else
       @_log "Wrong mode name, choose from:\n\n#{modesList()}"
 
-  _displayMessage: (type, message) ->
-    @setState
-      messageType: type
-      message: message
-
-  _hideMessage: (types...) ->
-    @setState
-      hideTypes: types
-
   handleCompilerLoad: (compiler) ->
     # if isCurrentMessage "modesList"
     #   @_logCurrent modesList(), "modesList" # update current message
     # else
-    @_displayMessage 'info', "#{@state.sourceMode.name} compiler loaded"
+    @refs.message.display 'info', "#{@state.sourceMode.name} compiler loaded"
     @setState
       compiler: compiler
 
   handleSourceCompiled: (js) ->
     # saveCurrent()
-    @_hideMessage 'compiler', 'runtime'
+    @refs.message.hide 'compiler', 'runtime'
 
     @setState
       compiledJS: js
       sourceCompiled: yes
 
   handleSourceFailed: (text) ->
-    @_displayMessage 'compiler', "Compiler: #{text}"
+    @refs.message.display 'compiler', "Compiler: #{text}"
 
   _execute: (code) ->
     @state.compiler.preExecute?()
     eval code
 
   handleCommandExecution: (result, type) ->
-    @_hideMessage 'command', 'runtime'
+    @refs.message.hide 'command', 'runtime'
     if type is 'command'
       for command in commands
         match = command.match result
@@ -257,10 +248,10 @@ module.exports = hyper class EditorMain
         # saveTimeline()
         # outputScrollTop()
       catch error
-        @_displayMessage 'runtime', "Runtime: #{error}"
+        @refs.message.display 'runtime', "Runtime: #{error}"
 
   handleCommandFailed: (text) ->
-    @_displayMessage 'command', "Command Line: #{text}"
+    @refs.message.display 'command', "Command Line: #{text}"
 
   handleCommandLineLeave: ->
     @setState
@@ -313,10 +304,7 @@ module.exports = hyper class EditorMain
           sourceMode: @state.sourceMode.id
         # _compilationIndicator to: 0,
         #   '&middot;'
-        _MessageDisplay
-          type: @state.messageType
-          value: @state.message
-          hideTypes: @state.hideTypes
+        _MessageDisplay ref: 'message'
         _SourceEditor
           onCompilerLoad: @handleCompilerLoad
           onSourceCompiled: @handleSourceCompiled
