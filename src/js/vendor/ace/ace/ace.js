@@ -70,7 +70,7 @@ exports.require = require;
  * @param {String | DOMElement} el Either the id of an element, or the element itself
  *
  **/
-exports.edit = function(el) {
+exports.edit = function(el, mode, theme) {
     if (typeof(el) == "string") {
         var _id = el;
         var el = document.getElementById(_id);
@@ -81,10 +81,10 @@ exports.edit = function(el) {
     if (el.env && el.env.editor instanceof Editor)
         return el.env.editor;
 
-    var doc = exports.createEditSession(dom.getInnerText(el));
+    var doc = exports.createEditSession(dom.getInnerText(el), mode);
     el.innerHTML = '';
 
-    var editor = new Editor(new Renderer(el));
+    var editor = new Editor(new Renderer(el, theme));
     new MultiSelect(editor);
     editor.setSession(doc);
 
