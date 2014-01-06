@@ -10,6 +10,7 @@ require
     jquery: 'vendor/jquery/jquery'
     ejquery: 'app/jquery.extended'
     'coffee-script': 'vendor/coffee-script/coffee-script'
+    'tinyemitter': 'vendor/tiny-emitter/tinyemitter'
   shim:
     'vendor/jquery/jquery.cookie': ['jquery']
     'vendor/jquery/jquery.total-storage': ['jquery']

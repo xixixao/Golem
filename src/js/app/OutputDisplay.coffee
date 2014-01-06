@@ -49,6 +49,6 @@ module.exports = hyper class OutputDisplay
 
   render: ->
     _div className: 'output',
-      for value in @props.logs
-        _div className: 'log', style: 'max-width': @props.width - 45,
+      for [key, value] in @props.logs
+        _div id: key, key: key, className: 'log', style: 'max-width': @props.width - 45,
           value

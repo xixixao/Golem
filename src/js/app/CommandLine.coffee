@@ -18,27 +18,21 @@ module.exports = hyper class CommandLine
   getInitialState: ->
     backgroundColor: '#222'
 
-  getDefaultProps: ->
-    memory: new Memory
-
   handleMouseEnter: ->
-    @state.editor.focus()
+    @editor.focus()
 
   _getEditorNode: ->
     @refs.ace.getDOMNode()
 
-  _setMode: (sourceMode) ->
-    @state.editor.session.setMode new CommandMode "compilers/#{sourceMode}"
+  setMode: (sourceModeId) ->
+    @editor.session.setMode new CommandMode "compilers/#{sourceModeId}"
 
-  componentWillReceiveProps: ({focus, sourceMode}) ->
+  componentWillReceiveProps: ({focus}) ->
     if focus
-      @state.editor.focus()
-    if sourceMode and sourceMode isnt @props.sourceMode
-      @_setMode sourceMode
+      @editor.focus()
 
   componentDidMount: ->
-    editor = ace.edit @_getEditorNode()
-    editor.setTheme "ace/theme/cobalt"
+    @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/cobalt"
     editor.setHighlightActiveLine false
     editor.setShowPrintMargin false
     editor.renderer.setShowGutter false
@@ -87,14 +81,11 @@ module.exports = hyper class CommandLine
           @props.onCommandExecution result, type
           @props.memory.saveCommands timeline
           editor.setValue ""
+          editor.focus()
 
       commandWorker.on 'error', ({data: {text}}) =>
         @props.onCommandFailed text
 
-    @setState
-      editor: editor
-
-    @_setMode @props.sourceMode
     @props.memory.loadCommands timeline
 
   render: ->

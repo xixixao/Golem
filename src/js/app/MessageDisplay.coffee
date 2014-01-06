@@ -6,8 +6,6 @@ React = require 'React'
 ReactTransitionGroup = React.addons.TransitionGroup
 _TransitionContainer = require './TransitionContainer'
 
-console.log React
-
 module.exports = hyper class MessageDisplay
 
   _getColor: ->

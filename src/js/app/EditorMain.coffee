@@ -1,5 +1,7 @@
 {_div} = hyper = require 'hyper'
 
+jsDump = require 'vendor/jsDump'
+
 _AdjustableColumns = require './AdjustableColumns'
 _SourceEditor = require './SourceEditor'
 _CommandLine = require './CommandLine'
@@ -11,6 +13,7 @@ TimeLine = require './UniqueTimeLine'
 CommandParser = require './CommandParser'
 Modes = require './Modes'
 History = require './History'
+Memory = require './Memory'
 
 # Prelude.installPrelude window
 # sourceFragment = "try:"
@@ -217,26 +220,24 @@ helpDescription = """
 module.exports = hyper class EditorMain
 
   getInitialState: ->
+    @memory = new Memory
+    @logId = 0
+
     sourceEditorFocus: yes
     timeline: new TimeLine
     logs: []
     message: {}
     sourceEditorHeight: 300
-    sourceMode: Modes.CoffeeScript
+    modes: Modes
     commands: [
-      require './commands/builtin/HelpCommand'
-      require './commands/builtin/EraseCommand'
-    ]
+      require './commands/builtin/Help'
+      require './commands/builtin/Output'
+      require './commands/builtin/Runtime'
+      require './commands/builtin/Modes'
+      require './commands/builtin/Files'
+    ].flatten()
 
-  _setMode: (name) ->
-    config = Modes[name]
-    if config?
-      @setState
-        sourceMode: config
-    else
-      @_logAscii "Wrong mode name, choose from:\n\n#{modesList()}"
-
-  _displayMessage: (type, message) ->
+  displayMessage: (type, message) ->
     @setState
       message:
         type: type
@@ -247,16 +248,18 @@ module.exports = hyper class EditorMain
       @setState
         message: {}
 
-  handleCompilerLoad: (compiler) ->
+  handleModeChange: (mode) ->
+    @refs.commandLine.setMode mode
+
+  handleCompilerLoad: (compiler, modeId) ->
     # if isCurrentMessage "modesList"
     #   @_logCurrent modesList(), "modesList" # update current message
     # else
-    @_displayMessage 'info', "#{@state.sourceMode.name} compiler loaded"
+    @displayMessage 'info', "#{@state.modes.getName modeId} compiler loaded"
     @setState
       compiler: compiler
 
   handleSourceCompiled: (js) ->
-    # saveCurrent()
     @_hideMessage 'compiler', 'runtime'
 
     @setState
@@ -264,14 +267,18 @@ module.exports = hyper class EditorMain
       sourceCompiled: yes
 
   handleSourceFailed: (text) ->
-    @_displayMessage 'compiler', "Compiler: #{text}"
+    @displayMessage 'compiler', "Compiler: #{text}"
 
-  _execute: (code) ->
-    @state.compiler.preExecute?()
-    eval code
+  execute: (code) ->
+    try
+      @state.compiler.preExecute?()
+      eval code
+    catch error
+      @displayMessage 'runtime', "Runtime: #{error}"
+      error
 
   _executeCommand: (command, args) ->
-    @setState command.execute args, @state
+    @setState command.execute args, @state, this
 
   _bindCommands: ->
     commandMap = {}
@@ -289,19 +296,16 @@ module.exports = hyper class EditorMain
       [symbol, args] = CommandParser result
       command = @state.commandMap[symbol]
       if !command
-        @_displayMessage 'command',
+        @displayMessage 'command',
           "Command Line: #{symbol} is not a command"
       else
         @_executeCommand command, args
     else
-      try
-        @_logResult @_execute @state.compiledJs + result
-        # outputScrollTop()
-      catch error
-        @_displayMessage 'runtime', "Runtime: #{error}"
+      @logResult @execute @state.compiledJs + result
+      # outputScrollTop()
 
   handleCommandFailed: (text) ->
-    @_displayMessage 'command', "Command Line: #{text}"
+    @displayMessage 'command', "Command Line: #{text}"
 
   handleCommandLineLeave: ->
     @setState
@@ -324,22 +328,25 @@ module.exports = hyper class EditorMain
     # loadTimeline()
 
     # @_setMode 'CoffeeScript'
-
     @_bindCommands()
 
   componentDidMount: ->
     if @state.timeline.size() < 10
       @_executeCommand @state.commandMap.help
 
-  _logAscii: (input) ->
-    @_log input
+  logAscii: (input) ->
+    @log input
 
-  _logResult: (input) ->
-    @_log jsDump.parse input ? "Nothing"
+  logResult: (input) ->
+    if input not instanceof Error
+      @log if input?
+        jsDump.parse input
+      else
+        "Nothing"
 
-  _log: (input) ->
+  log: (input) ->
     @setState
-      logs: [input].concat @state.logs
+      logs: [["log#{@logId++}", input]].concat @state.logs
 
   handleColumnsResize: ->
     @refs.sourceEditor.forceResize()
@@ -359,12 +366,13 @@ module.exports = hyper class EditorMain
       onResize: @handleColumnsResize
       _FillHeight onResize: @handleHeightResize,
         _CommandLine
+          ref: 'commandLine'
           onCommandExecution: @handleCommandExecution
           onCommandFailed: @handleCommandFailed
           onLeave: @handleCommandLineLeave
           focus: !@state.sourceEditorFocus
           timeline: @state.timeline
-          sourceMode: @state.sourceMode.id
+          memory: @memory
         # _compilationIndicator to: 0,
         #   '&middot;'
         _MessageDisplay
@@ -372,13 +380,14 @@ module.exports = hyper class EditorMain
           message: @state.message
         _SourceEditor
           ref: 'sourceEditor'
+          onModeChange: @handleModeChange
           onCompilerLoad: @handleCompilerLoad
           onSourceCompiled: @handleSourceCompiled
           onSourceFailed: @handleSourceFailed
           onLeave: @handleSourceEditorLeave
+          memory: @memory
           focus: @state.sourceEditorFocus
           height: @state.sourceEditorHeight
-          mode: @state.sourceMode.id
       ''
       _OutputDisplay logs: @state.logs
 

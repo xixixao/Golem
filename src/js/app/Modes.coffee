@@ -1,13 +1,21 @@
 
-module.exports =
-  CoffeeScript:
+modes = [
     id: 'coffeescript'
     name: 'CoffeeScript'
-
-  IcedCoffeeScript:
+  ,
     id: 'icedcoffeescript'
     name: 'IcedCoffeeScript'
-
-  MetaCoffee:
+  ,
     id: 'metacoffee'
     name: 'MetaCoffee'
+]
+
+module.exports = class Modes
+  @getName: (someId) ->
+    return name for {id, name} in modes when id is someId
+
+  @getId: (someName) ->
+    return id for {id, name} in modes when name is someName
+
+  @getAll: ->
+    modes
