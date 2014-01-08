@@ -40,6 +40,14 @@ jsDump = require 'vendor/jsDump'
 
 module.exports = hyper class OutputDisplay
 
+  windowResized: ->
+    @setState
+      height: window.innerHeight
+
+  componentWillMount: ->
+    window.addEventListener 'resize', @windowResized
+    @windowResized()
+
   componentDidUpdate: (prevProps, prevState, rootNode) ->
     $this = $ rootNode
     duration = $this.scrollTop() / 10
@@ -47,8 +55,14 @@ module.exports = hyper class OutputDisplay
       scrollTop: 0
     , duration
 
+
   render: ->
-    _div className: 'output',
+    _div
+      className: 'output'
+      style:
+        height: @state.height - 25
+        padding: '15px 20px 10px 0px'
+        overflow: 'auto'
       for [key, value] in @props.logs
         _div id: key, key: key, className: 'log', style: 'max-width': @props.width - 45,
           value

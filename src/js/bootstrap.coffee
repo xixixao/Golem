@@ -18,4 +18,4 @@ require
     'vendor/jquery/jquery.select-text': ['jquery']
     'vendor/jquery/jquery.repeat': ['jquery']
     'vendor/jquery/jquery-ui-draggable': ['jquery']
-  , ['vendor/sugar/sugar', 'app/EditorMain']
+  , ['vendor/sugar/sugar', 'React', 'app/EditorMain']

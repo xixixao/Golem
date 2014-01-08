@@ -391,4 +391,4 @@ module.exports = hyper class EditorMain
       ''
       _OutputDisplay logs: @state.logs
 
-hyper.render document.getElementById('test'), module.exports()
+hyper.render document.getElementById('editor'), module.exports()

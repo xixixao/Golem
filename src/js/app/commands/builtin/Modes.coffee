@@ -1,4 +1,4 @@
-{_div, _p, _table, _tr, _td, _code} = require 'hyper'
+{_div, _p, _table, _tbody, _tr, _td, _code} = require 'hyper'
 
 class SwitchModeCommand
   @defaultSymbols = ['mode']
@@ -20,7 +20,7 @@ class ListModesCommand
 
   @execute = (args, state, editor) ->
     currentMode = editor.refs.sourceEditor.mode
-    table = _table {},
+    table = _table _tbody {},
       state.modes.getAll().map ({id, name}) ->
         _tr {},
           _td if id is currentMode then '>'

@@ -9,14 +9,13 @@ module.exports = hyper class TransitionContainer
       @savedStyle = @props.on
 
   render: ->
-    if @props.children
-      style = @props.on
-    else
-      style = Object.merge @savedStyle, @props.off
+    style =
+      if @props.children
+        @props.on
+      else
+        Object.merge @savedStyle, @props.off
 
     component = @props.component || _span
 
-    component
-      style:
-        style
+    component style: style,
       @props.children || this.savedChildren
