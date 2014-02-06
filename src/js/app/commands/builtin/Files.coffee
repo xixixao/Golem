@@ -60,7 +60,6 @@ _FileBrowser = hyper class FileBrowser
     @props.memory.off 'lastOpen', @handleChange
 
   render: ->
-    console.log @state.data
     data = Object.values(@state.data).sortBy 'name'
     _table _tbody {},
       _tr _th(),

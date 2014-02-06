@@ -333,6 +333,7 @@ module.exports = hyper class EditorMain
   componentDidMount: ->
     if @state.timeline.size() < 10
       @_executeCommand @state.commandMap.help
+    window.log = @logResult
 
   logAscii: (input) ->
     @log input
