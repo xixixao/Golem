@@ -74,9 +74,8 @@ module.exports = hyper class SourceEditor
     modeId ||= 'coffeescript'
     @props.onModeChange modeId
 
-    #require ["compilers/#{modeId}/mode"], ({Mode}) =>
-    @editor.session.setMode "ace/mode/coffee"
-    @editor.session.on 'changeMode', (mode) =>
+    require ["compilers/#{modeId}/mode"], ({Mode}) =>
+      @editor.session.setMode new Mode
       @props.onCompilerLoad @editor.session.getMode(), modeId
 
       @editor.session.$worker.on 'ok', ({data: {result}}) =>
@@ -91,7 +90,7 @@ module.exports = hyper class SourceEditor
       @editor.focus()
 
   componentDidMount: ->
-    @editor = editor = ace.edit @_getEditorNode(), "ace/mode/coffee", "ace/theme/cobalt"
+    @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/cobalt"
     editor.setHighlightActiveLine true
     editor.session.setTabSize 2
     editor.setShowPrintMargin false
