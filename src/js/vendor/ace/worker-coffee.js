@@ -6869,7 +6869,7 @@ oop.inherits(Worker, Mirror);
         var value = this.doc.getValue();
 
         try {
-            coffee.parse(value).compile();
+            var data = coffee.parse(value).compile();
         } catch(e) {
             var loc = e.location;
             if (loc) {
@@ -6884,7 +6884,7 @@ oop.inherits(Worker, Mirror);
             }
             return;
         }
-        this.sender.emit("ok");
+        this.sender.emit("ok", {result: data});
     };
 
 }).call(Worker.prototype);
