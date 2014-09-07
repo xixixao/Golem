@@ -18086,7 +18086,7 @@ require("./ext/error_marker");
 
 exports.config = require("./config");
 exports.require = require;
-exports.edit = function(el, mode, theme)) {
+exports.edit = function(el, mode, theme) {
     if (typeof(el) == "string") {
         var _id = el;
         el = document.getElementById(_id);
