@@ -15943,7 +15943,7 @@ var net = require("../lib/net");
 var EventEmitter = require("../lib/event_emitter").EventEmitter;
 var config = require("../config");
 
-var WorkerClient = function(topLevelNamespaces, mod, classname, workerUrl) {
+var WorkerClient = function(topLevelNamespaces, mod, classname, workerUrl, aux) {
     this.$sendDeltaQueue = this.$sendDeltaQueue.bind(this);
     this.changeListener = this.changeListener.bind(this);
     this.onMessage = this.onMessage.bind(this);
@@ -15980,7 +15980,8 @@ var WorkerClient = function(topLevelNamespaces, mod, classname, workerUrl) {
         init : true,
         tlns : tlns,
         module : mod,
-        classname : classname
+        classname : classname,
+        aux: aux
     });
 
     this.callbackId = 1;
@@ -16023,7 +16024,8 @@ var WorkerClient = function(topLevelNamespaces, mod, classname, workerUrl) {
         this.deltaQueue = null;
         this.$worker.terminate();
         this.$worker = null;
-        this.$doc.removeEventListener("change", this.changeListener);
+        if (this.$doc)
+            this.$doc.removeEventListener("change", this.changeListener);
         this.$doc = null;
     };
 
@@ -18084,7 +18086,7 @@ require("./ext/error_marker");
 
 exports.config = require("./config");
 exports.require = require;
-exports.edit = function(el) {
+exports.edit = function(el, mode, theme)) {
     if (typeof(el) == "string") {
         var _id = el;
         el = document.getElementById(_id);
@@ -18106,9 +18108,9 @@ exports.edit = function(el) {
         el.innerHTML = '';
     }
 
-    var doc = exports.createEditSession(value);
+    var doc = exports.createEditSession(value, mode);
 
-    var editor = new Editor(new Renderer(el));
+    var editor = new Editor(new Renderer(el, theme));
     editor.setSession(doc);
 
     var env = {
