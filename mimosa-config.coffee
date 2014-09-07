@@ -16,7 +16,7 @@ exports.config = {
   and do not need to be installed. If a module is listed here that Mimosa is unaware of, Mimosa
   will attempt to install it.
   ###
-  modules: ['jshint', 'csslint', 'server', 'require', 'minify-js', 'minify-css', 'live-reload', 'bower', 'require-commonjs', 'server-template-compile', 'coffeescript', 'jade']
+  modules: ['jshint', 'csslint', 'server', 'require', 'minify-js', 'minify-css', 'live-reload', 'bower', 'require-commonjs', 'server-template-compile', 'coffeescript', 'jade', 'stylus', 'copy']
 
   requireCommonjs:
     exclude: [/[/\\]vendor[/\\]/, /[/\\]js[/\\]bootstrap\./]
@@ -42,7 +42,7 @@ exports.config = {
                                          # to leave this set at 0, thedefault, until you start
                                          # encountering EMFILE problems. throttle has no effect
                                          # if usePolling is set to false.
-    usePolling: false                    # WARNING: Do not change this default if you are on
+    #usePolling: true                    # WARNING: Do not change this default if you are on
                                          # *Nix. Windows users, read on.
                                          # Whether or not to poll for system file changes.
                                          # Unless you have a lot files and your CPU starts
