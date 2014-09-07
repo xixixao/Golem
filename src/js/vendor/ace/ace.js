@@ -18110,8 +18110,7 @@ exports.edit = function(el, mode, theme) {
 
     var doc = exports.createEditSession(value, mode);
 
-    var editor = new Editor(new Renderer(el, theme));
-    editor.setSession(doc);
+    var editor = new Editor(new Renderer(el, theme), doc);
 
     var env = {
         document: doc,
