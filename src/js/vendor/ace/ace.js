@@ -18084,7 +18084,7 @@ require("./ext/error_marker");
 
 exports.config = require("./config");
 exports.require = require;
-exports.edit = function(el) {
+exports.edit = function(el, mode, theme) {
     if (typeof(el) == "string") {
         var _id = el;
         el = document.getElementById(_id);
@@ -18106,9 +18106,9 @@ exports.edit = function(el) {
         el.innerHTML = '';
     }
 
-    var doc = exports.createEditSession(value);
+    var doc = exports.createEditSession(value, mode);
 
-    var editor = new Editor(new Renderer(el));
+    var editor = new Editor(new Renderer(el, theme));
     editor.setSession(doc);
 
     var env = {
