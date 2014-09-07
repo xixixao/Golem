@@ -327,7 +327,7 @@ module.exports = hyper class EditorMain
     #   loadFromClient()
     # loadTimeline()
 
-    # @_setMode 'CoffeeScript'
+    #@_setMode 'CoffeeScript'
     @_bindCommands()
 
   componentDidMount: ->

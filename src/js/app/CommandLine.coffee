@@ -5,7 +5,6 @@ $ = require 'ejquery'
 ace = require 'ace/ace'
 
 Timeline = require './UniqueTimeline'
-CommandMode = require './CommandMode'
 Memory = require './Memory'
 
 module.exports = hyper class CommandLine
@@ -25,14 +24,14 @@ module.exports = hyper class CommandLine
     @refs.ace.getDOMNode()
 
   setMode: (sourceModeId) ->
-    @editor.session.setMode new CommandMode "compilers/#{sourceModeId}"
+    @editor.session.setMode "ace/mode/coffee"# new CommandMode "compilers/#{sourceModeId}"
 
   componentWillReceiveProps: ({focus}) ->
     if focus
       @editor.focus()
 
   componentDidMount: ->
-    @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/cobalt"
+    @editor = editor = ace.edit @_getEditorNode(), "ace/mode/coffee", "ace/theme/cobalt"
     editor.setHighlightActiveLine false
     editor.setShowPrintMargin false
     editor.renderer.setShowGutter false
@@ -70,6 +69,7 @@ module.exports = hyper class CommandLine
 
     editor.session.on 'changeMode', =>
       commandWorker = editor.session.getMode().worker
+      return unless commandWorker
 
       # CommandWorker only compiles on user enter, hence this is an order to execute
       # the source and the command
