@@ -9,6 +9,7 @@ module.exports = class CommandMode extends CoffeeMode
     @worker = new WorkerClient ["ace", "compilers", "app", "vendor", "coffee-script"],
       "app/CommandWorker",
       "Worker",
+      null,
       "#{@sourceModePath}/worker"
 
     @doc = session.getDocument()

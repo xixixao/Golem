@@ -5,7 +5,7 @@ require
     hyper: 'vendor/hyper/hyper'
     React: 'vendor/react/react-with-addons'
     compilers: 'app/compilers'
-    ace: 'vendor/ace/ace'
+    ace: 'vendor/ace'
     jqueryLibs: 'vendor/jquery'
     jquery: 'vendor/jquery/jquery'
     ejquery: 'app/jquery.extended'
@@ -18,4 +18,4 @@ require
     'vendor/jquery/jquery.select-text': ['jquery']
     'vendor/jquery/jquery.repeat': ['jquery']
     'vendor/jquery/jquery-ui-draggable': ['jquery']
-  , ['vendor/sugar/sugar', 'React', 'app/EditorMain']
+  , ['vendor/sugar/sugar', 'React', 'vendor/ace/mode-coffee', 'app/EditorMain']
