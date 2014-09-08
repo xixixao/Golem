@@ -15950,11 +15950,11 @@ var WorkerClient = function(topLevelNamespaces, mod, classname, workerUrl, aux) 
     if (require.nameToUrl && !require.toUrl)
         require.toUrl = require.nameToUrl;
 
-    if (config.get("packaged") || !require.toUrl) {
+    if (!require.toUrl) {
         workerUrl = workerUrl || config.moduleUrl(mod, "worker");
     } else {
         var normalizePath = this.$normalizePath;
-        workerUrl = workerUrl || normalizePath(require.toUrl("ace/worker/worker.js", null, "_"));
+        workerUrl = workerUrl || normalizePath(require.toUrl("ace/worker.js", null, "_"));
 
         var tlns = {};
         topLevelNamespaces.forEach(function(ns) {
