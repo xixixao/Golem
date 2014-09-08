@@ -14,7 +14,7 @@ class HelpCommand
     table = _table {},
       for command in state.commands
         _tr {},
-          _td (_code symbol for symbol in command.symbols)
+          _td [].concat ([(_code symbol), ' '] for symbol in command.symbols)
           _td command.description
 
     editor.log _div header, table
