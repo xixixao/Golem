@@ -1,5 +1,3 @@
-Tokenizer    = require("ace/tokenizer").Tokenizer
-Rules        = require("ace/mode/coffee_highlight_rules").CoffeeHighlightRules
 Outdent      = require("ace/mode/matching_brace_outdent").MatchingBraceOutdent
 FoldMode     = require("ace/mode/folding/coffee").FoldMode
 Range        = require("ace/range").Range
@@ -25,12 +23,11 @@ indentation = /^\s*/
 
 exports.Mode = class extends TextMode
   constructor: ->
-    @$tokenizer = new Tokenizer new Rules().getRules()
-    getLineTokens = @$tokenizer.getLineTokens.bind(@$tokenizer)
-    @$tokenizer.getLineTokens = (args...) ->
-      console.log args...
-      getLineTokens args...
-
+    @$tokenizer = getLineTokens: (line, state, row) ->
+      console.log line
+      console.log state
+      console.log row
+      "hello"
     @$outdent = new Outdent
     @foldingRules = new FoldMode
 
@@ -68,7 +65,11 @@ exports.Mode = class extends TextMode
     @$outdent.autoOutdent doc, row
 
   createWorker: (session) ->
-    worker = new WorkerClient ["ace", "compilers"], "compilers/coffeescript/worker", "Worker"
+    worker = new WorkerClient ["ace", "compilers"],
+      "compilers/teascript/worker",
+      "Worker",
+      null,
+      yes
 
     if session
       worker.attachToDocument session.getDocument()

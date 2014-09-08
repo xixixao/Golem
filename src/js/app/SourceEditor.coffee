@@ -82,6 +82,7 @@ module.exports = hyper class SourceEditor
         @props.onSourceCompiled result
 
       @editor.session.$worker.on 'error', ({data: {text}}) =>
+        console.log "from source worker", text
         @props.onSourceFailed text
       @mode = modeId
 

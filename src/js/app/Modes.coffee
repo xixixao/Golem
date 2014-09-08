@@ -8,6 +8,9 @@ modes = [
   ,
     id: 'metacoffee'
     name: 'MetaCoffee'
+  ,
+    id: 'teascript'
+    name: 'TeaScript'
 ]
 
 module.exports = class Modes
