@@ -32,10 +32,12 @@ module.exports = hyper class CommandLine
       @editor.focus()
 
   componentDidMount: ->
-    @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/cobalt"
+    @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/tea"
+    editor.setFontSize 13
     editor.setHighlightActiveLine false
     editor.setShowPrintMargin false
     editor.renderer.setShowGutter false
+    editor.session.$mode.commandLine = true
 
     editor.renderer.on 'themeLoaded', =>
       @setState backgroundColor: $(@_getEditorNode()).css 'background-color'

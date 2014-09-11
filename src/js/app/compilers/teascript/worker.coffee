@@ -18,13 +18,16 @@ exports.Worker = class extends Mirror
             compiler.compileExp value
 
     catch e
-      loc = e.location
-      if loc
-        @sender.emit "error",
-          row: loc.first_line
-          column: loc.first_column
-          endRow: loc.last_line
-          endColumn: loc.last_column
-          text: e.message
-          type: "error"
+      # loc = e.location
+      # if loc
+      #   @sender.emit "error",
+      #     row: loc.first_line
+      #     column: loc.first_column
+      #     endRow: loc.last_line
+      #     endColumn: loc.last_column
+      #     text: e.message
+      #     type: "error"
+      @sender.emit "error",
+        text: e.message
+        type: 'error'
       return

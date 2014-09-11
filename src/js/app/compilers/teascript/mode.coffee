@@ -4,6 +4,8 @@ Range        = require("ace/range").Range
 TextMode     = require("ace/mode/text").Mode
 WorkerClient = require("ace/worker/worker_client").WorkerClient
 
+compiler = require './compiler'
+
 indenter = ///
   (?:
       [ ({[=: ] # opening braces, equal or colon
@@ -23,15 +25,42 @@ indentation = /^\s*/
 
 exports.Mode = class extends TextMode
   constructor: ->
-    @$tokenizer = getLineTokens: (line, state, row) ->
+    @$tokenizer = getLineTokens: (line, state, row, doc) ->
       console.log line
-      console.log state
-      console.log row
-      "hello"
+      try
+        tokens = compiler.tokenize doc.getValue()
+      catch
+        return tokens: [value: line, type: 'text']
+      start = doc.positionToIndex {row, column: 0}
+      end = doc.positionToIndex {row: row + 1, column: 0}
+
+      allTokens = [].concat.apply [], tokens.map (token) ->
+        {ws, pos} = token
+        createdTokens = []
+        wsTokens = ws.split '\n'
+        for wsToken, i in wsTokens
+          if i isnt 0
+            pos += 1 # for the new line character
+          createdTokens.push {token: wsToken, pos}
+          pos += wsToken.length
+        token.pos = pos
+        createdTokens.push token
+        createdTokens
+
+      res = tokens:
+        allTokens.filter ({pos}) -> start <= pos < end
+          .map ({token, label}) ->
+            value: token
+            type: if label then 'token_' + label else 'text'
+      console.log res
+      res
+
+
     @$outdent = new Outdent
     @foldingRules = new FoldMode
 
   getNextLineIndent: (state, line, tab) ->
+    return ''
     indent = @$getIndent line
     tokens = @$tokenizer.getLineTokens(line, state).tokens
     if not (tokens.length and tokens[tokens.length - 1].type is "comment") and

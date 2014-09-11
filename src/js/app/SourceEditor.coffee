@@ -91,7 +91,8 @@ module.exports = hyper class SourceEditor
       @editor.focus()
 
   componentDidMount: ->
-    @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/cobalt"
+    @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/tea"
+    editor.setFontSize 13
     editor.setHighlightActiveLine true
     editor.session.setTabSize 2
     editor.setShowPrintMargin false
