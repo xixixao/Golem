@@ -6,23 +6,6 @@ WorkerClient = require("ace/worker/worker_client").WorkerClient
 
 compiler = require './compiler'
 
-indenter = ///
-  (?:
-      [ ({[=: ] # opening braces, equal or colon
-    | [-=]>     # function symbol
-    | \b (?:    # any of keywords starting a block:
-        else
-      | switch
-      | try
-      | catch (?: \s*[$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]* )? # name of error
-      | finally
-    )
-  )\s*$
-///
-commentLine = /^(\s*)# ?/
-hereComment = /^\s*###(?!#)/
-indentation = /^\s*/
-
 exports.Mode = class extends TextMode
   constructor: ->
     @$tokenizer = getLineTokens: (line, state, row, doc) ->
@@ -60,13 +43,17 @@ exports.Mode = class extends TextMode
     @foldingRules = new FoldMode
 
   getNextLineIndent: (state, line, tab) ->
-    return ''
     indent = @$getIndent line
-    tokens = @$tokenizer.getLineTokens(line, state).tokens
-    if not (tokens.length and tokens[tokens.length - 1].type is "comment") and
-        state is "start" and indenter.test(line)
-      indent += tab
+    lastClosed = Math.max line.lastIndexOf(')'), line.lastIndexOf(']')
+    if lastClosed > -1
+      open = Math.max line.indexOf('(', lastClosed), line.indexOf('[', lastClosed)
+      if open isnt -1
+        indent += tab
     indent
+
+  commentLine = /^(\s*)# ?/
+  hereComment = /^\s*###(?!#)/
+  indentation = /^\s*/
 
   toggleCommentLines: (state, doc, startRow, endRow) ->
     console.log "toggle"
