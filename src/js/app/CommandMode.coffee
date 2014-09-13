@@ -1,21 +1,24 @@
 WorkerClient = require("ace/worker/worker_client").WorkerClient
-CoffeeMode = require("compilers/coffeescript/mode").Mode
 
-module.exports = class CommandMode extends CoffeeMode
-  constructor: (@sourceModePath) ->
-    super
+module.exports =
+  inherit: (Mode) ->
 
-  createWorker: (session) ->
-    @worker = new WorkerClient ["ace", "compilers", "app", "vendor", "coffee-script"],
-      "app/CommandWorker",
-      "Worker",
-      null,
-      "#{@sourceModePath}/worker"
+    class CommandMode extends Mode
 
-    @doc = session.getDocument()
+      constructor: (@sourceModePath) ->
+        super yes
 
-    @worker
+      createWorker: (session) ->
+        @worker = new WorkerClient ["ace", "compilers", "app", "vendor", "coffee-script"],
+          "app/CommandWorker",
+          "Worker",
+          null,
+          "#{@sourceModePath}/worker"
 
-  updateWorker: ->
-    @worker.call 'setValue', [@doc.getValue()]
-    @worker.call 'onUpdate', []
+        @doc = session.getDocument()
+
+        @worker
+
+      updateWorker: ->
+        @worker.call 'setValue', [@doc.getValue()]
+        @worker.call 'onUpdate', []

@@ -24,8 +24,9 @@ module.exports = hyper class CommandLine
   _getEditorNode: ->
     @refs.ace.getDOMNode()
 
-  setMode: (sourceModeId) ->
-    @editor.session.setMode new CommandMode "compilers/#{sourceModeId}"
+  setMode: (sourceModeId = 'coffeescript') ->
+    require ["compilers/#{sourceModeId}/mode"], ({Mode}) =>
+      @editor.session.setMode new (CommandMode.inherit Mode) "compilers/#{sourceModeId}"
 
   componentWillReceiveProps: ({focus}) ->
     if focus
@@ -96,4 +97,4 @@ module.exports = hyper class CommandLine
       _div
         className: 'areaBorder'
         style: backgroundColor: @state.backgroundColor,
-        _div ref: 'ace', style: width: '100%', height: 17
+        _div ref: 'ace', style: width: '100%', height: 19
