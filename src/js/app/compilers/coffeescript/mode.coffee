@@ -26,11 +26,6 @@ indentation = /^\s*/
 exports.Mode = class extends TextMode
   constructor: ->
     @$tokenizer = new Tokenizer new Rules().getRules()
-    getLineTokens = @$tokenizer.getLineTokens.bind(@$tokenizer)
-    @$tokenizer.getLineTokens = (args...) ->
-      console.log args...
-      getLineTokens args...
-
     @$outdent = new Outdent
     @foldingRules = new FoldMode
 

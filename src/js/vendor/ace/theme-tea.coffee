@@ -38,7 +38,10 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
   }
 
   .ace-tea .ace_marker-layer .ace_selection {
-    background: rgba(179, 101, 57, 0.75)
+    background-color: rgba(0, 170, 255, 0.05);
+    border-radius: 2px;
+    border: 2px solid rgba(0, 170, 255, 0.55);
+    border-width: 0 0 2px 0
   }
 
   .ace-tea.ace_multiselect .ace_selection.ace_start {
@@ -63,9 +66,9 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
     background-color: rgba(0, 0, 0, 0.35)
   }
 
-  .ace-tea .ace_marker-layer .ace_selected-word {
+  /*.ace-tea .ace_marker-layer .ace_selected-word {
     border: 1px solid rgba(179, 101, 57, 0.75)
-  }
+  }*/
 
   .ace-tea .ace_invisible {
     color: rgba(255, 255, 255, 0.15)

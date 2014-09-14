@@ -8075,6 +8075,15 @@ var EditSession = function(text, mode) {
     this.getDocument = function() {
         return this.doc;
     };
+    this.attachEditor = function(editor) {
+        this.editor = editor;
+    }
+    this.unattachEditor = function(editor) {
+        this.editor = null;
+    }
+    this.getEditor = function(editor) {
+        return this.editor;
+    }
     this.$resetRowCache = function(docRow) {
         if (!docRow) {
             this.$docRowCache = [];
@@ -11167,6 +11176,7 @@ var Editor = function(renderer, session) {
             this.session.removeEventListener("changeOverwrite", this.$onCursorChange);
             this.session.removeEventListener("changeScrollTop", this.$onScrollTopChange);
             this.session.removeEventListener("changeScrollLeft", this.$onScrollLeftChange);
+            selection.unattachEditor(this);
 
             var selection = this.session.getSelection();
             selection.removeEventListener("changeCursor", this.$onCursorChange);
@@ -11175,6 +11185,7 @@ var Editor = function(renderer, session) {
 
         this.session = session;
         if (session) {
+            session.attachEditor(this);
             this.$onDocumentChange = this.onDocumentChange.bind(this);
             session.addEventListener("change", this.$onDocumentChange);
             this.renderer.setSession(session);
@@ -13203,7 +13214,7 @@ var Marker = function(parentEl) {
             "left:", padding, "px;", extraStyle, "'></div>"
         );
         height = (range.end.row - range.start.row - 1) * config.lineHeight;
-        if (height < 0)
+        if (height <= 0)
             return;
         top = this.$getTop(range.start.row + 1, config);
 

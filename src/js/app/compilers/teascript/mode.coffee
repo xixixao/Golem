@@ -9,7 +9,7 @@ compiler = require './compiler'
 
 class TeaScriptBehaviour extends Behaviour
 
-  handleInsertion = (open, close) ->
+  bracketHelper = (open, close) ->
     (state, action, editor, session, text) ->
       if text is open
         selection = editor.getSelectionRange()
@@ -23,9 +23,9 @@ class TeaScriptBehaviour extends Behaviour
 
   constructor: ->
 
-    @add "parens", "insertion", handleInsertion "(", ")"
+    @add "parens", "insertion", bracketHelper "(", ")"
 
-    @add "brackets", "insertion", handleInsertion "[", "]"
+    @add "brackets", "insertion", bracketHelper "[", "]"
 
     @add "quotes", "insertion", (state, action, editor, session, text) ->
       if text is "\""
@@ -53,38 +53,28 @@ class TeaScriptBehaviour extends Behaviour
     return
 
 exports.Mode = class extends TextMode
-  constructor: (isNotSource)->
-    if isNotSource
-      tokenizingFunction = compiler.tokenizeExp
-    else
-      tokenizingFunction = compiler.tokenize
-
-    @$tokenizer = getLineTokens: (line, state, row, doc) ->
-      try
-        tokens = tokenizingFunction doc.getValue()
-      catch
-        return tokens: [value: line, type: 'text']
+  constructor: (@isNotSource)->
+    @$tokenizer = getLineTokens: (line, state, row, doc) =>
       start = doc.positionToIndex {row, column: 0}
       end = doc.positionToIndex {row: row + 1, column: 0}
 
-      allTokens = [].concat.apply [], tokens.map (token) ->
-        {ws, pos} = token
-        createdTokens = []
-        wsTokens = ws.split '\n'
-        for wsToken, i in wsTokens
-          if i isnt 0
-            pos += 1 # for the new line character
-          createdTokens.push {token: wsToken, pos}
-          pos += wsToken.length
-        token.pos = pos
-        createdTokens.push token
-        createdTokens
+      tokensOnLine = []
+      addOnLine = (ast) ->
+        if Array.isArray ast
+          if start < ast.pos + ast.size and ast.pos < end
+            addOnLine node for node in ast
+        else
+          if start <= ast.pos < end
+            tokensOnLine.push ast
+        return
 
-      res = tokens:
-        allTokens.filter ({pos}) -> start <= pos < end
-          .map ({token, label}) ->
-            value: token
-            type: if label then 'token_' + label else 'text'
+      if !@ast
+        @onDocumentChange doc
+      if !@ast
+        return tokens: [value: line, type: 'text']
+      console.log @ast
+      addOnLine @ast
+      res = tokens: tokensOnLine
       # console.log res
       res
 
@@ -92,6 +82,67 @@ exports.Mode = class extends TextMode
     @$outdent = new Outdent
     @foldingRules = new FoldMode
     @$behaviour = new TeaScriptBehaviour
+
+  onDocumentChange: (doc) =>
+    console.log "document changed"
+    if @isNotSource
+      tokenizingFunction = compiler.tokenizeExp
+    else
+      tokenizingFunction = compiler.tokenize
+    value = if doc?.getValue then doc.getValue() else @editor.getValue()
+    try
+      ast = tokenizingFunction value
+      ast.DUPER = 'true'
+      console.log "original ast", ast
+      @ast = (@labelTokens ast)[0]
+      console.log "should be ast", @ast
+
+  labelTokens: (ast) =>
+    if Array.isArray ast
+      newNodes = for node in ast
+        @labelTokens node
+      ast.length = 0 # remove all nodes
+      for nodeList in [].concat newNodes...
+        ast.push nodeList
+      totalLength = 0
+      nonWsLength = 0
+      nonWsPos = undefined
+      for node in ast
+        if !node.isWs and !nonWsPos?
+          nonWsPos = node.pos
+        if nonWsPos?
+          nonWsLength += node.totalSize
+        totalLength += node.totalSize
+      ast.pos = nonWsPos
+      ast.size = nonWsLength
+      ast.totalSize = totalLength
+      [ast]
+    else
+      token = ast
+      {ws, pos, parent} = token
+      createdTokens = []
+      wsTokens = ws.split '\n'
+      if wsTokens.length > 1 or wsTokens[0].length > 0
+        for wsToken, i in wsTokens
+          if i isnt 0
+            pos += 1 # for the new line character
+          size = wsToken.length + (if i isnt wsTokens.length - 1 then 1 else 0)
+          createdTokens.push {
+            value: wsToken,
+            type: 'text',
+            isWs: yes
+            totalSize: size,
+            size: size,
+            parent: parent,
+            pos}
+          pos += wsToken.length
+      token.pos = pos
+      token.value = token.token
+      token.type = if token.label then 'token_' + token.label else 'text'
+      token.size = token.token.length
+      token.totalSize = token.size
+      createdTokens.push token
+      createdTokens
 
   getNextLineIndent: (state, line, tab) ->
     indent = @$getIndent line
@@ -128,9 +179,36 @@ exports.Mode = class extends TextMode
     @$outdent.autoOutdent doc, row
 
   attachToSession: (session) ->
-    editor = session.editor
-    editor.on 'click', (e) ->
-      console.log e
+    @editor = session.getEditor()
+    session.on 'change', @onDocumentChange
+    @editor.on 'click', @handleClick
+    @editor.commands.addCommand
+      name: 'up the tree'
+      bindKey: win: 'Up', mac: 'Up'
+      exec: =>
+        if (token = @editor.selection.token) and token.parent
+          # select parent node
+          @selectToken token.parent
+
+  handleClick: (event) =>
+    if event.getShiftKey()
+      @editor.session.selection.clearSelection()
+      return
+    pos = @editor.getCursorPosition()
+    token = @editor.session.getTokenAt(pos.row, pos.column)
+
+    if token.isWs or token.label in ['paren', 'bracket']
+      token = token.parent
+
+    # select clicked word or its parent
+    @selectToken token
+
+  selectToken: (token) ->
+    start = @editor.session.doc.indexToPosition token.pos
+    end = @editor.session.doc.indexToPosition token.pos + token.size
+    range = Range.fromPoints start, end
+    @editor.selection.setSelectionRange range
+    @editor.selection.token = token
 
   createWorker: (session) ->
     worker = new WorkerClient ["ace", "compilers"],
