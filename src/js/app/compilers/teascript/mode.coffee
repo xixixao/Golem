@@ -72,7 +72,6 @@ exports.Mode = class extends TextMode
         @onDocumentChange doc
       if !@ast
         return tokens: [value: line, type: 'text']
-      console.log @ast
       addOnLine @ast
       res = tokens: tokensOnLine
       # console.log res
@@ -96,6 +95,8 @@ exports.Mode = class extends TextMode
       console.log "original ast", ast
       @ast = (@labelTokens ast)[0]
       console.log "should be ast", @ast
+    catch
+      @ast = undefined
 
   labelTokens: (ast) =>
     if Array.isArray ast
@@ -178,24 +179,91 @@ exports.Mode = class extends TextMode
   autoOutdent: (state, doc, row) ->
     @$outdent.autoOutdent doc, row
 
+  selectedInserted: (e) =>
+    pos = e.data.range.end
+    token = @getTokenAt(pos.row, pos.column)
+    if token.isWs
+      return
+    if token
+      @selectToken token
+
   attachToSession: (session) ->
     @editor = session.getEditor()
     session.on 'change', @onDocumentChange
     @editor.on 'click', @handleClick
-    @editor.commands.addCommand
-      name: 'up the tree'
-      bindKey: win: 'Up', mac: 'Up'
-      exec: =>
-        if (token = @editor.selection.token) and token.parent
-          # select parent node
-          @selectToken token.parent
+
+    if not @isNotSource
+      session.on 'change', @selectedInserted
+      @editor.commands.addCommand
+        name: 'up the tree'
+        bindKey: win: 'Up', mac: 'Up'
+        exec: =>
+          if (token = @editor.selection.token) and token.parent
+            # select parent node
+            @selectToken token.parent
+
+      @editor.commands.addCommand
+        name: 'down the tree'
+        bindKey: win: 'Down', mac: 'Down'
+        exec: =>
+          if (token = @editor.selection.token) and Array.isArray token
+            # select first child node
+            for t in token
+              if t.label not in ['paren', 'bracket'] and not t.isWs
+                @selectToken t
+                return
+
+      @editor.commands.addCommand
+        name: 'next in expression'
+        bindKey: win: 'Right', mac: 'Right'
+        exec: =>
+          if (token = @editor.selection.token) and token.parent
+            # select first sibling node
+            found = false
+            for t in token.parent
+              if found and t.label not in ['paren', 'bracket'] and not t.isWs
+                @selectToken t
+                return
+              if t is token
+                found = true
+
+      @editor.commands.addCommand
+        name: 'previous in expression'
+        bindKey: win: 'Left', mac: 'Left'
+        exec: =>
+          if (token = @editor.selection.token) and token.parent
+            # select first sibling node
+            found = false
+            for t in token.parent by -1
+              if found and t.label not in ['paren', 'bracket'] and not t.isWs
+                @selectToken t
+                return
+              if t is token
+                found = true
+
+      @editor.commands.addCommand
+        name: 'add new sibling expression'
+        bindKey: win: 'Space', mac: 'Space'
+        exec: =>
+          if (token = @editor.selection.token) and token.parent
+            # select first sibling node
+            @editor.selection.clearSelection()
+            @editor.insert ' '
+
+  getTokenAt: (row, col) ->
+    {tokens} = @$tokenizer.getLineTokens "", "", row, @editor.session.doc
+    c = 0
+    for token, i in tokens
+      c += token.value.length
+      if c >= col
+        return token
 
   handleClick: (event) =>
     if event.getShiftKey()
       @editor.session.selection.clearSelection()
       return
     pos = @editor.getCursorPosition()
-    token = @editor.session.getTokenAt(pos.row, pos.column)
+    token = @getTokenAt(pos.row, pos.column)
 
     if token.isWs or token.label in ['paren', 'bracket']
       token = token.parent

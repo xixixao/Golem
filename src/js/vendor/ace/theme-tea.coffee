@@ -38,8 +38,7 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
   }
 
   .ace-tea .ace_marker-layer .ace_selection {
-    background-color: rgba(0, 170, 255, 0.05);
-    border-radius: 2px;
+    border-radius: 1px;
     border: 2px solid rgba(0, 170, 255, 0.55);
     border-width: 0 0 2px 0
   }
