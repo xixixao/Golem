@@ -39,7 +39,14 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
 
   .ace-tea .ace_marker-layer .ace_selection {
     border-radius: 1px;
-    border: 2px solid rgba(0, 170, 255, 0.55);
+    border: 2px solid rgba(0, 170, 255, 0.75);
+    border-width: 0 0 2px 0
+  }
+
+  .ace-tea .ace_marker-layer .ace_active-token {
+    position: absolute;
+    border-radius: 1px;
+    border: 2px solid rgba(0, 170, 255, 0.25);
     border-width: 0 0 2px 0
   }
 

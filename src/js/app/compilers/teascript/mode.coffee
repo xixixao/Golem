@@ -83,7 +83,7 @@ exports.Mode = class extends TextMode
     @$behaviour = new TeaScriptBehaviour
 
   onDocumentChange: (doc) =>
-    console.log "document changed"
+    console.log "document changed", @editor.getValue(), doc
     if @isNotSource
       tokenizingFunction = compiler.tokenizeExp
     else
@@ -179,13 +179,34 @@ exports.Mode = class extends TextMode
   autoOutdent: (state, doc, row) ->
     @$outdent.autoOutdent doc, row
 
-  selectedInserted: (e) =>
-    pos = e.data.range.end
-    token = @getTokenAt(pos.row, pos.column)
-    if token.isWs
-      return
+  selectedInserted: ({data}) =>
+    console.log data
+    switch data.action
+      when 'insertText'
+        pos = data.range.end
+        @highLightTokenAt pos.row, pos.column
+
+
+  highLightTokenAt: (row, column) ->
+    token = @getTokenAt row, column
     if token
-      @selectToken token
+      if token.isWs or token.label in ['paren', 'bracket']
+        return
+      @deselect()
+      @unhighlightActive()
+      @highLightToken token
+
+  highLightToken: (token) ->
+      @editor.selection.activeToken = token
+      range = @tokenToRange token
+      @editor.selection.activeTokenMarkerId = @editor.session.addMarker range, 'ace_active-token'
+
+  unhighlightActive: ->
+    @editor.session.removeMarker @editor.selection.activeTokenMarkerId
+    @editor.selection.activeToken = undefined
+
+  activeToken: =>
+    return @editor.selection.token or @editor.selection.activeToken
 
   attachToSession: (session) ->
     @editor = session.getEditor()
@@ -198,8 +219,16 @@ exports.Mode = class extends TextMode
         name: 'up the tree'
         bindKey: win: 'Up', mac: 'Up'
         exec: =>
-          if (token = @editor.selection.token) and token.parent
-            # select parent node
+          if token = @editor.selection.token
+            if token.parent?.pos?
+              # select parent node
+              @selectToken token.parent
+          else if token = @editor.selection.activeToken
+            # select whole token
+            @selectToken token
+          else
+            # select brackets
+            token = @tokenBeforeCursor()
             @selectToken token.parent
 
       @editor.commands.addCommand
@@ -212,12 +241,20 @@ exports.Mode = class extends TextMode
               if t.label not in ['paren', 'bracket'] and not t.isWs
                 @selectToken t
                 return
+            # or go inside brackets
+            @deselect()
+            inside = @editor.session.doc.indexToPosition token.pos + 1
+            @editor.selection.setSelectionRange Range.fromPoints inside, inside
+          else
+            @deselect()
+            @highLightToken token
+
 
       @editor.commands.addCommand
         name: 'next in expression'
         bindKey: win: 'Right', mac: 'Right'
         exec: =>
-          if (token = @editor.selection.token) and token.parent
+          if (token = @activeToken()) and token.parent
             # select first sibling node
             found = false
             for t in token.parent
@@ -231,7 +268,7 @@ exports.Mode = class extends TextMode
         name: 'previous in expression'
         bindKey: win: 'Left', mac: 'Left'
         exec: =>
-          if (token = @editor.selection.token) and token.parent
+          if (token = @activeToken()) and token.parent
             # select first sibling node
             found = false
             for t in token.parent by -1
@@ -245,38 +282,88 @@ exports.Mode = class extends TextMode
         name: 'add new sibling expression'
         bindKey: win: 'Space', mac: 'Space'
         exec: =>
-          if (token = @editor.selection.token) and token.parent
-            # select first sibling node
-            @editor.selection.clearSelection()
-            @editor.insert ' '
+          if (token = @activeToken()) and token.parent
+            @deselect()
+            @unhighlightActive()
+
+          @editor.insert ' '
+
+      @editor.commands.addCommand
+        name: 'add new sibling expression on new line'
+        bindKey: win: 'Enter', mac: 'Enter'
+        exec: =>
+          if (token = @activeToken()) and token.parent
+            @deselect()
+            @unhighlightActive()
+
+          @editor.insert '\n'
+
+      @editor.commands.addCommand
+        name: 'remove token and preceding whitespace'
+        bindKey: win: 'Backspace', mac: 'Backspace'
+        exec: =>
+          token = @expressionBeforeCursor()
+          if @editor.selection.token
+            @deselect()
+            if token.parent
+              found = false
+              for t in token.parent by -1
+                if found
+                  if t.isWs
+                    @editor.session.doc.remove @tokenToRange t
+                  else
+                    @selectToken @expressionBeforeCursor()
+                    break
+                if t is token
+                  found = true
+                  @editor.session.doc.remove @tokenToRange t
+          else if @editor.selection.activeToken
+            @highLightTokenAt data.range.start.row, data.range.start.column
+
+  deselect: =>
+    @editor.selection.clearSelection()
+    @editor.selection.token = undefined
+    @editor.selection.activeToken = undefined
 
   getTokenAt: (row, col) ->
     {tokens} = @$tokenizer.getLineTokens "", "", row, @editor.session.doc
+    console.log "tokens", tokens
     c = 0
     for token, i in tokens
       c += token.value.length
       if c >= col
         return token
 
+  tokenBeforeCursor: =>
+    pos = @editor.getCursorPosition()
+    @getTokenAt pos.row, pos.column
+
+  expressionBeforeCursor: =>
+    token = @tokenBeforeCursor()
+
+    if token.isWs or token.label in ['paren', 'bracket']
+      token.parent
+    else
+      token
+
   handleClick: (event) =>
     if event.getShiftKey()
       @editor.session.selection.clearSelection()
       return
-    pos = @editor.getCursorPosition()
-    token = @getTokenAt(pos.row, pos.column)
-
-    if token.isWs or token.label in ['paren', 'bracket']
-      token = token.parent
+    token = @expressionBeforeCursor()
 
     # select clicked word or its parent
     @selectToken token
 
   selectToken: (token) ->
+    @editor.selection.setSelectionRange @tokenToRange token
+    @editor.selection.token = token
+    @unhighlightActive()
+
+  tokenToRange: (token) ->
     start = @editor.session.doc.indexToPosition token.pos
     end = @editor.session.doc.indexToPosition token.pos + token.size
-    range = Range.fromPoints start, end
-    @editor.selection.setSelectionRange range
-    @editor.selection.token = token
+    Range.fromPoints start, end
 
   createWorker: (session) ->
     worker = new WorkerClient ["ace", "compilers"],
