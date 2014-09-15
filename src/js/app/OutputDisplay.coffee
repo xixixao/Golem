@@ -55,6 +55,14 @@ module.exports = hyper class OutputDisplay
       scrollTop: 0
     , duration
 
+  parseValue: (value) ->
+    if typeof value is 'function'
+      _pre value.toString()
+    else if typeof value isnt 'string'
+      _pre jsDump.parse value
+    else
+      value
+
 
   render: ->
     _div
@@ -65,4 +73,4 @@ module.exports = hyper class OutputDisplay
         overflow: 'auto'
       for [key, value] in @props.logs
         _div id: key, key: key, className: 'log', style: 'max-width': @props.width - 45,
-          value
+          @parseValue value
