@@ -29,7 +29,6 @@ class TeaScriptBehaviour extends Behaviour
 
     @add "quotes", "insertion", (state, action, editor, session, text) ->
       if text is "\""
-        initContext editor
         quote = text
         selection = editor.getSelectionRange()
         selected = session.doc.getTextRange(selection)
@@ -43,7 +42,6 @@ class TeaScriptBehaviour extends Behaviour
     @add "quotes", "deletion", (state, action, editor, session, range) ->
       selected = session.doc.getTextRange(range)
       if not range.isMultiLine() and (selected is "\"" or selected is "'")
-        initContext editor
         line = session.doc.getLine(range.start.row)
         rightChar = line.substring(range.start.column + 1, range.start.column + 2)
         if rightChar is selected
