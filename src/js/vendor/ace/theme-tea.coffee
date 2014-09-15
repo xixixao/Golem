@@ -18,6 +18,10 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
   exports.isDark = true
   exports.cssClass = "ace-tea"
   exports.cssText = """
+  .ace_layer, .ace_content {
+      overflow: visible !important;
+  }
+
   .ace-tea .ace_gutter {
     background: #222;
     color: #444

@@ -93,6 +93,7 @@ module.exports = hyper class SourceEditor
   componentDidMount: ->
     @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/tea"
     editor.setFontSize 13
+    editor.renderer.setScrollMargin 2, 2
     editor.setHighlightActiveLine true
     editor.session.setTabSize 2
     editor.setShowPrintMargin false

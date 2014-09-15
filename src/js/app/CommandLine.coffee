@@ -35,6 +35,7 @@ module.exports = hyper class CommandLine
   componentDidMount: ->
     @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/tea"
     editor.setFontSize 13
+    editor.renderer.setScrollMargin 2, 2
     editor.setHighlightActiveLine false
     editor.setShowPrintMargin false
     editor.renderer.setShowGutter false
@@ -97,4 +98,4 @@ module.exports = hyper class CommandLine
       _div
         className: 'areaBorder'
         style: backgroundColor: @state.backgroundColor,
-        _div ref: 'ace', style: width: '100%', height: 19
+        _div ref: 'ace', style: width: '100%', height: 23
