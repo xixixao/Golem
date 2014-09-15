@@ -72,6 +72,7 @@ module.exports = hyper class SourceEditor
 
   setMode: (modeId) ->
     modeId ||= 'coffeescript'
+    @mode ?= modeId # save immediately if no mode set yet
     @props.onModeChange modeId
 
     require ["compilers/#{modeId}/mode"], ({Mode}) =>
@@ -84,7 +85,7 @@ module.exports = hyper class SourceEditor
       @editor.session.$worker.on 'error', ({data: {text}}) =>
         console.log "from source worker", text
         @props.onSourceFailed text
-      @mode = modeId
+      @mode = modeId # save mode
 
   componentWillReceiveProps: ({focus, fileName}) ->
     if focus and not @props.focus
