@@ -1,5 +1,6 @@
 {_div, _pre} = hyper = require 'hyper'
 
+React = require 'React'
 $ = require 'ejquery'
 ace = require 'ace/ace'
 jsDump = require 'vendor/jsDump'
@@ -56,13 +57,12 @@ module.exports = hyper class OutputDisplay
     , duration
 
   parseValue: (value) ->
-    if typeof value is 'function'
-      _pre value.toString()
-    else if typeof value isnt 'string'
-      _pre jsDump.parse value
-    else
+    if React.isValidComponent value
       value
-
+    else if typeof value is 'function'
+      _pre value.toString()
+    else
+      _pre jsDump.parse value
 
   render: ->
     _div
