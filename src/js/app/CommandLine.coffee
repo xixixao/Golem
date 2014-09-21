@@ -7,6 +7,7 @@ ace = require 'ace/ace'
 Timeline = require './UniqueTimeline'
 CommandMode = require './CommandMode'
 Memory = require './Memory'
+_require = require
 
 module.exports = hyper class CommandLine
 
@@ -24,8 +25,8 @@ module.exports = hyper class CommandLine
   _getEditorNode: ->
     @refs.ace.getDOMNode()
 
-  setMode: (sourceModeId = 'coffeescript') ->
-    require ["compilers/#{sourceModeId}/mode"], ({Mode}) =>
+  setMode: (sourceModeId = 'teascript') ->
+    _require ["compilers/#{sourceModeId}/mode"], ({Mode}) =>
       @editor.session.setMode new (CommandMode.inherit Mode) "compilers/#{sourceModeId}"
 
   componentWillReceiveProps: ({focus}) ->

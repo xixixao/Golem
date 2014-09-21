@@ -6,6 +6,7 @@ ace = require 'ace/ace'
 
 Memory = require './Memory'
 SetIntervalMixin = require './SetIntervalMixin'
+_require = require
 
 module.exports = hyper class SourceEditor
 
@@ -71,11 +72,11 @@ module.exports = hyper class SourceEditor
     @refs.ace.getDOMNode()
 
   setMode: (modeId) ->
-    modeId ||= 'coffeescript'
+    modeId ||= 'teascript'
     @mode ?= modeId # save immediately if no mode set yet
     @props.onModeChange modeId
 
-    require ["compilers/#{modeId}/mode"], ({Mode}) =>
+    _require ["compilers/#{modeId}/mode"], ({Mode}) =>
       @editor.session.setMode new Mode
       @props.onCompilerLoad @editor.session.getMode(), modeId
 

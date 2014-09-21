@@ -9,7 +9,7 @@ module.exports =
         super yes
 
       createWorker: (session) ->
-        @worker = new WorkerClient ["ace", "compilers", "app", "vendor", "coffee-script"],
+        @worker = new WorkerClient ["ace", "compilers", "app", "vendor"],
           "app/CommandWorker",
           "Worker",
           null,
