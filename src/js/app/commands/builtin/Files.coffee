@@ -61,15 +61,18 @@ _FileBrowser = hyper class FileBrowser
 
   render: ->
     data = Object.values(@state.data).sortBy 'name'
-    _table _tbody {},
-      _tr _th(),
-        _th 'Name'
-        _th 'Lines'
-      for {name, numLines} in data
-        _tr key: name,
-          _td if name is @state.fileName then '>'
-          _td name
-          _td numLines
+    if data.length is 0
+      "No files found"
+    else
+      _table _tbody {},
+        _tr _th(),
+          _th 'Name'
+          _th 'Lines'
+        for {name, numLines} in data
+          _tr key: name,
+            _td if name is @state.fileName then '>'
+            _td name
+            _td numLines
 
 class BrowseCommand
   @defaultSymbols = ['browse', 'b']
