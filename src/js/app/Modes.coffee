@@ -3,12 +3,6 @@ modes = [
     id: 'coffeescript'
     name: 'CoffeeScript'
   ,
-    id: 'icedcoffeescript'
-    name: 'IcedCoffeeScript'
-  ,
-    id: 'metacoffee'
-    name: 'MetaCoffee'
-  ,
     id: 'teascript'
     name: 'TeaScript'
 ]
