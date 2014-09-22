@@ -6,6 +6,8 @@ ace = require 'ace/ace'
 
 Memory = require './Memory'
 SetIntervalMixin = require './SetIntervalMixin'
+Theme = require './TeaTheme'
+
 _require = require
 
 module.exports = hyper class SourceEditor
@@ -93,7 +95,7 @@ module.exports = hyper class SourceEditor
       @editor.focus()
 
   componentDidMount: ->
-    @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/tea"
+    @editor = editor = ace.edit @_getEditorNode(), null, Theme
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2
     editor.setHighlightActiveLine true

@@ -7,6 +7,8 @@ ace = require 'ace/ace'
 Timeline = require './UniqueTimeline'
 CommandMode = require './CommandMode'
 Memory = require './Memory'
+Theme = require './TeaTheme'
+
 _require = require
 
 module.exports = hyper class CommandLine
@@ -34,7 +36,7 @@ module.exports = hyper class CommandLine
       @editor.focus()
 
   componentDidMount: ->
-    @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/tea"
+    @editor = editor = ace.edit @_getEditorNode(), null, Theme
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2
     editor.setHighlightActiveLine false

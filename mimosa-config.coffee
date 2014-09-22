@@ -260,12 +260,12 @@ exports.config = {
                                   # like, by default, static views. Is string path,
                                   # can be relative to project root, or absolute
 
-  # require:                 # configuration for requirejs options.
+  require:                 # configuration for requirejs options.
     # exclude:[]             # Regex or string paths. Paths can be absolute or relative to the
                              # watch.javascriptDir. These files will be excluded from all
                              # require module functionality. That includes AMD verification and
                              # being considered a root level file to be optimized.
-    # commonConfig: "common" # The path from 'javascriptDir' to the location of common requirejs
+    commonConfig: "config" # The path from 'javascriptDir' to the location of common requirejs
                              # config. This is config shared across multiple requirejs modules.
                              # This should be either a require.config({}) or a requirejs.config({})
                              # function call. Defaults to the value `common` - referring to a file
@@ -284,7 +284,7 @@ exports.config = {
                              # root of the project.
     # verify:                # settings for requirejs path verification
       # enabled: true        # Whether or not to perform verification
-    # optimize :
+    #optimize :
       # inferConfig:true     # Mimosa figures out all you'd need for a simple r.js optimizer run.
                              # If you rather Mimosa not do that, set inferConfig to false and
                              # provide your config in the overrides section. See here
@@ -297,7 +297,7 @@ exports.config = {
                              # path is where pristine root module files are kept in between r.js
                              # runs. This cache allows you to keep "mimosa watch" running while
                              # building and rebuilding your application.
-      # overrides:           # Optimization configuration and Mimosa overrides. If you need to
+      #overrides:            # Optimization configuration and Mimosa overrides. If you need to
                              # make tweaks uncomment this line and add the r.js config
                              # (http://requirejs.org/docs/optimization.html#options) as new
                              # paramters inside the overrides ojbect. To unset Mimosa's defaults,

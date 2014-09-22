@@ -1,3 +1,5 @@
+require 'compilers/coffeescript/mode'
+require 'compilers/teascript/mode'
 
 modes = [
     id: 'coffeescript'
