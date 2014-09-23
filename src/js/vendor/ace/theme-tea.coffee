@@ -47,6 +47,24 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
     border-width: 0 0 2px 0
   }
 
+  .ace-tea .ace_marker-layer .ace_selection.ace_start.ace_multiline {
+    border-width: 2px 0 0 2px;
+    border-radius: 1px 0 0 0;
+    margin-left: -3px;
+  }
+
+  .ace-tea .ace_marker-layer .ace_selection.ace_middle {
+    border-width: 0 0 0 2px;
+    border-radius: 0;
+    margin-left: -3px;
+  }
+
+  .ace-tea .ace_marker-layer .ace_selection.ace_finish {
+    border-width: 0 0 2px 2px;
+    border-radius: 0 0 0 1px;
+    margin-left: -3px;
+  }
+
   .ace-tea .ace_marker-layer .ace_active-token {
     position: absolute;
     border-radius: 1px;
