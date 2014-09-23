@@ -35,7 +35,7 @@ module.exports = class Memory
 
   _fileTableStorage: (table) ->
     @emitter.emit 'fileTable' if table isnt undefined
-    $.totalStorage "fileTableCOOKIE", table
+    $.totalStorage "fileTableCOOKIEv2", table
 
   getFileTable: ->
     Object.findAll @_fileTableStorage(), (name) =>

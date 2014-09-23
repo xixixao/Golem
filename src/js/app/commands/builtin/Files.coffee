@@ -62,7 +62,7 @@ _FileBrowser = hyper class FileBrowser
   render: ->
     data = Object.values(@state.data).sortBy 'name'
     if data.length is 0
-      "No files found"
+      _div "No files found"
     else
       _table _tbody {},
         _tr _th(),

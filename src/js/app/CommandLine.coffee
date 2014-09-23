@@ -4,7 +4,6 @@ React = require 'React'
 $ = require 'ejquery'
 ace = require 'ace/ace'
 
-Timeline = require './UniqueTimeline'
 CommandMode = require './CommandMode'
 Memory = require './Memory'
 _require = require
