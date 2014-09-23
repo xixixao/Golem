@@ -187,11 +187,12 @@ exports.Mode = class extends TextMode
   highLightTokenAt: (row, column, isInsert) ->
     token = @getTokenAt row, column
     if token
-      wasActive = @editor.selection.activeToken? or !@editor.selection.token?
+      wasActive = @editor.selection.activeToken?
+      beforeInsert = !@editor.selection.token?
+      @unhighlightActive()
       if token.isWs
         return
       @deselect()
-      @unhighlightActive()
       if token.token in ['(', '[']
         return
       else if token.label in ['paren', 'bracket']
@@ -199,7 +200,7 @@ exports.Mode = class extends TextMode
             @lastChild token.parent
           else
             token
-      else if wasActive
+      else if wasActive or beforeInsert and isInsert
         @highLightToken token
       else
         @selectToken token
@@ -319,20 +320,21 @@ exports.Mode = class extends TextMode
             @deselect()
             if token.parent
               found = false
+              # find the token and erase all preceding whitespace tokens
               for t in token.parent by -1
                 if found
                   if t.isWs
                     @editor.session.doc.remove @tokenToRange t
                   else
-                    #@selectToken @expressionBeforeCursor()
                     break
                 if t is token
                   found = true
                   @editor.session.doc.remove @tokenToRange t
-          else if @editor.selection.activeToken
-            {end} = @tokenToRange @editor.selection.activeToken
-            butOne = row: end.row, column: end.column - 1
-            @editor.session.doc.remove Range.fromPoints butOne, end
+          else
+            pos = @editor.getCursorPosition()
+            # if @editor.selection.activeToken
+            butOne = row: pos.row, column: pos.column - 1
+            @editor.session.doc.remove Range.fromPoints butOne, pos
 
   deselect: =>
     @editor.selection.clearSelection()
