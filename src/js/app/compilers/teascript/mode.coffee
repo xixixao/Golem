@@ -12,11 +12,14 @@ class TeaScriptBehaviour extends Behaviour
   bracketHelper = (open, close) ->
     (state, action, editor, session, text) ->
       if text is open
+        activeToken = editor.selection.activeToken
+        if activeToken
+          session.getMode().selectToken activeToken
         selection = editor.getSelectionRange()
         selected = session.doc.getTextRange(selection)
-        if selected isnt "" and editor.getWrapBehavioursEnabled()
+        if selected isnt ""
           text: open + selected + close
-          selection: [1, 1 + selected.length]
+          # selection: [0, 2 + selected.length]
         else
           text: open + close
           selection: [1, 1]
@@ -51,7 +54,7 @@ class TeaScriptBehaviour extends Behaviour
     return
 
 exports.Mode = class extends TextMode
-  constructor: (@isNotSource)->
+  constructor: (@isNotSource) ->
     @$tokenizer = getLineTokens: (line, state, row, doc) =>
       start = doc.positionToIndex {row, column: 0}
       end = doc.positionToIndex {row: row + 1, column: 0}
@@ -71,9 +74,7 @@ exports.Mode = class extends TextMode
       if !@ast
         return tokens: [value: line, type: 'text']
       addOnLine @ast
-      res = tokens: tokensOnLine
-      # console.log res
-      res
+      tokens: tokensOnLine
 
 
     @$outdent = new Outdent
@@ -81,7 +82,7 @@ exports.Mode = class extends TextMode
     @$behaviour = new TeaScriptBehaviour
 
   onDocumentChange: (doc) =>
-    console.log "document changed", @editor.getValue(), doc
+    # console.log "document changed", @editor.getValue()
     if @isNotSource
       tokenizingFunction = compiler.tokenizeExp
     else
@@ -89,10 +90,7 @@ exports.Mode = class extends TextMode
     value = if doc?.getValue then doc.getValue() else @editor.getValue()
     try
       ast = tokenizingFunction value
-      ast.DUPER = 'true'
-      console.log "original ast", ast
       @ast = (@labelTokens ast)[0]
-      console.log "should be ast", @ast
     catch
       @ast = undefined
 
@@ -177,34 +175,49 @@ exports.Mode = class extends TextMode
   autoOutdent: (state, doc, row) ->
     @$outdent.autoOutdent doc, row
 
-  selectedInserted: ({data}) =>
-    console.log data
+  selectInserted: ({data}) =>
+    console.log "somehting changed", data
     switch data.action
       when 'insertText'
         pos = data.range.end
-        @highLightTokenAt pos.row, pos.column
+      when 'removeText'
+        pos = data.range.start
+    @highLightTokenAt pos.row, pos.column, data.action is 'insertText'
 
-
-  highLightTokenAt: (row, column) ->
+  highLightTokenAt: (row, column, isInsert) ->
     token = @getTokenAt row, column
     if token
-      if token.isWs or token.label in ['paren', 'bracket']
+      wasActive = @editor.selection.activeToken? or !@editor.selection.token?
+      if token.isWs
         return
       @deselect()
       @unhighlightActive()
-      @highLightToken token
+      if token.token in ['(', '[']
+        return
+      else if token.label in ['paren', 'bracket']
+        @selectToken if isInsert
+            @lastChild token.parent
+          else
+            token
+      else if wasActive
+        @highLightToken token
+      else
+        @selectToken token
+
+  lastChild: (expression) ->
+    expression[expression.length - 2]
 
   highLightToken: (token) ->
-      @editor.selection.activeToken = token
-      range = @tokenToRange token
-      @editor.selection.activeTokenMarkerId = @editor.session.addMarker range, 'ace_active-token'
+    @editor.selection.activeToken = token
+    range = @tokenToRange token
+    @editor.selection.activeTokenMarkerId = @editor.session.addMarker range, 'ace_active-token'
 
   unhighlightActive: ->
     @editor.session.removeMarker @editor.selection.activeTokenMarkerId
     @editor.selection.activeToken = undefined
 
   activeToken: =>
-    return @editor.selection.token or @editor.selection.activeToken
+    @editor.selection.token or @editor.selection.activeToken
 
   attachToSession: (session) ->
     @editor = session.getEditor()
@@ -212,7 +225,8 @@ exports.Mode = class extends TextMode
     @editor.on 'click', @handleClick
 
     if not @isNotSource
-      session.on 'change', @selectedInserted
+      # attaching as last listener, so that everything is updated already
+      session.getDocument().on 'change', @selectInserted, no
       @editor.commands.addCommand
         name: 'up the tree'
         bindKey: win: 'Up', mac: 'Up'
@@ -297,7 +311,7 @@ exports.Mode = class extends TextMode
           @editor.insert '\n'
 
       @editor.commands.addCommand
-        name: 'remove token and preceding whitespace'
+        name: 'remove token and preceding whitespace or delete a character'
         bindKey: win: 'Backspace', mac: 'Backspace'
         exec: =>
           token = @expressionBeforeCursor()
@@ -310,39 +324,44 @@ exports.Mode = class extends TextMode
                   if t.isWs
                     @editor.session.doc.remove @tokenToRange t
                   else
-                    @selectToken @expressionBeforeCursor()
+                    #@selectToken @expressionBeforeCursor()
                     break
                 if t is token
                   found = true
                   @editor.session.doc.remove @tokenToRange t
           else if @editor.selection.activeToken
-            @highLightTokenAt data.range.start.row, data.range.start.column
+            {end} = @tokenToRange @editor.selection.activeToken
+            butOne = row: end.row, column: end.column - 1
+            @editor.session.doc.remove Range.fromPoints butOne, end
 
   deselect: =>
     @editor.selection.clearSelection()
     @editor.selection.token = undefined
     @editor.selection.activeToken = undefined
 
-  getTokenAt: (row, col) ->
-    {tokens} = @$tokenizer.getLineTokens "", "", row, @editor.session.doc
-    console.log "tokens", tokens
-    c = 0
-    for token, i in tokens
-      c += token.value.length
-      if c >= col
-        return token
+  expressionBeforeCursor: =>
+    @getExpression @tokenBeforeCursor()
 
   tokenBeforeCursor: =>
     pos = @editor.getCursorPosition()
     @getTokenAt pos.row, pos.column
 
-  expressionBeforeCursor: =>
-    token = @tokenBeforeCursor()
+  expressionAt: (row, col) ->
+    @getExpression @getTokenAt row, col
 
+  getExpression: (token) ->
     if token.isWs or token.label in ['paren', 'bracket']
       token.parent
     else
       token
+
+  getTokenAt: (row, col) ->
+    {tokens} = @$tokenizer.getLineTokens "", "", row, @editor.session.doc
+    c = 0
+    for token, i in tokens
+      c += token.value.length
+      if c >= col
+        return token
 
   handleClick: (event) =>
     if event.getShiftKey()
