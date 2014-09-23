@@ -14,6 +14,7 @@ class TeaScriptBehaviour extends Behaviour
       if text is open
         activeToken = editor.selection.activeToken
         if activeToken
+          console.log "selecting", activeToken
           session.getMode().selectToken activeToken
         selection = editor.getSelectionRange()
         selected = session.doc.getTextRange(selection)
@@ -82,7 +83,7 @@ exports.Mode = class extends TextMode
     @$behaviour = new TeaScriptBehaviour
 
   onDocumentChange: (doc) =>
-    # console.log "document changed", @editor.getValue()
+    console.log "tokenizing document", @editor.getValue()
     if @isNotSource
       tokenizingFunction = compiler.tokenizeExp
     else
@@ -179,33 +180,31 @@ exports.Mode = class extends TextMode
     @$outdent.autoOutdent doc, row
 
   selectInserted: ({data}) =>
-    console.log "somehting changed", data
-    pos = @editor.getCursorPosition()
-    @highLightTokenAt pos.row, pos.column, data.action is 'insertText'
+    if data.action is 'insertText'
+      pos = @editor.getCursorPosition()
+      @highLightTokenAt pos.row, pos.column
 
   highLightTokenAt: (row, column, isInsert) ->
     token = @getTokenAt row, column
     if token
-      wasActive = @editor.selection.activeToken?
-      beforeInsert = !@editor.selection.token?
-      console.log "beforeinsert", token, @editor.selection.token
-      @unhighlightActive()
+      # whitespace is handled by command
       if token.isWs
         return
+      wasActive = @editor.selection.activeToken?
+      beforeInsert = !@editor.selection.token?
+      @unhighlightActive()
       @deselect()
-      if token.token in ['(', '[']
-        return
-      else if token.label in ['paren', 'bracket']
+      if token.label in ['paren', 'bracket']
+        # added empty parens, put cursor inside
         if @lastChild(token.parent).token in ['(', '[']
           @putCursorBeforeToken token
-        else if isInsert
-          @selectToken @lastChild token.parent
+        # wrapped token in parens
         else
-          @selectToken token.parent
-      else if wasActive or isInsert
-        @highLightToken token
+          console.log "selected", token.parent
+          @selectToken @lastChild token.parent
+      # normal insert
       else
-        @selectToken token
+        @highLightToken token
 
   putCursorBeforeToken: (token) ->
     {start} = @tokenToVisibleRange token
@@ -301,6 +300,17 @@ exports.Mode = class extends TextMode
         name: 'add new sibling expression'
         bindKey: win: 'Space', mac: 'Space'
         exec: =>
+          console.log "space", @activeToken()
+          if (token = @activeToken()) and token.parent
+            @deselect()
+            @unhighlightActive()
+
+          @editor.insert ' '
+
+      @editor.commands.addCommand
+        name: 'add new sibling expression before current'
+        bindKey: win: 'Shift-Space', mac: 'Shift-Space'
+        exec: =>
           if (token = @activeToken()) and token.parent
             @deselect()
             @unhighlightActive()
@@ -324,23 +334,46 @@ exports.Mode = class extends TextMode
           token = @expressionBeforeCursor()
           if @editor.selection.token
             @deselect()
+          console.log @editor.getCursorPosition()
+          if @editor.selection.activeToken
+            # remove single character
+            {end} = @tokenToActualRange @editor.selection.activeToken
+            butOne = row: end.row, column: end.column - 1
+            @editor.session.doc.remove Range.fromPoints butOne, end
+            @unhighlightActive()
+            @highLightToken @tokenBeforeCursor()
+          else
+            # whitespace or actual token
+            toRemove = [token]
             if token.parent
               found = false
+              isFirst = true
               # find the token and erase all preceding whitespace tokens
               for t in token.parent by -1
                 if found
                   if t.isWs
-                    @editor.session.doc.remove @tokenToActualRange t
+                    toRemove.unshift t
                   else
+                    if t.label not in ['paren', 'bracket']
+                      isFirst = false
                     break
                 if t is token
                   found = true
-                  @editor.session.doc.remove @tokenToActualRange t
-          else
-            pos = @editor.getCursorPosition()
-            # if @editor.selection.activeToken
-            butOne = row: pos.row, column: pos.column - 1
-            @editor.session.doc.remove Range.fromPoints butOne, pos
+              found = false
+              # for first token remove all succeding whitespace tokens
+              if !isFirst
+                for t in token.parent
+                  if found
+                    if t.isWs
+                      toRemove.push t
+                    else
+                      break
+                  if t is token
+                    found = true
+            [first, ..., last] = toRemove
+            @editor.session.doc.remove Range.fromPoints (@tokenToActualRange first).start, (@tokenToActualRange last).end
+            if not isFirst
+              @selectToken @expressionBeforeCursor()
 
   deselect: =>
     @editor.selection.clearSelection()
@@ -381,6 +414,7 @@ exports.Mode = class extends TextMode
     @selectToken token
 
   selectToken: (token) ->
+    console.log "selecting token", token
     @editor.selection.setSelectionRange @tokenToVisibleRange token
     @editor.selection.token = token
     @unhighlightActive()
