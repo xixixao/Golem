@@ -182,10 +182,12 @@ exports.Mode = class extends TextMode
   selectInserted: ({data}) =>
     if data.action is 'insertText'
       pos = @editor.getCursorPosition()
+      console.log "insert", data, pos
       @highLightTokenAt pos.row, pos.column
 
   highLightTokenAt: (row, column, isInsert) ->
     token = @getTokenAt row, column
+    console.log "highlighting", token
     if token
       # whitespace is handled by command
       if token.isWs
@@ -299,8 +301,8 @@ exports.Mode = class extends TextMode
       @editor.commands.addCommand
         name: 'add new sibling expression'
         bindKey: win: 'Space', mac: 'Space'
-        exec: =>
-          console.log "space", @activeToken()
+        exec: (e) =>
+          console.log "space", e
           if (token = @activeToken()) and token.parent
             @deselect()
             @unhighlightActive()
@@ -315,7 +317,10 @@ exports.Mode = class extends TextMode
             @deselect()
             @unhighlightActive()
 
-          @editor.insert ' '
+            {start} = @tokenToVisibleRange token
+            @editor.moveCursorToPosition start
+            @editor.session.insert start, ' '
+            @editor.moveCursorToPosition start
 
       @editor.commands.addCommand
         name: 'add new sibling expression on new line'
