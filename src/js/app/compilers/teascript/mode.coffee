@@ -201,8 +201,8 @@ exports.Mode = class extends TextMode
         else if isInsert
           @selectToken @lastChild token.parent
         else
-          @selectToken token
-      else if wasActive or beforeInsert and isInsert
+          @selectToken token.parent
+      else if wasActive or isInsert
         @highLightToken token
       else
         @selectToken token
