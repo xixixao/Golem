@@ -22,7 +22,7 @@ class TeaScriptBehaviour extends Behaviour
           # selection: [0, 2 + selected.length]
         else
           text: open + close
-          selection: [1, 1]
+          # selection: [1, 1]
 
   constructor: ->
 
@@ -111,6 +111,7 @@ exports.Mode = class extends TextMode
           nonWsLength += node.totalSize
         totalLength += node.totalSize
       ast.pos = nonWsPos
+      ast.wsPos = ast[0].pos
       ast.size = nonWsLength
       ast.totalSize = totalLength
       [ast]
@@ -131,9 +132,11 @@ exports.Mode = class extends TextMode
             totalSize: size,
             size: size,
             parent: parent,
+            wsPos: pos
             pos}
           pos += wsToken.length
       token.pos = pos
+      token.wsPos = pos
       token.value = token.token
       token.type = if token.label then 'token_' + token.label else 'text'
       token.size = token.token.length
@@ -177,11 +180,7 @@ exports.Mode = class extends TextMode
 
   selectInserted: ({data}) =>
     console.log "somehting changed", data
-    switch data.action
-      when 'insertText'
-        pos = data.range.end
-      when 'removeText'
-        pos = data.range.start
+    pos = @editor.getCursorPosition()
     @highLightTokenAt pos.row, pos.column, data.action is 'insertText'
 
   highLightTokenAt: (row, column, isInsert) ->
@@ -189,6 +188,7 @@ exports.Mode = class extends TextMode
     if token
       wasActive = @editor.selection.activeToken?
       beforeInsert = !@editor.selection.token?
+      console.log "beforeinsert", token, @editor.selection.token
       @unhighlightActive()
       if token.isWs
         return
@@ -196,21 +196,27 @@ exports.Mode = class extends TextMode
       if token.token in ['(', '[']
         return
       else if token.label in ['paren', 'bracket']
-        @selectToken if isInsert
-            @lastChild token.parent
-          else
-            token
+        if @lastChild(token.parent).token in ['(', '[']
+          @putCursorBeforeToken token
+        else if isInsert
+          @selectToken @lastChild token.parent
+        else
+          @selectToken token
       else if wasActive or beforeInsert and isInsert
         @highLightToken token
       else
         @selectToken token
+
+  putCursorBeforeToken: (token) ->
+    {start} = @tokenToVisibleRange token
+    @editor.selection.setSelectionRange Range.fromPoints start, start
 
   lastChild: (expression) ->
     expression[expression.length - 2]
 
   highLightToken: (token) ->
     @editor.selection.activeToken = token
-    range = @tokenToRange token
+    range = @tokenToVisibleRange token
     @editor.selection.activeTokenMarkerId = @editor.session.addMarker range, 'ace_active-token'
 
   unhighlightActive: ->
@@ -324,12 +330,12 @@ exports.Mode = class extends TextMode
               for t in token.parent by -1
                 if found
                   if t.isWs
-                    @editor.session.doc.remove @tokenToRange t
+                    @editor.session.doc.remove @tokenToActualRange t
                   else
                     break
                 if t is token
                   found = true
-                  @editor.session.doc.remove @tokenToRange t
+                  @editor.session.doc.remove @tokenToActualRange t
           else
             pos = @editor.getCursorPosition()
             # if @editor.selection.activeToken
@@ -375,13 +381,18 @@ exports.Mode = class extends TextMode
     @selectToken token
 
   selectToken: (token) ->
-    @editor.selection.setSelectionRange @tokenToRange token
+    @editor.selection.setSelectionRange @tokenToVisibleRange token
     @editor.selection.token = token
     @unhighlightActive()
 
-  tokenToRange: (token) ->
+  tokenToVisibleRange: (token) ->
     start = @editor.session.doc.indexToPosition token.pos
     end = @editor.session.doc.indexToPosition token.pos + token.size
+    Range.fromPoints start, end
+
+  tokenToActualRange: (token) ->
+    start = @editor.session.doc.indexToPosition token.wsPos
+    end = @editor.session.doc.indexToPosition token.wsPos + token.totalSize
     Range.fromPoints start, end
 
   createWorker: (session) ->
