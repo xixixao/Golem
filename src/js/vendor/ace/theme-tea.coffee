@@ -7,6 +7,7 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
   # typename: '#9C49B6'
   # label: '#9C49B6'
   # string: '#FEDF6B'
+  # regex: '#FEDF6B'
   # paren: '#444'
   # name: '#9EE062'
   # recurse: '#67B3DD'
@@ -123,6 +124,10 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
   }
 
   .ace-tea .ace_token_string {
+    color: #FEDF6B
+  }
+
+  .ace-tea .ace_token_regex {
     color: #FEDF6B
   }
 
