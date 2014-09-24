@@ -182,12 +182,10 @@ exports.Mode = class extends TextMode
   selectInserted: ({data}) =>
     if data.action is 'insertText'
       pos = @editor.getCursorPosition()
-      console.log "insert", data, pos
       @highLightTokenAt pos.row, pos.column
 
   highLightTokenAt: (row, column, isInsert) ->
-    token = @getTokenAt row, column
-    console.log "highlighting", token
+    token = @getTokenBefore row, column
     if token
       # whitespace is handled by command
       if token.isWs
@@ -301,8 +299,7 @@ exports.Mode = class extends TextMode
       @editor.commands.addCommand
         name: 'add new sibling expression'
         bindKey: win: 'Space', mac: 'Space'
-        exec: (e) =>
-          console.log "space", e
+        exec: =>
           if (token = @activeToken()) and token.parent
             @deselect()
             @unhighlightActive()
@@ -339,7 +336,6 @@ exports.Mode = class extends TextMode
           token = @expressionBeforeCursor()
           if @editor.selection.token
             @deselect()
-          console.log @editor.getCursorPosition()
           if @editor.selection.activeToken
             # remove single character
             {end} = @tokenToActualRange @editor.selection.activeToken
@@ -353,6 +349,7 @@ exports.Mode = class extends TextMode
             if token.parent
               found = false
               isFirst = true
+              nextToken = undefined
               # find the token and erase all preceding whitespace tokens
               for t in token.parent by -1
                 if found
@@ -366,18 +363,22 @@ exports.Mode = class extends TextMode
                   found = true
               found = false
               # for first token remove all succeding whitespace tokens
-              if !isFirst
+              if isFirst
                 for t in token.parent
                   if found
                     if t.isWs
                       toRemove.push t
                     else
+                      if t.label not in ['paren', 'bracket']
+                        nextToken = t
                       break
                   if t is token
                     found = true
             [first, ..., last] = toRemove
             @editor.session.doc.remove Range.fromPoints (@tokenToActualRange first).start, (@tokenToActualRange last).end
-            if not isFirst
+            if isFirst
+              @selectToken @expressionAfterCursor() if nextToken?
+            else
               @selectToken @expressionBeforeCursor()
 
   deselect: =>
@@ -385,15 +386,22 @@ exports.Mode = class extends TextMode
     @editor.selection.token = undefined
     @editor.selection.activeToken = undefined
 
+  expressionAfterCursor: ->
+    @getExpression @tokenAfterCursor()
+
   expressionBeforeCursor: =>
     @getExpression @tokenBeforeCursor()
 
+  tokenAfterCursor: =>
+    pos = @editor.getCursorPosition()
+    @getTokenAfter pos.row, pos.column
+
   tokenBeforeCursor: =>
     pos = @editor.getCursorPosition()
-    @getTokenAt pos.row, pos.column
+    @getTokenBefore pos.row, pos.column
 
   expressionAt: (row, col) ->
-    @getExpression @getTokenAt row, col
+    @getExpression @getTokenBefore row, col
 
   getExpression: (token) ->
     if token.isWs or token.label in ['paren', 'bracket']
@@ -401,7 +409,15 @@ exports.Mode = class extends TextMode
     else
       token
 
-  getTokenAt: (row, col) ->
+  getTokenAfter: (row, col) ->
+    {tokens} = @$tokenizer.getLineTokens "", "", row, @editor.session.doc
+    c = 0
+    for token, i in tokens
+      if c >= col
+        return token
+      c += token.value.length
+
+  getTokenBefore: (row, col) ->
     {tokens} = @$tokenizer.getLineTokens "", "", row, @editor.session.doc
     c = 0
     for token, i in tokens
