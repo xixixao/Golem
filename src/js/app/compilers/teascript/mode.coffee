@@ -14,7 +14,6 @@ class TeaScriptBehaviour extends Behaviour
       if text is open
         activeToken = editor.selection.activeToken
         if activeToken
-          console.log "selecting", activeToken
           session.getMode().selectToken activeToken
         selection = editor.getSelectionRange()
         selected = session.doc.getTextRange(selection)
@@ -83,7 +82,7 @@ exports.Mode = class extends TextMode
     @$behaviour = new TeaScriptBehaviour
 
   onDocumentChange: (doc) =>
-    console.log "tokenizing document", @editor.getValue()
+    # console.log "tokenizing document", @editor.getValue()
     if @isNotSource
       tokenizingFunction = compiler.tokenizeExp
     else
@@ -147,6 +146,7 @@ exports.Mode = class extends TextMode
 
   getNextLineIndent: (state, line, tab) ->
     indent = @$getIndent line
+    # TODO: this doesn't work properly for strings, use tokens instead
     numOpen = (line.match(/[\(\[]/g) or []).length
     numClosed = (line.match(/[\)\]]/g) or []).length
     new Array(numOpen - numClosed + indent.length / tab.length + 1).join tab
@@ -303,8 +303,7 @@ exports.Mode = class extends TextMode
           if (token = @activeToken()) and token.parent
             @deselect()
             @unhighlightActive()
-
-          @editor.insert ' '
+            @editor.insert ' '
 
       @editor.commands.addCommand
         name: 'add new sibling expression before current'
@@ -330,6 +329,21 @@ exports.Mode = class extends TextMode
           @editor.insert '\n'
 
       @editor.commands.addCommand
+        name: 'add new sibling expression on previous line'
+        bindKey: win: 'Shift-Enter', mac: 'Shift-Enter'
+        exec: =>
+          if (token = @activeToken()) and token.parent
+            @deselect()
+            @unhighlightActive()
+
+            {start} = @tokenToVisibleRange token
+            @editor.moveCursorToPosition start
+          else
+            start = @editor.getCursorPosition()
+          @editor.session.insert start, '\n'
+          @editor.moveCursorToPosition start
+
+      @editor.commands.addCommand
         name: 'remove token and preceding whitespace or delete a character'
         bindKey: win: 'Backspace', mac: 'Backspace'
         exec: =>
@@ -338,7 +352,7 @@ exports.Mode = class extends TextMode
             @deselect()
           if @editor.selection.activeToken
             # remove single character
-            {end} = @tokenToActualRange @editor.selection.activeToken
+            end = @editor.getCursorPosition()
             butOne = row: end.row, column: end.column - 1
             @editor.session.doc.remove Range.fromPoints butOne, end
             @unhighlightActive()
@@ -426,16 +440,16 @@ exports.Mode = class extends TextMode
         return token
 
   handleClick: (event) =>
-    if event.getShiftKey()
-      @editor.session.selection.clearSelection()
-      return
     token = @expressionBeforeCursor()
-
-    # select clicked word or its parent
-    @selectToken token
+    @deselect()
+    @unhighlightActive()
+    if event.getShiftKey()
+      @highLightToken token
+    else
+      # select clicked word or its parent if whitespace selected
+      @selectToken token
 
   selectToken: (token) ->
-    console.log "selecting token", token
     @editor.selection.setSelectionRange @tokenToVisibleRange token
     @editor.selection.token = token
     @unhighlightActive()
