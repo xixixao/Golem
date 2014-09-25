@@ -271,7 +271,7 @@ module.exports = hyper class EditorMain
 
   execute: (code) ->
     try
-      @state.compiler.preExecute?()
+      @state.compiler.preExecute? @memory
       eval code
     catch error
       @displayMessage 'runtime', "Runtime: #{error}"

@@ -521,3 +521,9 @@ exports.Mode = class extends TextMode
         session.clearAnnotations()
 
     worker
+
+  preExecute: (memory) ->
+    window.requireModule = (fileName, names) ->
+      module = eval compiler.compileModule (memory.loadSource fileName).value
+      for name in names
+        module[name]

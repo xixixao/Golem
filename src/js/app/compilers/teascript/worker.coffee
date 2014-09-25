@@ -13,9 +13,9 @@ exports.Worker = class extends Mirror
     try
       @sender.emit "ok",
         result: if @isSource
-            compiler.compile value
+            compiler.compileModule value
           else
-            compiler.compileExp value
+            ";" + compiler.compileExp value
 
     catch e
       # loc = e.location
