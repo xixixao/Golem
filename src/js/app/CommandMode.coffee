@@ -8,6 +8,14 @@ module.exports =
       constructor: (@sourceModePath) ->
         super yes
 
+        superTokenizer = @$tokenizer
+
+        @$tokenizer = getLineTokens: (line, state, row, doc) =>
+          if line[0] isnt ':'
+            superTokenizer.getLineTokens line, state, row, doc
+          else
+            tokens: [value: line, type: 'text']
+
       createWorker: (session) ->
         @worker = new WorkerClient ["ace", "compilers", "app", "vendor"],
           "app/CommandWorker",
