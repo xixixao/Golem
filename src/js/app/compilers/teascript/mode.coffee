@@ -349,7 +349,6 @@ exports.Mode = class extends TextMode
         name: 'remove token and preceding whitespace or delete a character'
         bindKey: win: 'Backspace', mac: 'Backspace'
         exec: =>
-          token = @expressionBeforeCursor()
           if @editor.selection.token
             @deselect()
           if @editor.selection.activeToken
@@ -362,7 +361,7 @@ exports.Mode = class extends TextMode
             if @isSelectable maybeActiveToken
               @highLightToken maybeActiveToken
           else
-            # whitespace or actual token
+            token = @tokenBeforeCursor()
             toRemove = [token]
             if token.parent
               found = false
@@ -398,6 +397,8 @@ exports.Mode = class extends TextMode
               @selectToken @expressionAfterCursor() if nextToken?
             else
               @selectToken @expressionBeforeCursor()
+
+
 
   isSelectable: (token) ->
     not token.isWs and token.label not in ['paren', 'bracket']
