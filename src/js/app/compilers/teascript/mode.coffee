@@ -193,7 +193,6 @@ exports.Mode = class extends TextMode
       if token.isWs
         return
       wasActive = @editor.selection.activeToken?
-      beforeInsert = !@editor.selection.token?
       @unhighlightActive()
       @deselect()
       if token.label in ['paren', 'bracket']
@@ -224,8 +223,19 @@ exports.Mode = class extends TextMode
     @editor.session.removeMarker @editor.selection.activeTokenMarkerId
     @editor.selection.activeToken = undefined
 
-  activeToken: =>
-    @editor.selection.token or @editor.selection.activeToken
+  activeTokens: ->
+    if @editor.selection.activeToken
+      [@editor.selection.activeToken]
+    else
+      @editor.selection.tokens
+
+  leftActiveToken: ->
+    @editor.selection.activeToken or
+      @editor.selection.tokens and @editor.selection.tokens[0]
+
+  rightActiveToken: =>
+    @editor.selection.activeToken or
+      @editor.selection.tokens and @editor.selection.tokens[@editor.selection.tokens.length - 1]
 
   attachToSession: (session) ->
     @editor = session.getEditor()
@@ -239,7 +249,8 @@ exports.Mode = class extends TextMode
         name: 'up the tree'
         bindKey: win: 'Up', mac: 'Up'
         exec: =>
-          if token = @editor.selection.token
+          # todo: select lowest common ancenstor when using multiple selections
+          if @editor.selection.tokens and [token] = @editor.selection.tokens
             if token.parent?.pos?
               # select parent node
               @selectToken token.parent
@@ -255,7 +266,7 @@ exports.Mode = class extends TextMode
         name: 'down the tree'
         bindKey: win: 'Down', mac: 'Down'
         exec: =>
-          if (token = @editor.selection.token) and Array.isArray token
+          if (token = @editor.selection.tokens[0]) and Array.isArray token
             # select first child node
             for t in token
               if @isSelectable t
@@ -266,6 +277,7 @@ exports.Mode = class extends TextMode
             inside = @editor.session.doc.indexToPosition token.pos + 1
             @editor.selection.setSelectionRange Range.fromPoints inside, inside
           else
+            # start editing
             @deselect()
             @highLightToken token
 
@@ -274,7 +286,7 @@ exports.Mode = class extends TextMode
         name: 'next in expression'
         bindKey: win: 'Right', mac: 'Right'
         exec: =>
-          if (token = @activeToken()) and token.parent
+          if (token = @rightActiveToken()) and token.parent
             # select first sibling node
             found = false
             for t in token.parent
@@ -288,7 +300,7 @@ exports.Mode = class extends TextMode
         name: 'previous in expression'
         bindKey: win: 'Left', mac: 'Left'
         exec: =>
-          if (token = @activeToken()) and token.parent
+          if (token = @leftActiveToken()) and token.parent
             # select first sibling node
             found = false
             for t in token.parent by -1
@@ -299,10 +311,38 @@ exports.Mode = class extends TextMode
                 found = true
 
       @editor.commands.addCommand
+        name: 'include next expression'
+        bindKey: win: 'Shift-Right', mac: 'Shift-Right'
+        exec: =>
+          if (tokens = @activeTokens()) and tokens[0].parent
+            [..., last] = tokens
+            found = false
+            for t in last.parent
+              if found and @isSelectable t
+                @selectTokens tokens.concat [t]
+                return
+              if t is last
+                found = true
+
+      @editor.commands.addCommand
+        name: 'include previous expression'
+        bindKey: win: 'Shift-Left', mac: 'Shift-Left'
+        exec: =>
+          if (tokens = @activeTokens()) and tokens[0].parent
+            [first] = tokens
+            found = false
+            for t in first.parent by -1
+              if found and @isSelectable t
+                @selectTokens [t].concat tokens
+                return
+              if t is first
+                found = true
+
+      @editor.commands.addCommand
         name: 'add new sibling expression'
         bindKey: win: 'Space', mac: 'Space'
         exec: =>
-          if (token = @activeToken()) and token.parent
+          if (token = @rightActiveToken()) and token.parent
             @deselect()
             @unhighlightActive()
             @editor.insert ' '
@@ -311,7 +351,7 @@ exports.Mode = class extends TextMode
         name: 'add new sibling expression before current'
         bindKey: win: 'Shift-Space', mac: 'Shift-Space'
         exec: =>
-          if (token = @activeToken()) and token.parent
+          if (token = @leftActiveToken()) and token.parent
             @deselect()
             @unhighlightActive()
 
@@ -324,7 +364,7 @@ exports.Mode = class extends TextMode
         name: 'add new sibling expression on new line'
         bindKey: win: 'Enter', mac: 'Enter'
         exec: =>
-          if (token = @activeToken()) and token.parent
+          if (token = @rightActiveToken()) and token.parent
             @deselect()
             @unhighlightActive()
 
@@ -334,7 +374,7 @@ exports.Mode = class extends TextMode
         name: 'add new sibling expression on previous line'
         bindKey: win: 'Shift-Enter', mac: 'Shift-Enter'
         exec: =>
-          if (token = @activeToken()) and token.parent
+          if (token = @leftActiveToken()) and token.parent
             @deselect()
             @unhighlightActive()
 
@@ -349,8 +389,6 @@ exports.Mode = class extends TextMode
         name: 'remove token and preceding whitespace or delete a character'
         bindKey: win: 'Backspace', mac: 'Backspace'
         exec: =>
-          if @editor.selection.token
-            @deselect()
           if @editor.selection.activeToken
             # remove single character
             end = @editor.getCursorPosition()
@@ -364,12 +402,17 @@ exports.Mode = class extends TextMode
             if @isSelectable maybeActiveToken
               @highLightToken maybeActiveToken
           else
-            token = @tokenBeforeCursor()
-            if token.label in ['paren', 'bracket']
-              token = token.parent
-            {tokens, isFirst, nextToken} = @surroundingWhitespace token
-            [first, ..., last] = tokens
-            @editor.session.doc.remove Range.fromPoints (@tokenToActualRange first).start, (@tokenToActualRange last).end
+            # TODO: support multiple selected tokens by deleting whole selected range
+            if tokens = @editor.selection.tokens
+              @deselect()
+            else
+              token = @tokenBeforeCursor()
+              tokens = if token.label in ['paren', 'bracket']
+                [token.parent]
+              else
+                [token]
+            {tokens, isFirst, nextToken} = @surroundingWhitespace tokens
+            @editor.session.doc.remove @tokensToActualRange tokens
             if isFirst
               @selectToken @expressionAfterCursor() if nextToken?
             else
@@ -377,21 +420,40 @@ exports.Mode = class extends TextMode
 
       @editor.commands.addCommand
         name: 'replace parent with current selection'
-        bindKey: win: 'Ctrl+P', mac: 'Ctrl+P'
+        bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
         exec: =>
-          token = @activeToken()
-          if token and token.parent
+          range = @activeRange()
+          # todo: select lowest common ancenstor when using multiple selections
+          token = @leftActiveToken()
+          if range and token and token.parent
             @editor.session.doc.replace @tokenToVisibleRange(token.parent),
-              @editor.session.doc.getTextRange @tokenToVisibleRange token
+              @editor.session.doc.getTextRange range
 
-  surroundingWhitespace: (token) ->
-    tokens = [token]
-    if token.parent
+  activeRange: ->
+    if @editor.selection.tokens
+      @editor.selection.getRange()
+    else if token = @editor.selection.activeToken
+      @tokenToVisibleRange token
+    else
+      undefined
+
+  tokensToActualRange: (tokens) ->
+    [first, ..., last] = tokens
+    Range.fromPoints (@tokenToActualRange first).start, (@tokenToActualRange last).end
+
+  tokensToVisibleRange: (tokens) ->
+    [first, ..., last] = tokens
+    Range.fromPoints (@tokenToVisibleRange first).start, (@tokenToVisibleRange last).end
+
+  surroundingWhitespace: (surroundedTokens) ->
+    tokens = [].concat surroundedTokens
+    [first, ..., last] = surroundedTokens
+    if first.parent
       found = false
       isFirst = true
       nextToken = undefined
-      # find the token and erase all preceding whitespace tokens
-      for t in token.parent by -1
+      # find the first token and erase all preceding whitespace tokens
+      for t in first.parent by -1
         if found
           if t.isWs
             tokens.unshift t
@@ -399,12 +461,12 @@ exports.Mode = class extends TextMode
             if @isSelectable t
               isFirst = false
             break
-        if t is token
+        if t is first
           found = true
       found = false
-      # for first token remove all succeding whitespace tokens
+      # if there are no preceding tokens remove all succeding whitespace tokens
       if isFirst
-        for t in token.parent
+        for t in first.parent
           if found
             if t.isWs
               tokens.push t
@@ -412,7 +474,7 @@ exports.Mode = class extends TextMode
               if @isSelectable t
                 nextToken = t
               break
-          if t is token
+          if t is last
             found = true
     {tokens, isFirst, nextToken}
 
@@ -422,7 +484,7 @@ exports.Mode = class extends TextMode
 
   deselect: =>
     @editor.selection.clearSelection()
-    @editor.selection.token = undefined
+    @editor.selection.tokens = undefined
     @editor.selection.activeToken = undefined
 
   expressionAfterCursor: ->
@@ -493,9 +555,13 @@ exports.Mode = class extends TextMode
       @selectToken token
 
   selectToken: (token) ->
-    @editor.selection.setSelectionRange @tokenToVisibleRange token
-    @editor.selection.token = token
     @unhighlightActive()
+    @editor.selection.setSelectionRange @tokenToVisibleRange token
+    @editor.selection.tokens = [token]
+
+  selectTokens: (tokens) ->
+    @editor.selection.setSelectionRange @tokensToVisibleRange tokens
+    @editor.selection.tokens = tokens
 
   tokenToVisibleRange: (token) ->
     start = @editor.session.doc.indexToPosition token.pos
