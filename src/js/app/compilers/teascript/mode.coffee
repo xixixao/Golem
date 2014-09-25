@@ -13,6 +13,8 @@ class TeaScriptBehaviour extends Behaviour
     (state, action, editor, session, text) ->
       if text is open
         activeToken = editor.selection.activeToken
+        if activeToken and activeToken.label in ['string', 'regex']
+          return
         if activeToken
           session.getMode().selectToken activeToken
         selection = editor.getSelectionRange()
@@ -256,7 +258,7 @@ exports.Mode = class extends TextMode
           if (token = @editor.selection.token) and Array.isArray token
             # select first child node
             for t in token
-              if t.label not in ['paren', 'bracket'] and not t.isWs
+              if @isSelectable t
                 @selectToken t
                 return
             # or go inside brackets
@@ -276,7 +278,7 @@ exports.Mode = class extends TextMode
             # select first sibling node
             found = false
             for t in token.parent
-              if found and t.label not in ['paren', 'bracket'] and not t.isWs
+              if found and @isSelectable t
                 @selectToken t
                 return
               if t is token
@@ -290,7 +292,7 @@ exports.Mode = class extends TextMode
             # select first sibling node
             found = false
             for t in token.parent by -1
-              if found and t.label not in ['paren', 'bracket'] and not t.isWs
+              if found and @isSelectable t
                 @selectToken t
                 return
               if t is token
@@ -356,7 +358,9 @@ exports.Mode = class extends TextMode
             butOne = row: end.row, column: end.column - 1
             @editor.session.doc.remove Range.fromPoints butOne, end
             @unhighlightActive()
-            @highLightToken @tokenBeforeCursor()
+            maybeActiveToken = @tokenBeforeCursor()
+            if @isSelectable maybeActiveToken
+              @highLightToken maybeActiveToken
           else
             # whitespace or actual token
             toRemove = [token]
@@ -370,7 +374,7 @@ exports.Mode = class extends TextMode
                   if t.isWs
                     toRemove.unshift t
                   else
-                    if t.label not in ['paren', 'bracket']
+                    if @isSelectable t
                       isFirst = false
                     break
                 if t is token
@@ -383,7 +387,7 @@ exports.Mode = class extends TextMode
                     if t.isWs
                       toRemove.push t
                     else
-                      if t.label not in ['paren', 'bracket']
+                      if @isSelectable t
                         nextToken = t
                       break
                   if t is token
@@ -394,6 +398,9 @@ exports.Mode = class extends TextMode
               @selectToken @expressionAfterCursor() if nextToken?
             else
               @selectToken @expressionBeforeCursor()
+
+  isSelectable: (token) ->
+    not token.isWs and token.label not in ['paren', 'bracket']
 
   deselect: =>
     @editor.selection.clearSelection()
@@ -418,10 +425,10 @@ exports.Mode = class extends TextMode
     @getExpression @getTokenBefore row, col
 
   getExpression: (token) ->
-    if token.isWs or token.label in ['paren', 'bracket']
-      token.parent
-    else
+    if @isSelectable token
       token
+    else
+      token.parent
 
   getTokenAfter: (row, col) ->
     {tokens} = @$tokenizer.getLineTokens "", "", row, @editor.session.doc
