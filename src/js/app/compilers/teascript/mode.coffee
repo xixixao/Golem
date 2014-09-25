@@ -362,42 +362,45 @@ exports.Mode = class extends TextMode
               @highLightToken maybeActiveToken
           else
             token = @tokenBeforeCursor()
-            toRemove = [token]
-            if token.parent
-              found = false
-              isFirst = true
-              nextToken = undefined
-              # find the token and erase all preceding whitespace tokens
-              for t in token.parent by -1
-                if found
-                  if t.isWs
-                    toRemove.unshift t
-                  else
-                    if @isSelectable t
-                      isFirst = false
-                    break
-                if t is token
-                  found = true
-              found = false
-              # for first token remove all succeding whitespace tokens
-              if isFirst
-                for t in token.parent
-                  if found
-                    if t.isWs
-                      toRemove.push t
-                    else
-                      if @isSelectable t
-                        nextToken = t
-                      break
-                  if t is token
-                    found = true
-            [first, ..., last] = toRemove
+            {tokens, isFirst, nextToken} = @surroundingWhitespace token
+            [first, ..., last] = tokens
             @editor.session.doc.remove Range.fromPoints (@tokenToActualRange first).start, (@tokenToActualRange last).end
             if isFirst
               @selectToken @expressionAfterCursor() if nextToken?
             else
               @selectToken @expressionBeforeCursor()
 
+  surroundingWhitespace: (token) ->
+    tokens = [token]
+    if token.parent
+      found = false
+      isFirst = true
+      nextToken = undefined
+      # find the token and erase all preceding whitespace tokens
+      for t in token.parent by -1
+        if found
+          if t.isWs
+            tokens.unshift t
+          else
+            if @isSelectable t
+              isFirst = false
+            break
+        if t is token
+          found = true
+      found = false
+      # for first token remove all succeding whitespace tokens
+      if isFirst
+        for t in token.parent
+          if found
+            if t.isWs
+              tokens.push t
+            else
+              if @isSelectable t
+                nextToken = t
+              break
+          if t is token
+            found = true
+    {tokens, isFirst, nextToken}
 
 
   isSelectable: (token) ->
