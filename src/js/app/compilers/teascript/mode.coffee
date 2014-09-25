@@ -278,6 +278,7 @@ exports.Mode = class extends TextMode
             @editor.selection.setSelectionRange Range.fromPoints inside, inside
           else
             # start editing
+            @selectToken token
             @deselect()
             @highLightToken token
 
