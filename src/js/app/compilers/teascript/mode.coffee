@@ -357,6 +357,9 @@ exports.Mode = class extends TextMode
             butOne = row: end.row, column: end.column - 1
             @editor.session.doc.remove Range.fromPoints butOne, end
             @unhighlightActive()
+            # TODO: this doesn't work if the trailing space is last in the file
+            # because the compiler trims it
+            # fix: have the compiler output whitespace tokens instead of coalescing them
             maybeActiveToken = @tokenBeforeCursor()
             if @isSelectable maybeActiveToken
               @highLightToken maybeActiveToken
@@ -369,6 +372,15 @@ exports.Mode = class extends TextMode
               @selectToken @expressionAfterCursor() if nextToken?
             else
               @selectToken @expressionBeforeCursor()
+
+      @editor.commands.addCommand
+        name: 'replace parent with current selection'
+        bindKey: win: 'Ctrl+P', mac: 'Ctrl+P'
+        exec: =>
+          token = @activeToken()
+          if token and token.parent
+            @editor.session.doc.replace @tokenToVisibleRange(token.parent),
+              @editor.session.doc.getTextRange @tokenToVisibleRange token
 
   surroundingWhitespace: (token) ->
     tokens = [token]
@@ -417,6 +429,9 @@ exports.Mode = class extends TextMode
   expressionBeforeCursor: =>
     @getExpression @tokenBeforeCursor()
 
+  expressionNextToCursor: ->
+    @getExpression @tokenNextToCursor()
+
   tokenAfterCursor: =>
     pos = @editor.getCursorPosition()
     @getTokenAfter pos.row, pos.column
@@ -424,6 +439,10 @@ exports.Mode = class extends TextMode
   tokenBeforeCursor: =>
     pos = @editor.getCursorPosition()
     @getTokenBefore pos.row, pos.column
+
+  tokenNextToCursor: =>
+    pos = @editor.getCursorPosition()
+    @getTokenNextTo pos.row, pos.column
 
   expressionAt: (row, col) ->
     @getExpression @getTokenBefore row, col
@@ -450,14 +469,25 @@ exports.Mode = class extends TextMode
       if c >= col
         return token
 
+  getTokenNextTo: (row, col) ->
+    {tokens} = @$tokenizer.getLineTokens "", "", row, @editor.session.doc
+    c = 0
+    for token, i in tokens
+      c += token.value.length
+      if c == col and !token.isWs
+        return token
+      if c > col
+        return token
+
   handleClick: (event) =>
-    token = @expressionBeforeCursor()
     @deselect()
     @unhighlightActive()
     if event.getShiftKey()
+      token = @expressionNextToCursor()
       @highLightToken token
     else
       # select clicked word or its parent if whitespace selected
+      token = @expressionBeforeCursor()
       @selectToken token
 
   selectToken: (token) ->
