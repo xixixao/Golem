@@ -365,6 +365,8 @@ exports.Mode = class extends TextMode
               @highLightToken maybeActiveToken
           else
             token = @tokenBeforeCursor()
+            if token.label in ['paren', 'bracket']
+              token = token.parent
             {tokens, isFirst, nextToken} = @surroundingWhitespace token
             [first, ..., last] = tokens
             @editor.session.doc.remove Range.fromPoints (@tokenToActualRange first).start, (@tokenToActualRange last).end
