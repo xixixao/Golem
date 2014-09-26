@@ -25,8 +25,11 @@ module.exports = hyper class CommandLine
     @refs.ace.getDOMNode()
 
   setMode: (sourceModeId = 'teascript') ->
+    if @sourceModeId and @sourceModeId is sourceModeId
+      return
     _require ["compilers/#{sourceModeId}/mode"], ({Mode}) =>
       @editor.session.setMode new (CommandMode.inherit Mode) "compilers/#{sourceModeId}"
+      @sourceModeId = sourceModeId
 
   componentWillReceiveProps: ({focus}) ->
     if focus

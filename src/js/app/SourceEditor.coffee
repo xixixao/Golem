@@ -72,6 +72,8 @@ module.exports = hyper class SourceEditor
     @refs.ace.getDOMNode()
 
   setMode: (modeId) ->
+    if @mode and @mode is modeId
+      return
     modeId ||= 'teascript'
     @mode ?= modeId # save immediately if no mode set yet
     @props.onModeChange modeId
