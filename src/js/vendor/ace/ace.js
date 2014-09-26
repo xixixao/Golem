@@ -8517,6 +8517,8 @@ var EditSession = function(text, mode) {
         if (this.$mode === mode)
             return;
 
+        if (this.$mode && this.$mode.detachFromSession)
+            this.$mode.detachFromSession(this);
         this.$mode = mode;
 
         this.$stopWorker();

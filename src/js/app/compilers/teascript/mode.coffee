@@ -186,7 +186,7 @@ exports.Mode = class extends TextMode
       pos = @editor.getCursorPosition()
       @highLightTokenAt pos.row, pos.column
 
-  highLightTokenAt: (row, column, isInsert) ->
+  highLightTokenAt: (row, column) ->
     token = @getTokenBefore row, column
     if token
       # whitespace is handled by command
@@ -201,7 +201,6 @@ exports.Mode = class extends TextMode
           @putCursorBeforeToken token
         # wrapped token in parens
         else
-          console.log "selected", token.parent
           @selectToken @lastChild token.parent
       # normal insert
       else
@@ -237,7 +236,13 @@ exports.Mode = class extends TextMode
     @editor.selection.activeToken or
       @editor.selection.tokens and @editor.selection.tokens[@editor.selection.tokens.length - 1]
 
+  detachFromSession: (session) ->
+    session.removeListener 'change', @onDocumentChange
+    @editor.removeListener 'click', @handleClick
+    session.getDocument().removeListener 'change', @selectInserted
+
   attachToSession: (session) ->
+    @ast = undefined
     @editor = session.getEditor()
     session.on 'change', @onDocumentChange
     @editor.on 'click', @handleClick
