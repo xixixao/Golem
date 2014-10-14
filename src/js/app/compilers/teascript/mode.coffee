@@ -29,8 +29,8 @@ class TeaScriptBehaviour extends Behaviour
   constructor: ->
 
     @add "parens", "insertion", bracketHelper "(", ")"
-
     @add "brackets", "insertion", bracketHelper "[", "]"
+    @add "braces", "insertion", bracketHelper "{", "}"
 
     @add "quotes", "insertion", (state, action, editor, session, text) ->
       if text is "\""
