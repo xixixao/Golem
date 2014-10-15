@@ -123,6 +123,10 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
     color: #9C49B6
   }
 
+  .ace-tea .ace_token_const {
+    color: #9C49B6
+  }
+
   .ace-tea .ace_token_string {
     color: #FEDF6B
   }

@@ -149,8 +149,8 @@ exports.Mode = class extends TextMode
   getNextLineIndent: (state, line, tab) ->
     indent = @$getIndent line
     # TODO: this doesn't work properly for strings, use tokens instead
-    numOpen = (line.match(/[\(\[]/g) or []).length
-    numClosed = (line.match(/[\)\]]/g) or []).length
+    numOpen = (line.match(/[\(\[\{]/g) or []).length
+    numClosed = (line.match(/[\)\]\}]/g) or []).length
     new Array(numOpen - numClosed + indent.length / tab.length + 1).join tab
 
   commentLine = /^(\s*)# ?/
@@ -195,9 +195,9 @@ exports.Mode = class extends TextMode
       wasActive = @editor.selection.activeToken?
       @unhighlightActive()
       @deselect()
-      if token.label in ['paren', 'bracket']
+      if @isDelim token
         # added empty parens, put cursor inside
-        if @lastChild(token.parent).token in ['(', '[']
+        if @lastChild(token.parent).token in ['(', '[', '{']
           @putCursorBeforeToken token
         # wrapped token in parens
         else
@@ -486,7 +486,10 @@ exports.Mode = class extends TextMode
 
 
   isSelectable: (token) ->
-    not token.isWs and token.label not in ['paren', 'bracket']
+    not token.isWs and not @isDelim token
+
+  isDelim: (token) ->
+    token.label in ['paren', 'bracket', 'brace']
 
   deselect: =>
     @editor.selection.clearSelection()
