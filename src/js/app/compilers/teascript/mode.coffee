@@ -220,17 +220,31 @@ exports.Mode = class extends TextMode
     expression[expression.length - 2]
 
   editToken: (token) ->
-    range = @highlightToken token
+    @highlightToken token
     if token.label is 'string'
+      range = @tokenToEditableRange token
       @editor.selection.setSelectionRange Range.fromPoints range.end, range.end
 
   highlightToken: (token) ->
-    index = @editor.selection.index ? 0
-    range = @tokenToEditableRange token
-    @manipulatedTokens().active[index] = token
-    markerId = @editor.session.addMarker range, 'ace_active-token'
+    # 1-based for multiselect, 0 is the single-select
+    index = (@editor.selection.index ? -1)
+    if @isMultiEditing()
+      @manipulatedTokens().active[@editor.selection.index] = token
+      # update all active
+      for token, i in @manipulatedTokens().active when token
+        @highlightTokenAtIndex token, i
+    else
+      @manipulatedTokens().active.main = token
+      markerId = @highlightTokenReturnId token
+      @manipulatedTokens().activeMarkers.main = markerId
+
+  highlightTokenAtIndex: (token, index) ->
+    markerId = @highlightTokenReturnId token
     @manipulatedTokens().activeMarkers[index] = markerId
-    return range
+
+  highlightTokenReturnId: (token) ->
+    range = @tokenToEditableRange token
+    @editor.session.addMarker range, 'ace_active-token'
 
   tokenToEditableRange: (token) ->
     if token.label is 'string'
@@ -238,23 +252,41 @@ exports.Mode = class extends TextMode
     else
       @tokenToVisibleRange token
 
+  unhighlightActive: ->
+    # remove all markers
+    for id in @activeMarkers()
+      @editor.session.removeMarker id
+    @manipulatedTokens().activeMarkers = []
+    if @isMultiEditing()
+      @manipulatedTokens().active.main = undefined
+    else
+      # forget tokens including main
+      @manipulatedTokens().active = []
+    return
+
   isMultiEditing: ->
     @editor.multiSelect.ranges.length > 1
-
-  unhighlightActive: ->
-    index = @editor.selection.index ? 0
-
-    @editor.session.removeMarker @manipulatedTokens().activeMarkers[index]
-    @manipulatedTokens().active[index] = undefined
 
   manipulatedTokens: ->
     @editor.session.manipulatedTokens
 
-  activeTokens: ->
-    if @editor.selection.activeToken
+  activeOrSelectedTokens: ->
+    if @manipulatedTokens().active.length > 1
       [@editor.selection.activeToken]
     else
       @editor.selection.tokens
+
+  activeTokens: ->
+    if @manipulatedTokens().active.main
+      [@manipulatedTokens().active.main]
+    else
+      @manipulatedTokens().active
+
+  activeMarkers: ->
+    if @manipulatedTokens().activeMarkers.main
+      [@manipulatedTokens().activeMarkers.main]
+    else
+      @manipulatedTokens().activeMarkers
 
   leftActiveToken: ->
     @editor.selection.activeToken or
@@ -351,7 +383,7 @@ exports.Mode = class extends TextMode
         name: 'include next expression'
         bindKey: win: 'Shift-Right', mac: 'Shift-Right'
         exec: =>
-          if (tokens = @activeTokens()) and tokens[0].parent
+          if (tokens = @activeOrSelectedTokens()) and tokens[0].parent
             [..., last] = tokens
             found = false
             for t in last.parent
@@ -365,7 +397,7 @@ exports.Mode = class extends TextMode
         name: 'include previous expression'
         bindKey: win: 'Shift-Left', mac: 'Shift-Left'
         exec: =>
-          if (tokens = @activeTokens()) and tokens[0].parent
+          if (tokens = @activeOrSelectedTokens()) and tokens[0].parent
             [first] = tokens
             found = false
             for t in first.parent by -1
