@@ -183,18 +183,17 @@ exports.Mode = class extends TextMode
 
   selectInserted: ({data}) =>
     if data.action is 'insertText'
-      pos = @editor.getCursorPosition()
-      @highlightTokenAt pos.row, pos.column
+      #pos = @editor.getCursorPosition()
+      {row, column} = data.range.end
+      @highlightTokenAt row, column
 
   highlightTokenAt: (row, column) ->
     token = @getTokenBefore row, column
-    console.log token
     if token
       # whitespace is handled by command
       if token.isWs
         return
       wasActive = @editor.selection.activeToken?
-      console.log wasActive, token
       @deselect()
       @unhighlightActive()
       if @isDelim token
@@ -226,17 +225,30 @@ exports.Mode = class extends TextMode
       @editor.selection.setSelectionRange Range.fromPoints range.end, range.end
 
   highlightToken: (token) ->
-    if token.label is 'string'
-      range = @tokenStringToEditableRange token
-    else
-      range = @tokenToVisibleRange token
-    @editor.selection.activeToken = token
-    @editor.selection.activeTokenMarkerId = @editor.session.addMarker range, 'ace_active-token'
+    index = @editor.selection.index ? 0
+    range = @tokenToEditableRange token
+    @manipulatedTokens().active[index] = token
+    markerId = @editor.session.addMarker range, 'ace_active-token'
+    @manipulatedTokens().activeMarkers[index] = markerId
     return range
 
+  tokenToEditableRange: (token) ->
+    if token.label is 'string'
+      @tokenStringToEditableRange token
+    else
+      @tokenToVisibleRange token
+
+  isMultiEditing: ->
+    @editor.multiSelect.ranges.length > 1
+
   unhighlightActive: ->
-    @editor.session.removeMarker @editor.selection.activeTokenMarkerId
-    @editor.selection.activeToken = undefined
+    index = @editor.selection.index ? 0
+
+    @editor.session.removeMarker @manipulatedTokens().activeMarkers[index]
+    @manipulatedTokens().active[index] = undefined
+
+  manipulatedTokens: ->
+    @editor.session.manipulatedTokens
 
   activeTokens: ->
     if @editor.selection.activeToken
@@ -260,6 +272,9 @@ exports.Mode = class extends TextMode
   attachToSession: (session) ->
     @ast = undefined
     @editor = session.getEditor()
+    session.manipulatedTokens =
+      active: []
+      activeMarkers: []
     session.on 'change', @onDocumentChange
     @editor.on 'click', @handleClick
 
@@ -445,6 +460,8 @@ exports.Mode = class extends TextMode
         exec: =>
           range = @activeRange()
           # todo: select lowest common ancenstor when using multiple selections
+          # TODO: actually, we should replace parent of two adjecent nodes or
+          # if the nodes span more expressions replace each, like normal multi-cursor
           token = @leftActiveToken()
           if range and token and token.parent
             @editor.session.doc.replace @tokenToVisibleRange(token.parent),
