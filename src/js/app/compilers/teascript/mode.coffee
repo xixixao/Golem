@@ -184,9 +184,9 @@ exports.Mode = class extends TextMode
   selectInserted: ({data}) =>
     if data.action is 'insertText'
       pos = @editor.getCursorPosition()
-      @highLightTokenAt pos.row, pos.column
+      @highlightTokenAt pos.row, pos.column
 
-  highLightTokenAt: (row, column) ->
+  highlightTokenAt: (row, column) ->
     token = @getTokenBefore row, column
     if token
       # whitespace is handled by command
@@ -204,7 +204,7 @@ exports.Mode = class extends TextMode
           @selectToken @lastChild token.parent
       # normal insert
       else
-        @highLightToken token
+        @editToken token
 
   putCursorBeforeToken: (token) ->
     {start} = @tokenToVisibleRange token
@@ -213,10 +213,19 @@ exports.Mode = class extends TextMode
   lastChild: (expression) ->
     expression[expression.length - 2]
 
-  highLightToken: (token) ->
+  editToken: (token) ->
+    range = @highlightToken token
+    if token.label is 'string'
+      @editor.selection.setSelectionRange Range.fromPoints range.end, range.end
+
+  highlightToken: (token) ->
+    if token.label is 'string'
+      range = @tokenStringToEditableRange token
+    else
+      range = @tokenToVisibleRange token
     @editor.selection.activeToken = token
-    range = @tokenToVisibleRange token
     @editor.selection.activeTokenMarkerId = @editor.session.addMarker range, 'ace_active-token'
+    return range
 
   unhighlightActive: ->
     @editor.session.removeMarker @editor.selection.activeTokenMarkerId
@@ -285,7 +294,7 @@ exports.Mode = class extends TextMode
             # start editing
             @selectToken token
             @deselect()
-            @highLightToken token
+            @editToken token
 
 
       @editor.commands.addCommand
@@ -361,7 +370,7 @@ exports.Mode = class extends TextMode
             @deselect()
             @unhighlightActive()
 
-            {start} = @tokenToVisibleRange token
+            {start} = @tokenStringToEditableRange token
             @editor.moveCursorToPosition start
             @editor.session.insert start, ' '
             @editor.moveCursorToPosition start
@@ -384,7 +393,7 @@ exports.Mode = class extends TextMode
             @deselect()
             @unhighlightActive()
 
-            {start} = @tokenToVisibleRange token
+            {start} = @tokenStringToEditableRange token
             @editor.moveCursorToPosition start
           else
             start = @editor.getCursorPosition()
@@ -406,7 +415,7 @@ exports.Mode = class extends TextMode
             # fix: have the compiler output whitespace tokens instead of coalescing them
             maybeActiveToken = @tokenBeforeCursor()
             if @isSelectable maybeActiveToken
-              @highLightToken maybeActiveToken
+              @highlightToken maybeActiveToken
           else
             # TODO: support multiple selected tokens by deleting whole selected range
             if tokens = @editor.selection.tokens
@@ -557,7 +566,7 @@ exports.Mode = class extends TextMode
     @unhighlightActive()
     if event.getShiftKey()
       token = @expressionNextToCursor()
-      @highLightToken token
+      @highlightToken token
     else
       # select clicked word or its parent if whitespace selected
       token = @expressionBeforeCursor()
@@ -575,6 +584,11 @@ exports.Mode = class extends TextMode
   tokenToVisibleRange: (token) ->
     start = @editor.session.doc.indexToPosition token.pos
     end = @editor.session.doc.indexToPosition token.pos + token.size
+    Range.fromPoints start, end
+
+  tokenStringToEditableRange: (token) ->
+    start = @editor.session.doc.indexToPosition token.pos + 1
+    end = @editor.session.doc.indexToPosition token.pos + token.size - 1
     Range.fromPoints start, end
 
   tokenToActualRange: (token) ->
