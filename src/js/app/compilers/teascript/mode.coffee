@@ -12,11 +12,11 @@ class TeaScriptBehaviour extends Behaviour
   bracketHelper = (open, close) ->
     (state, action, editor, session, text) ->
       if text is open
-        activeToken = activeToken()
-        if activeToken and activeToken.label in ['string', 'regex']
+        currentActiveToken = session.manipulatedTokens.active.main
+        if currentActiveToken and currentActiveToken.label in ['string', 'regex']
           return
-        if activeToken
-          session.getMode().selectToken activeToken
+        if currentActiveToken
+          session.getMode().selectToken currentActiveToken
         selection = editor.getSelectionRange()
         selected = session.doc.getTextRange(selection)
         if selected isnt ""
