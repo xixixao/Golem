@@ -188,11 +188,13 @@ exports.Mode = class extends TextMode
 
   highlightTokenAt: (row, column) ->
     token = @getTokenBefore row, column
+    console.log token
     if token
       # whitespace is handled by command
       if token.isWs
         return
       wasActive = @editor.selection.activeToken?
+      console.log wasActive, token
       @deselect()
       @unhighlightActive()
       if @isDelim token
@@ -375,7 +377,7 @@ exports.Mode = class extends TextMode
             @deselect()
             @unhighlightActive()
 
-            {start} = @tokenStringToEditableRange token
+            {start} = @tokenToVisibleRange token
             @editor.moveCursorToPosition start
             @editor.session.insert start, ' '
             @editor.moveCursorToPosition start
@@ -398,7 +400,7 @@ exports.Mode = class extends TextMode
             @deselect()
             @unhighlightActive()
 
-            {start} = @tokenStringToEditableRange token
+            {start} = @tokenToVisibleRange token
             @editor.moveCursorToPosition start
           else
             start = @editor.getCursorPosition()
@@ -550,7 +552,6 @@ exports.Mode = class extends TextMode
   deselect: =>
     @editor.selection.clearSelection()
     @editor.selection.tokens = undefined
-    @editor.selection.activeToken = undefined
 
   expressionAfterCursor: ->
     @getExpression @tokenAfterCursor()
