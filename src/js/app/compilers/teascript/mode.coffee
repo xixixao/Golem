@@ -444,6 +444,16 @@ exports.Mode = class extends TextMode
             @editor.session.doc.replace @tokenToVisibleRange(token.parent),
               @editor.session.doc.getTextRange range
 
+      @editor.commands.addCommand
+        name: 'wrap current in a function'
+        bindKey: win: 'Ctrl-F', mac: 'Ctrl-F'
+        exec: =>
+          range = @activeRange()
+          if range
+            expression = @editor.session.doc.getTextRange range
+            @editor.session.doc.replace range,
+              "(fn [] #{expression})"
+
   activeRange: ->
     if @editor.selection.tokens
       @editor.selection.getRange()
