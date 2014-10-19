@@ -39,6 +39,7 @@ class CloseCommand
   @execute = ([name], state, editor) ->
     editor.displayMessage 'file', "File closed."
     editor.refs.sourceEditor.save "@unnamed"
+    editor.refs.sourceEditor.empty()
     {}
 
 _FileBrowser = hyper class FileBrowser

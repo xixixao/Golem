@@ -45,6 +45,10 @@ module.exports = hyper class SourceEditor
     @save fileName if serialized or not mustExist
     serialized?
 
+  empty: ->
+    {editor} = this
+    editor.setValue ''
+
   propTypes:
     onCompilerLoad: React.PropTypes.func.isRequired
     onSourceCompiled: React.PropTypes.func.isRequired
