@@ -196,19 +196,24 @@ exports.Mode = class extends TextMode
       @unhighlightActive()
       @deselect()
       if @isDelim token
-        # added empty parens, put cursor inside
-        if @lastChild(token.parent).token in ['(', '[', '{']
-          @putCursorBeforeToken token
-        # wrapped token in parens
+        parenOrChild = @lastChild token.parent
+        if @isEmpty token.parent
+          # added empty parens, put cursor inside
+          @editor.selection.setSelectionRange @rangeOfEnd parenOrChild
         else
-          @selectToken @lastChild token.parent
+          # wrapped token in parens
+          @selectToken parenOrChild
       # normal insert
       else
         @editToken token
 
-  putCursorBeforeToken: (token) ->
-    {start} = @tokenToVisibleRange token
-    @editor.selection.setSelectionRange Range.fromPoints start, start
+  isEmpty: (expression) ->
+    parenOrChild = @lastChild expression
+    parenOrChild.token in ['(', '[', '{']
+
+  rangeOfEnd: (token) ->
+    {end} = @tokenToVisibleRange token
+    Range.fromPoints end, end
 
   lastChild: (expression) ->
     expression[expression.length - 2]
@@ -453,6 +458,39 @@ exports.Mode = class extends TextMode
             expression = @editor.session.doc.getTextRange range
             @editor.session.doc.replace range,
               "(fn [] #{expression})"
+
+      @editor.commands.addCommand
+        name: 'replace expression by new function param'
+        bindKey: win: 'Ctrl-A', mac: 'Ctrl-A'
+        exec: =>
+          range = @activeRange()
+          token = @leftActiveToken()
+          fun = @findParentFunction token
+          params = @findParamList fun if fun
+          if range and params
+            # insert new param and put cursors at both places
+            @editor.session.doc.replace range, ""
+            parenOrChild = @lastChild params
+            addedCursor = @rangeOfEnd parenOrChild
+            @editor.selection.addRange addedCursor
+            if !@isEmpty params
+              @editor.session.insert addedCursor.end, ' '
+
+  findParentFunction: (token) ->
+    if token.parent
+      if token.parent.type is 'function'
+        token.parent
+      else
+        @findParentFunction token.parent
+
+  findParamList: (token) ->
+    if Array.isArray(token)
+      if token[0].isWs
+        [_, paren, kw, params] = token
+      else
+        [paren, kw, params]
+      if Array.isArray params
+        params
 
   activeRange: ->
     if @editor.selection.tokens
