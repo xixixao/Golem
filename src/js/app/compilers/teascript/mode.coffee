@@ -12,7 +12,7 @@ class TeaScriptBehaviour extends Behaviour
   bracketHelper = (open, close) ->
     (state, action, editor, session, text) ->
       if text is open
-        activeToken = editor.selection.activeToken
+        activeToken = activeToken()
         if activeToken and activeToken.label in ['string', 'regex']
           return
         if activeToken
@@ -193,7 +193,7 @@ exports.Mode = class extends TextMode
       # whitespace is handled by command
       if token.isWs
         return
-      wasActive = @editor.selection.activeToken?
+      wasActive = @activeToken()?
       @deselect()
       @unhighlightActive()
       if @isDelim token
@@ -272,7 +272,7 @@ exports.Mode = class extends TextMode
 
   activeOrSelectedTokens: ->
     if @manipulatedTokens().active.length > 1
-      [@editor.selection.activeToken]
+      [@activeToken()]
     else
       @editor.selection.tokens
 
@@ -288,12 +288,15 @@ exports.Mode = class extends TextMode
     else
       @manipulatedTokens().activeMarkers
 
+  activeToken: ->
+    @manipulatedTokens().active.main
+
   leftActiveToken: ->
-    @editor.selection.activeToken or
+    @activeToken() or
       @editor.selection.tokens and @editor.selection.tokens[0]
 
   rightActiveToken: =>
-    @editor.selection.activeToken or
+    @activeToken() or
       @editor.selection.tokens and @editor.selection.tokens[@editor.selection.tokens.length - 1]
 
   detachFromSession: (session) ->
@@ -322,7 +325,7 @@ exports.Mode = class extends TextMode
             if token.parent?.pos?
               # select parent node
               @selectToken token.parent
-          else if token = @editor.selection.activeToken
+          else if token = @activeToken()
             # select whole token
             @selectToken token
           else
@@ -458,7 +461,7 @@ exports.Mode = class extends TextMode
         name: 'remove token and preceding whitespace or delete a character'
         bindKey: win: 'Backspace', mac: 'Backspace'
         exec: =>
-          if @editor.selection.activeToken
+          if @activeToken()
             # remove single character
             end = @editor.getCursorPosition()
             butOne = row: end.row, column: end.column - 1
@@ -545,7 +548,7 @@ exports.Mode = class extends TextMode
   activeRange: ->
     if @editor.selection.tokens
       @editor.selection.getRange()
-    else if token = @editor.selection.activeToken
+    else if token = @activeToken()
       @tokenToVisibleRange token
     else
       undefined
