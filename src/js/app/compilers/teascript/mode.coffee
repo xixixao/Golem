@@ -193,8 +193,8 @@ exports.Mode = class extends TextMode
       if token.isWs
         return
       wasActive = @editor.selection.activeToken?
-      @unhighlightActive()
       @deselect()
+      @unhighlightActive()
       if @isDelim token
         parenOrChild = @lastChild token.parent
         if @isEmpty token.parent
@@ -297,8 +297,8 @@ exports.Mode = class extends TextMode
             @editor.selection.setSelectionRange Range.fromPoints inside, inside
           else
             # start editing
-            @selectToken token
             @deselect()
+            @unhighlightActive()
             @editToken token
 
 
@@ -422,7 +422,6 @@ exports.Mode = class extends TextMode
             if @isSelectable maybeActiveToken
               @highlightToken maybeActiveToken
           else
-            # TODO: support multiple selected tokens by deleting whole selected range
             if tokens = @editor.selection.tokens
               @deselect()
             else
