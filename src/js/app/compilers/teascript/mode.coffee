@@ -715,6 +715,9 @@ exports.Mode = class extends TextMode
 
   preExecute: (memory) ->
     window.requireModule = (fileName, names) ->
-      module = eval compiler.compileModule (memory.loadSource fileName).value
+      try
+        module = eval compiler.compileModule (memory.loadSource fileName).value
+      catch e
+        throw new Error e.message + " in file #{fileName}"
       for name in names
         module[name]
