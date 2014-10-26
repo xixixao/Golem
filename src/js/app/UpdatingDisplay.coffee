@@ -32,6 +32,7 @@ module.exports = hyper class UpdatingDisplay
     editor.session.setTabSize 2
     editor.setShowPrintMargin false
     editor.renderer.setShowGutter false
+    editor.setReadOnly true
     editor.setValue @props.expression, 1
 
   render: ->
