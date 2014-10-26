@@ -1,4 +1,4 @@
-{_div, _pre} = hyper = require 'hyper'
+{_div, _pre, _span} = hyper = require 'hyper'
 
 React = require 'React'
 ace = require 'ace/ace'
@@ -22,7 +22,11 @@ module.exports = hyper class UpdatingDisplay
       result = eval @props.compiledSource + @props.compiledExpression
       @parseValue result
     catch error
-      "Runtime Error: #{error}"
+      _span style: color: '#cc0000',
+        "#{error}"
+
+  handleCommand: (name) ->
+    => @props.onCommand name, @editor
 
   componentDidMount: ->
     @editor = editor = ace.edit @refs.ace.getDOMNode(), new Mode, "ace/theme/tea"
@@ -32,8 +36,12 @@ module.exports = hyper class UpdatingDisplay
     editor.session.setTabSize 2
     editor.setShowPrintMargin false
     editor.renderer.setShowGutter false
-    editor.setReadOnly true
+    # editor.setReadOnly true
     editor.setValue @props.expression, 1
+    editor.session.getMode().attachToSession editor.session
+
+    for name, command of editor.session.getMode().commands
+      command.exec = @handleCommand name
 
   render: ->
     _div id: @props.key, key: @props.key, className: 'log', style: 'max-width': @props.maxWidth,

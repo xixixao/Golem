@@ -350,6 +350,9 @@ module.exports = hyper class EditorMain
     @setState
       logs: [["log#{@logId++}", input]].concat @state.logs
 
+  handleExpressionCommand: (name, editor) ->
+    console.log name, editor
+
   handleColumnsResize: ->
     @refs.sourceEditor.forceResize()
 
@@ -391,6 +394,9 @@ module.exports = hyper class EditorMain
           focus: @state.sourceEditorFocus
           height: @state.sourceEditorHeight
       ''
-      _OutputDisplay logs: @state.logs, compiledSource: @state.compiledJs
+      _OutputDisplay
+        logs: @state.logs
+        compiledSource: @state.compiledJs
+        onCommand: @handleExpressionCommand
 
 hyper.render document.getElementById('editor'), module.exports()

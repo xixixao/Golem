@@ -86,6 +86,7 @@ module.exports = hyper class OutputDisplay
             compiledExpression: compiled
             compiledSource: @props.compiledSource
             maxWidth: @props.width - 45
+            onCommand: @props.onCommand
         else
           @singleDisplay key, @parseValue value
 
