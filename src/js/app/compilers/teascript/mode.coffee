@@ -188,7 +188,7 @@ exports.Mode = class extends TextMode
       @highlightTokenAt row, column
 
   highlightTokenAt: (row, column) ->
-    token = @getTokenBefore row, column
+    token = @getTokenBefore @editor, row, column
     if token
       # whitespace is handled by command
       if token.isWs
@@ -366,7 +366,7 @@ exports.Mode = class extends TextMode
             @selectToken token
           else
             # select brackets
-            token = @tokenBeforeCursor()
+            token = @tokenBeforeCursor @editor
             @selectToken token.parent
 
       'down the tree':
@@ -474,14 +474,14 @@ exports.Mode = class extends TextMode
             # TODO: this doesn't work if the trailing space is last in the file
             # because the compiler trims it
             # fix: have the compiler output whitespace tokens instead of coalescing them
-            maybeActiveToken = @tokenBeforeCursor()
+            maybeActiveToken = @tokenBeforeCursor @editor
             if @isSelectable maybeActiveToken
               @highlightToken maybeActiveToken
           else
             if tokens = @editor.selection.tokens
               @deselect()
             else
-              token = @tokenBeforeCursor()
+              token = @tokenBeforeCursor @editor
               tokens = if token.label in ['paren', 'bracket']
                 [token.parent]
               else
@@ -489,9 +489,9 @@ exports.Mode = class extends TextMode
             {tokens, isFirst, nextToken} = @surroundingWhitespace tokens
             @editor.session.doc.remove @tokensToActualRange tokens
             if isFirst
-              @selectToken @expressionAfterCursor() if nextToken?
+              @selectToken @expressionAfterCursor @editor if nextToken?
             else
-              @selectToken @expressionBeforeCursor()
+              @selectToken @expressionBeforeCursor @editor
 
       'replace parent with current selection':
         bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
@@ -529,6 +529,16 @@ exports.Mode = class extends TextMode
             @editor.selection.addRange addedCursor
             if !@isEmpty params
               @editor.session.insert addedCursor.end, ' '
+
+      'define selected token'
+        bindKey: win: 'Ctrl-D', mac: 'Ctrl-D'
+        indirect: yes
+        exec: ({targetEditor} = {}) =>
+          targetEditor ?= @editor
+          @expressionNextToCursor targetEditor
+
+
+
 
       'add label':
         bindKey: win: ':', mac: ':'
@@ -618,29 +628,26 @@ exports.Mode = class extends TextMode
     @editor.selection.clearSelection()
     @editor.selection.tokens = undefined
 
-  expressionAfterCursor: ->
-    @getExpression @tokenAfterCursor()
+  expressionAfterCursor: (editor) ->
+    @getExpression @tokenAfterCursor editor
 
-  expressionBeforeCursor: =>
-    @getExpression @tokenBeforeCursor()
+  expressionBeforeCursor: (editor) ->
+    @getExpression @tokenBeforeCursor editor
 
-  expressionNextToCursor: ->
-    @getExpression @tokenNextToCursor()
+  expressionNextToCursor: (editor) ->
+    @getExpression @tokenNextToCursor editor
 
-  tokenAfterCursor: =>
-    pos = @editor.getCursorPosition()
-    @getTokenAfter pos.row, pos.column
+  tokenAfterCursor: (editor) ->
+    pos = editor.getCursorPosition()
+    @getTokenAfter editor, pos.row, pos.column
 
-  tokenBeforeCursor: =>
-    pos = @editor.getCursorPosition()
-    @getTokenBefore pos.row, pos.column
+  tokenBeforeCursor: (editor) ->
+    pos = editor.getCursorPosition()
+    @getTokenBefore editor, pos.row, pos.column
 
-  tokenNextToCursor: =>
-    pos = @editor.getCursorPosition()
-    @getTokenNextTo pos.row, pos.column
-
-  expressionAt: (row, col) ->
-    @getExpression @getTokenBefore row, col
+  tokenNextToCursor: (editor) ->
+    pos = editor.getCursorPosition()
+    @getTokenNextTo editor, pos.row, pos.column
 
   getExpression: (token) ->
     if @isSelectable token
@@ -648,24 +655,24 @@ exports.Mode = class extends TextMode
     else
       token.parent
 
-  getTokenAfter: (row, col) ->
-    {tokens} = @$tokenizer.getLineTokens "", "", row, @editor.session.doc
+  getTokenAfter: (editor, row, col) ->
+    {tokens} = editor.session.$mode.$tokenizer.getLineTokens "", "", row, editor.session.doc
     c = 0
     for token, i in tokens
       if c >= col
         return token
       c += token.value.length
 
-  getTokenBefore: (row, col) ->
-    {tokens} = @$tokenizer.getLineTokens "", "", row, @editor.session.doc
+  getTokenBefore: (editor, row, col) ->
+    {tokens} = editor.session.$mode.$tokenizer.getLineTokens "", "", row, editor.session.doc
     c = 0
     for token, i in tokens
       c += token.value.length
       if c >= col
         return token
 
-  getTokenNextTo: (row, col) ->
-    {tokens} = @$tokenizer.getLineTokens "", "", row, @editor.session.doc
+  getTokenNextTo: (editor, row, col) ->
+    {tokens} = editor.session.$mode.$tokenizer.getLineTokens "", "", row, editor.session.doc
     c = 0
     for token, i in tokens
       c += token.value.length
@@ -678,11 +685,11 @@ exports.Mode = class extends TextMode
     @deselect()
     @unhighlightActive()
     if event.getShiftKey()
-      token = @expressionNextToCursor()
+      token = @expressionNextToCursor @editor
       @highlightToken token
     else
       # select clicked word or its parent if whitespace selected
-      token = @expressionBeforeCursor()
+      token = @expressionBeforeCursor @editor
       @selectToken token
 
   selectToken: (token) ->

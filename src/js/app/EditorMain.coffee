@@ -351,7 +351,7 @@ module.exports = hyper class EditorMain
       logs: [["log#{@logId++}", input]].concat @state.logs
 
   handleExpressionCommand: (name, editor) ->
-    console.log name, editor
+    @refs.sourceEditor.editor.execCommand name, targetEditor: editor
 
   handleColumnsResize: ->
     @refs.sourceEditor.forceResize()
