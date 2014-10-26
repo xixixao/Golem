@@ -85,7 +85,7 @@ module.exports = hyper class CommandLine
         source = $.trim editor.getValue()
         if source.length > 0
           timeline.push source
-          @props.onCommandExecution result, type
+          @props.onCommandExecution source, result, type
           @props.memory.saveCommands timeline
           editor.setValue ""
           editor.focus()

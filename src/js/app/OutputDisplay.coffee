@@ -5,6 +5,8 @@ $ = require 'ejquery'
 ace = require 'ace/ace'
 jsDump = require 'vendor/jsDump'
 
+_UpdatingDisplay = require './UpdatingDisplay'
+
 
 # addMessage = (text, id) ->
 #   tag = if id?
@@ -56,13 +58,13 @@ module.exports = hyper class OutputDisplay
       scrollTop: 0
     , duration
 
-  parseValue: (value) ->
-    if React.isValidComponent value
-      value
-    else if typeof value is 'function'
-      _pre value.toString()
-    else
-      _pre jsDump.parse value
+  # parseValue: (value) ->
+  #   if React.isValidComponent value
+  #     value
+  #   else if typeof value is 'function'
+  #     _pre value.toString()
+  #   else
+  #     _pre jsDump.parse value
 
   render: ->
     _div
@@ -71,6 +73,10 @@ module.exports = hyper class OutputDisplay
         height: @state.height - 25
         padding: '15px 20px 10px 0px'
         overflow: 'auto'
-      for [key, value] in @props.logs
-        _div id: key, key: key, className: 'log', style: 'max-width': @props.width - 45,
-          @parseValue value
+      for [key, {source, compiled}] in @props.logs
+        _UpdatingDisplay
+          key: key
+          expression: source
+          compiledExpression: compiled
+          compiledSource: @props.compiledSource
+          maxWidth: @props.width - 45

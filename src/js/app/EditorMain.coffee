@@ -290,7 +290,7 @@ module.exports = hyper class EditorMain
     @setState
       commandMap: commandMap
 
-  handleCommandExecution: (result, type) ->
+  handleCommandExecution: (source, result, type) ->
     @_hideMessage 'command', 'runtime'
     if type is 'command'
       [symbol, args] = CommandParser result
@@ -301,7 +301,15 @@ module.exports = hyper class EditorMain
       else
         @_executeCommand command, args
     else
-      @logResult @execute @state.compiledJs + result
+      # result = @execute @state.compiledJs + result
+      @state.compiler.preExecute? @memory
+      @log source: source, compiled: result
+      # @log _div {},
+      #   _div source
+      #   if result not instanceof Error
+      #     _div @formatResult @execute @state.compiledJs + result
+      #   else
+      #     null
       # outputScrollTop()
 
   handleCommandFailed: (text) ->
@@ -334,16 +342,6 @@ module.exports = hyper class EditorMain
     if @state.timeline.size() < 10
       @_executeCommand @state.commandMap.help
     window.log = @logResult
-
-  logAscii: (input) ->
-    @log input
-
-  logResult: (input) ->
-    if input not instanceof Error
-      @log if input?
-        jsDump.parse input
-      else
-        "Nothing"
 
   log: (input) ->
     @setState
@@ -390,6 +388,6 @@ module.exports = hyper class EditorMain
           focus: @state.sourceEditorFocus
           height: @state.sourceEditorHeight
       ''
-      _OutputDisplay logs: @state.logs
+      _OutputDisplay logs: @state.logs, compiledSource: @state.compiledJs
 
 hyper.render document.getElementById('editor'), module.exports()
