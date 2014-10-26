@@ -200,7 +200,7 @@ exports.Mode = class extends TextMode
         parenOrChild = @lastChild token.parent
         if @isEmpty token.parent
           # added empty parens, put cursor inside
-          @editor.selection.setSelectionRange @rangeOfEnd parenOrChild
+          @editor.moveCursorToPosition @tokenVisibleEnd parenOrChild
         else
           # wrapped token in parens
           @selectToken parenOrChild
@@ -213,8 +213,11 @@ exports.Mode = class extends TextMode
     parenOrChild.token in ['(', '[', '{']
 
   rangeOfEnd: (token) ->
-    {end} = @tokenToVisibleRange token
-    Range.fromPoints end, end
+    end = @tokenVisibleEnd token
+    @rangeOfPos end
+
+  rangeOfPos: (pos) ->
+    Range.fromPoints pos, pos
 
   lastChild: (expression) ->
     expression[expression.length - 2]
@@ -419,6 +422,7 @@ exports.Mode = class extends TextMode
           if (token = @rightActiveToken()) and token.parent
             @deselect()
             @unhighlightActive()
+            @editor.moveCursorToPosition @tokenVisibleEnd token
             @editor.insert ' '
 
       @editor.commands.addCommand
@@ -429,7 +433,7 @@ exports.Mode = class extends TextMode
             @deselect()
             @unhighlightActive()
 
-            {start} = @tokenToVisibleRange token
+            start = @tokenVisibleStart token
             @editor.moveCursorToPosition start
             @editor.session.insert start, ' '
             @editor.moveCursorToPosition start
@@ -530,6 +534,19 @@ exports.Mode = class extends TextMode
             @editor.selection.addRange addedCursor
             if !@isEmpty params
               @editor.session.insert addedCursor.end, ' '
+
+      @editor.commands.addCommand
+        name: 'add label'
+        bindKey: win: ':', mac: ':'
+        exec: =>
+          if (token = @rightActiveToken())
+            @deselect()
+            @unhighlightActive()
+            @editor.insert ':'
+          else
+            @editor.insert ':'
+            {row, column} = @editor.getCursorPosition()
+            @editor.selection.setSelectionRange @rangeOfPos row: row, column: column - 1
 
   findParentFunction: (token) ->
     if token.parent
@@ -684,8 +701,8 @@ exports.Mode = class extends TextMode
     @editor.selection.tokens = tokens
 
   tokenToVisibleRange: (token) ->
-    start = @editor.session.doc.indexToPosition token.pos
-    end = @editor.session.doc.indexToPosition token.pos + token.size
+    start = @tokenVisibleStart token
+    end = @tokenVisibleEnd token
     Range.fromPoints start, end
 
   tokenStringToEditableRange: (token) ->
@@ -697,6 +714,12 @@ exports.Mode = class extends TextMode
     start = @editor.session.doc.indexToPosition token.wsPos
     end = @editor.session.doc.indexToPosition token.wsPos + token.totalSize
     Range.fromPoints start, end
+
+  tokenVisibleEnd: (token) ->
+    @editor.session.doc.indexToPosition token.pos + token.size
+
+  tokenVisibleStart: (token) ->
+    @editor.session.doc.indexToPosition token.pos
 
   createWorker: (session) ->
     worker = new WorkerClient ["ace", "compilers"],
