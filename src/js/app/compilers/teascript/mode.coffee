@@ -140,6 +140,7 @@ exports.Mode = class extends TextMode
       token.pos = pos
       token.wsPos = pos
       token.value = token.token
+      token.tokenType = token.type
       token.type = if token.label then 'token_' + token.label else 'text'
       token.size = token.token.length
       token.totalSize = token.size
@@ -445,9 +446,10 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Space', mac: 'Space'
         exec: =>
           if (token = @rightActiveToken()) and token.parent
-            @deselect()
-            @unhighlightActive()
-            @editor.moveCursorToPosition @tokenVisibleEnd token
+            unless token.label is 'string' and token is @activeToken()
+              @deselect()
+              @unhighlightActive()
+              @editor.moveCursorToPosition @tokenVisibleEnd token
             @editor.insert ' '
 
       'add new sibling expression before current':
@@ -530,14 +532,34 @@ exports.Mode = class extends TextMode
             if !@isEmpty params
               @editor.session.insert addedCursor.end, ' '
 
-      'define selected token'
+      'define selected token':
         bindKey: win: 'Ctrl-D', mac: 'Ctrl-D'
         indirect: yes
-        exec: ({targetEditor} = {}) =>
+        exec: (editor, {targetEditor} = {}) =>
           targetEditor ?= @editor
-          @expressionNextToCursor targetEditor
-
-
+          token = @tokenNextToCursor targetEditor
+          @editor.insert if token.tokenType is 'operator'
+            labeled = false
+            i = 0
+            args = []
+            for t in token.parent
+              if t is token or t.isWs or @isDelim t
+                continue
+              if labeled
+                labeled = false
+                continue
+              args.push if t.label is 'label'
+                labeled = true
+                t.value[...-1]
+              else
+                console.log "adding for", t
+                String.fromCharCode 97 + i++
+            """
+            #{token.value} (fn [#{args.join ' '}]
+              _)"""
+          else
+            """
+            #{token.value} _"""
 
 
       'add label':
@@ -634,9 +656,6 @@ exports.Mode = class extends TextMode
   expressionBeforeCursor: (editor) ->
     @getExpression @tokenBeforeCursor editor
 
-  expressionNextToCursor: (editor) ->
-    @getExpression @tokenNextToCursor editor
-
   tokenAfterCursor: (editor) ->
     pos = editor.getCursorPosition()
     @getTokenAfter editor, pos.row, pos.column
@@ -685,7 +704,7 @@ exports.Mode = class extends TextMode
     @deselect()
     @unhighlightActive()
     if event.getShiftKey()
-      token = @expressionNextToCursor @editor
+      token = @tokenNextToCursor @editor
       @highlightToken token
     else
       # select clicked word or its parent if whitespace selected
