@@ -73,10 +73,15 @@ module.exports = hyper class OutputDisplay
         height: @state.height - 25
         padding: '15px 20px 10px 0px'
         overflow: 'auto'
-      for [key, {source, compiled}] in @props.logs
-        _UpdatingDisplay
-          key: key
-          expression: source
-          compiledExpression: compiled
-          compiledSource: @props.compiledSource
-          maxWidth: @props.width - 45
+      for [key, value] in @props.logs
+        if React.isValidComponent value
+          _div id: key, key: key, className: 'log', style: 'max-width': @props.width - 45,
+            value
+        else
+          {source, compiled} = value
+          _UpdatingDisplay
+            key: key
+            expression: source
+            compiledExpression: compiled
+            compiledSource: @props.compiledSource
+            maxWidth: @props.width - 45

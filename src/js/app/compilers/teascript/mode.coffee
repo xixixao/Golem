@@ -305,6 +305,8 @@ exports.Mode = class extends TextMode
     session.getDocument().removeListener 'change', @selectInserted
 
   attachToSession: (session) ->
+    return unless session.getEditor()
+
     @ast = undefined
     @editor = session.getEditor()
     session.manipulatedTokens =

@@ -1,7 +1,10 @@
 {_div, _pre} = hyper = require 'hyper'
 
 React = require 'React'
+ace = require 'ace/ace'
 jsDump = require 'vendor/jsDump'
+
+{Mode} = require 'compilers/teascript/mode'
 
 module.exports = hyper class UpdatingDisplay
 
@@ -21,7 +24,18 @@ module.exports = hyper class UpdatingDisplay
     catch error
       "Runtime Error: #{error}"
 
+  componentDidMount: ->
+    @editor = editor = ace.edit @refs.ace.getDOMNode(), new Mode, "ace/theme/tea"
+    editor.setFontSize 13
+    editor.renderer.setScrollMargin 2, 2
+    editor.setHighlightActiveLine false
+    editor.session.setTabSize 2
+    editor.setShowPrintMargin false
+    editor.renderer.setShowGutter false
+    editor.setValue @props.expression, 1
+
   render: ->
     _div id: @props.key, key: @props.key, className: 'log', style: 'max-width': @props.maxWidth,
-      _div @props.expression
-      _div @runSource()
+      _div ref: 'ace', style: width: '100%', height: 22
+      _div style: height: 0, margin: '0 4px', overflow: 'hidden', @props.expression
+      _div style: padding: '0 4px', @runSource()
