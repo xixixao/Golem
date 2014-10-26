@@ -56,7 +56,7 @@ class TeaScriptBehaviour extends Behaviour
     return
 
 exports.Mode = class extends TextMode
-  constructor: (@isNotSource) ->
+  constructor: (@isSingleLineInput) ->
     @$tokenizer = getLineTokens: (line, state, row, doc) =>
       start = doc.positionToIndex {row, column: 0}
       end = doc.positionToIndex {row: row + 1, column: 0}
@@ -85,7 +85,7 @@ exports.Mode = class extends TextMode
 
   onDocumentChange: (doc) =>
     # console.log "tokenizing document", @editor.getValue()
-    if @isNotSource
+    if @isSingleLineInput
       tokenizingFunction = compiler.tokenizeExp
     else
       tokenizingFunction = compiler.tokenize
@@ -317,236 +317,242 @@ exports.Mode = class extends TextMode
       activeMarkers: []
     session.on 'change', @onDocumentChange
     @editor.on 'click', @handleClick
+    # attaching as last listener, so that everything is updated already
+    session.getDocument().on 'change', @selectInserted, no
 
-    if not @isNotSource
-      # attaching as last listener, so that everything is updated already
-      session.getDocument().on 'change', @selectInserted, no
-      @editor.commands.addCommand
-        name: 'up the tree'
-        bindKey: win: 'Up', mac: 'Up'
-        exec: =>
-          # todo: select lowest common ancenstor when using multiple selections
-          if @editor.selection.tokens and [token] = @editor.selection.tokens
-            if token.parent?.pos?
-              # select parent node
-              @selectToken token.parent
-          else if token = @activeToken()
-            # select whole token
-            @selectToken token
-          else
-            # select brackets
-            token = @tokenBeforeCursor()
+    unless @isSingleLineInput
+      @addVerticalCommands session
+    @addCommands session
+
+
+  addVerticalCommands: (session) ->
+    @editor.commands.addCommand
+      name: 'add new sibling expression on new line'
+      bindKey: win: 'Enter', mac: 'Enter'
+      exec: =>
+        if (token = @rightActiveToken()) and token.parent
+          @deselect()
+          @unhighlightActive()
+
+        @editor.insert '\n'
+
+    @editor.commands.addCommand
+      name: 'add new sibling expression on previous line'
+      bindKey: win: 'Shift-Enter', mac: 'Shift-Enter'
+      exec: =>
+        if (token = @leftActiveToken()) and token.parent
+          @deselect()
+          @unhighlightActive()
+
+          {start} = @tokenToVisibleRange token
+          @editor.moveCursorToPosition start
+        else
+          start = @editor.getCursorPosition()
+        @editor.session.insert start, '\n'
+        @editor.moveCursorToPosition start
+
+  addCommands: (session) ->
+    @editor.commands.addCommand
+      name: 'up the tree'
+      bindKey: win: 'Up', mac: 'Up'
+      exec: =>
+        # todo: select lowest common ancenstor when using multiple selections
+        if @editor.selection.tokens and [token] = @editor.selection.tokens
+          if token.parent?.pos?
+            # select parent node
             @selectToken token.parent
+        else if token = @activeToken()
+          # select whole token
+          @selectToken token
+        else
+          # select brackets
+          token = @tokenBeforeCursor()
+          @selectToken token.parent
 
-      @editor.commands.addCommand
-        name: 'down the tree'
-        bindKey: win: 'Down', mac: 'Down'
-        exec: =>
-          if (token = @editor.selection.tokens[0]) and Array.isArray token
-            # select first child node
-            for t in token
-              if @isSelectable t
-                @selectToken t
-                return
-            # or go inside brackets
-            @deselect()
-            inside = @editor.session.doc.indexToPosition token.pos + 1
-            @editor.selection.setSelectionRange Range.fromPoints inside, inside
-          else
-            # start editing
-            @deselect()
-            @unhighlightActive()
-            @editToken token
+    @editor.commands.addCommand
+      name: 'down the tree'
+      bindKey: win: 'Down', mac: 'Down'
+      exec: =>
+        if (token = @editor.selection.tokens[0]) and Array.isArray token
+          # select first child node
+          for t in token
+            if @isSelectable t
+              @selectToken t
+              return
+          # or go inside brackets
+          @deselect()
+          inside = @editor.session.doc.indexToPosition token.pos + 1
+          @editor.selection.setSelectionRange Range.fromPoints inside, inside
+        else
+          # start editing
+          @deselect()
+          @unhighlightActive()
+          @editToken token
+
+    @editor.commands.addCommand
+      name: 'next in expression'
+      bindKey: win: 'Right', mac: 'Right'
+      exec: =>
+        if (token = @rightActiveToken()) and token.parent
+          # select first sibling node
+          found = false
+          for t in token.parent
+            if found and @isSelectable t
+              @selectToken t
+              return
+            if t is token
+              found = true
+
+    @editor.commands.addCommand
+      name: 'previous in expression'
+      bindKey: win: 'Left', mac: 'Left'
+      exec: =>
+        if (token = @leftActiveToken()) and token.parent
+          # select first sibling node
+          found = false
+          for t in token.parent by -1
+            if found and @isSelectable t
+              @selectToken t
+              return
+            if t is token
+              found = true
 
 
-      @editor.commands.addCommand
-        name: 'next in expression'
-        bindKey: win: 'Right', mac: 'Right'
-        exec: =>
-          if (token = @rightActiveToken()) and token.parent
-            # select first sibling node
-            found = false
-            for t in token.parent
-              if found and @isSelectable t
-                @selectToken t
-                return
-              if t is token
-                found = true
+    @editor.commands.addCommand
+      name: 'include next expression'
+      bindKey: win: 'Shift-Right', mac: 'Shift-Right'
+      exec: =>
+        if (tokens = @activeOrSelectedTokens()) and tokens[0].parent
+          [..., last] = tokens
+          found = false
+          for t in last.parent
+            if found and @isSelectable t
+              @selectTokens tokens.concat [t]
+              return
+            if t is last
+              found = true
 
-      @editor.commands.addCommand
-        name: 'previous in expression'
-        bindKey: win: 'Left', mac: 'Left'
-        exec: =>
-          if (token = @leftActiveToken()) and token.parent
-            # select first sibling node
-            found = false
-            for t in token.parent by -1
-              if found and @isSelectable t
-                @selectToken t
-                return
-              if t is token
-                found = true
+    @editor.commands.addCommand
+      name: 'include previous expression'
+      bindKey: win: 'Shift-Left', mac: 'Shift-Left'
+      exec: =>
+        if (tokens = @activeOrSelectedTokens()) and tokens[0].parent
+          [first] = tokens
+          found = false
+          for t in first.parent by -1
+            if found and @isSelectable t
+              @selectTokens [t].concat tokens
+              return
+            if t is first
+              found = true
 
-      @editor.commands.addCommand
-        name: 'include next expression'
-        bindKey: win: 'Shift-Right', mac: 'Shift-Right'
-        exec: =>
-          if (tokens = @activeOrSelectedTokens()) and tokens[0].parent
-            [..., last] = tokens
-            found = false
-            for t in last.parent
-              if found and @isSelectable t
-                @selectTokens tokens.concat [t]
-                return
-              if t is last
-                found = true
+    @editor.commands.addCommand
+      name: 'add new sibling expression'
+      bindKey: win: 'Space', mac: 'Space'
+      exec: =>
+        if (token = @rightActiveToken()) and token.parent
+          @deselect()
+          @unhighlightActive()
+          @editor.moveCursorToPosition @tokenVisibleEnd token
+          @editor.insert ' '
 
-      @editor.commands.addCommand
-        name: 'include previous expression'
-        bindKey: win: 'Shift-Left', mac: 'Shift-Left'
-        exec: =>
-          if (tokens = @activeOrSelectedTokens()) and tokens[0].parent
-            [first] = tokens
-            found = false
-            for t in first.parent by -1
-              if found and @isSelectable t
-                @selectTokens [t].concat tokens
-                return
-              if t is first
-                found = true
+    @editor.commands.addCommand
+      name: 'add new sibling expression before current'
+      bindKey: win: 'Shift-Space', mac: 'Shift-Space'
+      exec: =>
+        if (token = @leftActiveToken()) and token.parent
+          @deselect()
+          @unhighlightActive()
 
-      @editor.commands.addCommand
-        name: 'add new sibling expression'
-        bindKey: win: 'Space', mac: 'Space'
-        exec: =>
-          if (token = @rightActiveToken()) and token.parent
-            @deselect()
-            @unhighlightActive()
-            @editor.moveCursorToPosition @tokenVisibleEnd token
-            @editor.insert ' '
-
-      @editor.commands.addCommand
-        name: 'add new sibling expression before current'
-        bindKey: win: 'Shift-Space', mac: 'Shift-Space'
-        exec: =>
-          if (token = @leftActiveToken()) and token.parent
-            @deselect()
-            @unhighlightActive()
-
-            start = @tokenVisibleStart token
-            @editor.moveCursorToPosition start
-            @editor.session.insert start, ' '
-            @editor.moveCursorToPosition start
-
-      @editor.commands.addCommand
-        name: 'add new sibling expression on new line'
-        bindKey: win: 'Enter', mac: 'Enter'
-        exec: =>
-          if (token = @rightActiveToken()) and token.parent
-            @deselect()
-            @unhighlightActive()
-
-          @editor.insert '\n'
-
-      @editor.commands.addCommand
-        name: 'add new sibling expression on previous line'
-        bindKey: win: 'Shift-Enter', mac: 'Shift-Enter'
-        exec: =>
-          if (token = @leftActiveToken()) and token.parent
-            @deselect()
-            @unhighlightActive()
-
-            {start} = @tokenToVisibleRange token
-            @editor.moveCursorToPosition start
-          else
-            start = @editor.getCursorPosition()
-          @editor.session.insert start, '\n'
+          start = @tokenVisibleStart token
+          @editor.moveCursorToPosition start
+          @editor.session.insert start, ' '
           @editor.moveCursorToPosition start
 
-      @editor.commands.addCommand
-        name: 'remove token and preceding whitespace or delete a character'
-        bindKey: win: 'Backspace', mac: 'Backspace'
-        exec: =>
-          if @activeToken()
-            # remove single character
-            end = @editor.getCursorPosition()
-            butOne = row: end.row, column: end.column - 1
-            @editor.session.doc.remove Range.fromPoints butOne, end
-            @unhighlightActive()
-            # TODO: this doesn't work if the trailing space is last in the file
-            # because the compiler trims it
-            # fix: have the compiler output whitespace tokens instead of coalescing them
-            maybeActiveToken = @tokenBeforeCursor()
-            if @isSelectable maybeActiveToken
-              @highlightToken maybeActiveToken
-          else
-            if tokens = @editor.selection.tokens
-              @deselect()
-            else
-              token = @tokenBeforeCursor()
-              tokens = if token.label in ['paren', 'bracket']
-                [token.parent]
-              else
-                [token]
-            {tokens, isFirst, nextToken} = @surroundingWhitespace tokens
-            @editor.session.doc.remove @tokensToActualRange tokens
-            if isFirst
-              @selectToken @expressionAfterCursor() if nextToken?
-            else
-              @selectToken @expressionBeforeCursor()
-
-      @editor.commands.addCommand
-        name: 'replace parent with current selection'
-        bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
-        exec: =>
-          range = @activeRange()
-          # todo: select lowest common ancenstor when using multiple selections
-          # TODO: actually, we should replace parent of two adjecent nodes or
-          # if the nodes span more expressions replace each, like normal multi-cursor
-          token = @leftActiveToken()
-          if range and token and token.parent
-            @editor.session.doc.replace @tokenToVisibleRange(token.parent),
-              @editor.session.doc.getTextRange range
-
-      @editor.commands.addCommand
-        name: 'wrap current in a function'
-        bindKey: win: 'Ctrl-F', mac: 'Ctrl-F'
-        exec: =>
-          range = @activeRange()
-          if range
-            expression = @editor.session.doc.getTextRange range
-            @editor.session.doc.replace range,
-              "(fn [] #{expression})"
-
-      @editor.commands.addCommand
-        name: 'replace expression by new function param'
-        bindKey: win: 'Ctrl-A', mac: 'Ctrl-A'
-        exec: =>
-          range = @activeRange()
-          token = @leftActiveToken()
-          fun = @findParentFunction token
-          params = @findParamList fun if fun
-          if range and params
-            # insert new param and put cursors at both places
-            @editor.session.doc.replace range, ""
-            parenOrChild = @lastChild params
-            addedCursor = @rangeOfEnd parenOrChild
-            @editor.selection.addRange addedCursor
-            if !@isEmpty params
-              @editor.session.insert addedCursor.end, ' '
-
-      @editor.commands.addCommand
-        name: 'add label'
-        bindKey: win: ':', mac: ':'
-        exec: =>
-          if (token = @rightActiveToken())
+    @editor.commands.addCommand
+      name: 'remove token and preceding whitespace or delete a character'
+      bindKey: win: 'Backspace', mac: 'Backspace'
+      exec: =>
+        if @activeToken()
+          # remove single character
+          end = @editor.getCursorPosition()
+          butOne = row: end.row, column: end.column - 1
+          @editor.session.doc.remove Range.fromPoints butOne, end
+          @unhighlightActive()
+          # TODO: this doesn't work if the trailing space is last in the file
+          # because the compiler trims it
+          # fix: have the compiler output whitespace tokens instead of coalescing them
+          maybeActiveToken = @tokenBeforeCursor()
+          if @isSelectable maybeActiveToken
+            @highlightToken maybeActiveToken
+        else
+          if tokens = @editor.selection.tokens
             @deselect()
-            @unhighlightActive()
-            @editor.insert ':'
           else
-            @editor.insert ':'
-            {row, column} = @editor.getCursorPosition()
-            @editor.selection.setSelectionRange @rangeOfPos row: row, column: column - 1
+            token = @tokenBeforeCursor()
+            tokens = if token.label in ['paren', 'bracket']
+              [token.parent]
+            else
+              [token]
+          {tokens, isFirst, nextToken} = @surroundingWhitespace tokens
+          @editor.session.doc.remove @tokensToActualRange tokens
+          if isFirst
+            @selectToken @expressionAfterCursor() if nextToken?
+          else
+            @selectToken @expressionBeforeCursor()
+
+    @editor.commands.addCommand
+      name: 'replace parent with current selection'
+      bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
+      exec: =>
+        range = @activeRange()
+        # todo: select lowest common ancenstor when using multiple selections
+        # TODO: actually, we should replace parent of two adjecent nodes or
+        # if the nodes span more expressions replace each, like normal multi-cursor
+        token = @leftActiveToken()
+        if range and token and token.parent
+          @editor.session.doc.replace @tokenToVisibleRange(token.parent),
+            @editor.session.doc.getTextRange range
+
+    @editor.commands.addCommand
+      name: 'wrap current in a function'
+      bindKey: win: 'Ctrl-F', mac: 'Ctrl-F'
+      exec: =>
+        range = @activeRange()
+        if range
+          expression = @editor.session.doc.getTextRange range
+          @editor.session.doc.replace range,
+            "(fn [] #{expression})"
+
+    @editor.commands.addCommand
+      name: 'replace expression by new function param'
+      bindKey: win: 'Ctrl-A', mac: 'Ctrl-A'
+      exec: =>
+        range = @activeRange()
+        token = @leftActiveToken()
+        fun = @findParentFunction token
+        params = @findParamList fun if fun
+        if range and params
+          # insert new param and put cursors at both places
+          @editor.session.doc.replace range, ""
+          parenOrChild = @lastChild params
+          addedCursor = @rangeOfEnd parenOrChild
+          @editor.selection.addRange addedCursor
+          if !@isEmpty params
+            @editor.session.insert addedCursor.end, ' '
+
+    @editor.commands.addCommand
+      name: 'add label'
+      bindKey: win: ':', mac: ':'
+      exec: =>
+        if (token = @rightActiveToken())
+          @deselect()
+          @unhighlightActive()
+          @editor.insert ':'
+        else
+          @editor.insert ':'
+          {row, column} = @editor.getCursorPosition()
+          @editor.selection.setSelectionRange @rangeOfPos row: row, column: column - 1
 
   findParentFunction: (token) ->
     if token.parent

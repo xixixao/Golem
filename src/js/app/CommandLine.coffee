@@ -57,7 +57,7 @@ module.exports = hyper class CommandLine
 
     editor.commands.addCommand
       name: 'previous'
-      bindKey: win: 'Up', mac: 'Up'
+      bindKey: win: 'Ctrl-Up', mac: 'Command-Up'
       exec: ->
         timeline.temp editor.getValue() unless timeline.isInPast()
         editor.setValue timeline.goBack()
@@ -65,7 +65,7 @@ module.exports = hyper class CommandLine
 
     editor.commands.addCommand
       name: 'following'
-      bindKey: win: 'Down', mac: 'Down'
+      bindKey: win: 'Ctrl-Down', mac: 'Command-Down'
       exec: ->
         editor.setValue timeline.goForward() if timeline.isInPast()
         editor.clearSelection()
