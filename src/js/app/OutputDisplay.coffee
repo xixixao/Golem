@@ -58,13 +58,15 @@ module.exports = hyper class OutputDisplay
       scrollTop: 0
     , duration
 
-  # parseValue: (value) ->
-  #   if React.isValidComponent value
-  #     value
-  #   else if typeof value is 'function'
-  #     _pre value.toString()
-  #   else
-  #     _pre jsDump.parse value
+  parseValue: (value) ->
+    if typeof value is 'function'
+      _pre value.toString()
+    else
+      _pre jsDump.parse value
+
+  singleDisplay: (key, value) ->
+    _div id: key, key: key, className: 'log', style: 'max-width': @props.width - 45,
+      value
 
   render: ->
     _div
@@ -75,9 +77,8 @@ module.exports = hyper class OutputDisplay
         overflow: 'auto'
       for [key, value] in @props.logs
         if React.isValidComponent value
-          _div id: key, key: key, className: 'log', style: 'max-width': @props.width - 45,
-            value
-        else
+          @singleDisplay key, value
+        else if value.source
           {source, compiled} = value
           _UpdatingDisplay
             key: key
@@ -85,3 +86,6 @@ module.exports = hyper class OutputDisplay
             compiledExpression: compiled
             compiledSource: @props.compiledSource
             maxWidth: @props.width - 45
+        else
+          @singleDisplay key, @parseValue value
+

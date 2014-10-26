@@ -14,7 +14,13 @@ module.exports =
           if line[0] isnt ':'
             superTokenizer.getLineTokens line, state, row, doc
           else
+            @disableSuper() if line is ":"
+            @unhighlightActive()
             tokens: [value: line, type: 'text']
+
+      disableSuper: ->
+        @editor.moveCursorToPosition row: 0, column: 1
+        @editor.commands.removeCommands @commands
 
       createWorker: (session) ->
         @worker = new WorkerClient ["ace", "compilers", "app", "vendor"],

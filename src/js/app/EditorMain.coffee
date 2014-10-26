@@ -343,6 +343,9 @@ module.exports = hyper class EditorMain
       @_executeCommand @state.commandMap.help
     window.log = @logResult
 
+  logResult: (input) ->
+    @log input
+
   log: (input) ->
     @setState
       logs: [["log#{@logId++}", input]].concat @state.logs

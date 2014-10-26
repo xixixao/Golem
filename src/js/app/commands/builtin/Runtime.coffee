@@ -13,7 +13,7 @@ class DumpCommand
 
   @execute = (args, state, editor) ->
     ifCompiled state, editor, ->
-      editor.log state.compiledJs
+      editor.logResult state.compiledJs
 
 class RunCommand
   @defaultSymbols = ['run', 'r']
