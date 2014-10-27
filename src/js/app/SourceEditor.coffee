@@ -83,7 +83,7 @@ module.exports = hyper class SourceEditor
     @props.onModeChange modeId
 
     _require ["compilers/#{modeId}/mode"], ({Mode}) =>
-      @editor.session.setMode new Mode
+      @editor.session.setMode new Mode no, @props.memory
       @props.onCompilerLoad @editor.session.getMode(), modeId
 
       @editor.session.$worker.on 'ok', ({data: {result}}) =>

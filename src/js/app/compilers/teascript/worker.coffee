@@ -8,8 +8,10 @@ exports.Worker = class extends Mirror
     super sender
     @setTimeout 250
 
+    @sender.on 'prefix', ({data: {data: @prefix}}) =>
+
   onUpdate: ->
-    value = @doc.getValue()
+    value = (@prefix or '') + @doc.getValue()
     try
       @sender.emit "ok",
         result: if @isSource

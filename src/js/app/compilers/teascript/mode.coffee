@@ -56,7 +56,7 @@ class TeaScriptBehaviour extends Behaviour
     return
 
 exports.Mode = class extends TextMode
-  constructor: (@isSingleLineInput) ->
+  constructor: (@isSingleLineInput, @memory) ->
     @$tokenizer = getLineTokens: (line, state, row, doc) =>
       start = doc.positionToIndex {row, column: 0}
       end = doc.positionToIndex {row: row + 1, column: 0}
@@ -299,7 +299,7 @@ exports.Mode = class extends TextMode
     @activeToken() or
       @editor.selection.tokens and @editor.selection.tokens[0]
 
-  rightActiveToken: =>
+  rightActiveToken: ->
     @activeToken() or
       @editor.selection.tokens and @editor.selection.tokens[@editor.selection.tokens.length - 1]
 
@@ -750,6 +750,12 @@ exports.Mode = class extends TextMode
 
     if session
       worker.attachToDocument session.getDocument()
+
+      # HUGE HACK to load prelude by default
+      # window.requireModule 'Tea.Prelude'
+      names = @loadPreludeNames()
+      worker.emit 'prefix', data: data: "#{names} (require Tea.Prelude #{names}) "
+
       worker.on "error", (e) ->
         session.setAnnotations [e.data]
 
@@ -758,11 +764,20 @@ exports.Mode = class extends TextMode
 
     worker
 
+  # HUGE HACK to load prelude by default
+  # window.requireModule 'Tea.Prelude'
+  loadPreludeNames: ->
+    try
+      module = eval compiler.compileModule (@memory.loadSource 'Tea.Prelude').value
+    catch e
+      throw new Error e.message + " in module Tea.Prelude"
+    "[#{(name for own name of module).join ' '}]"
+
   preExecute: (memory) ->
     window.requireModule = (fileName, names) ->
       try
         module = eval compiler.compileModule (memory.loadSource fileName).value
       catch e
-        throw new Error e.message + " in file #{fileName}"
+        throw new Error e.message + " in module #{fileName}"
       for name in names
         module[name]
