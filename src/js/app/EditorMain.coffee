@@ -362,7 +362,6 @@ module.exports = hyper class EditorMain
       sourceEditorHeight: height
 
   render: ->
-    console.log "rendering", @state.compiledJs
     windowWidth = Math.floor window.innerWidth
     dividerWidth = 20
     leftColumnWidth = (windowWidth - dividerWidth) / 2
