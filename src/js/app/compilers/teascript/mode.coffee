@@ -753,9 +753,9 @@ exports.Mode = class extends TextMode
 
       # HUGE HACK to load prelude by default
       # window.requireModule 'Tea.Prelude'
-      if @memory
-        names = @loadPreludeNames()
-        worker.emit 'prefix', data: data: "#{names} (require Tea.Prelude #{names}) "
+      # if @memory
+      #   names = @loadPreludeNames()
+      #   worker.emit 'prefix', data: data: "#{names} (require Tea.Prelude #{names}) "
 
       worker.on "error", (e) ->
         session.setAnnotations [e.data]
