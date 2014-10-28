@@ -87,7 +87,7 @@ module.exports = hyper class SourceEditor
       @props.onCompilerLoad @editor.session.getMode(), modeId
 
       @editor.session.$worker.on 'ok', ({data: {result}}) =>
-        @props.onSourceCompiled result
+        @props.onSourceCompiled result, @editor.getValue()
 
       @editor.session.$worker.on 'error', ({data: {text}}) =>
         console.log "from source worker", text

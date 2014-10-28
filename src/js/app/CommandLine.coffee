@@ -28,7 +28,7 @@ module.exports = hyper class CommandLine
     if @sourceModeId and @sourceModeId is sourceModeId
       return
     _require ["compilers/#{sourceModeId}/mode"], ({Mode}) =>
-      @editor.session.setMode new (CommandMode.inherit Mode) "compilers/#{sourceModeId}"
+      @editor.session.setMode new (CommandMode.inherit Mode) "compilers/#{sourceModeId}", @props.memory
       @sourceModeId = sourceModeId
 
   componentWillReceiveProps: ({focus}) ->
@@ -50,7 +50,9 @@ module.exports = hyper class CommandLine
     editor.commands.addCommand
       name: 'execute'
       bindKey: win: 'Enter', mac: 'Enter'
-      exec: ->
+      exec: =>
+        # WARNING Another massive hack to get the prelude and source compiled with the expression
+        editor.session.getMode().prefixWorker editor.session.getMode().loadPreludeNames() + @props.source
         editor.session.getMode().updateWorker()
 
     timeline = @props.timeline

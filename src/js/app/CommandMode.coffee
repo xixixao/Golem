@@ -5,8 +5,8 @@ module.exports =
 
     class CommandMode extends Mode
 
-      constructor: (@sourceModePath) ->
-        super yes
+      constructor: (@sourceModePath, memory) ->
+        super yes, memory
 
         @commandMode = no
 

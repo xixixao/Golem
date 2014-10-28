@@ -747,6 +747,7 @@ exports.Mode = class extends TextMode
       "Worker",
       null,
       yes
+    @worker = worker
 
     if session
       worker.attachToDocument session.getDocument()
@@ -754,8 +755,7 @@ exports.Mode = class extends TextMode
       # HUGE HACK to load prelude by default
       # window.requireModule 'Tea.Prelude'
       if @memory
-        names = @loadPreludeNames()
-        worker.emit 'prefix', data: data: "#{names} (require Tea.Prelude #{names}) "
+        @prefixWorker @loadPreludeNames()
 
       worker.on "error", (e) ->
         session.setAnnotations [e.data]
@@ -765,6 +765,9 @@ exports.Mode = class extends TextMode
 
     worker
 
+  prefixWorker: (input) ->
+    @worker.emit 'prefix', data: data: input
+
   # HUGE HACK to load prelude by default
   # window.requireModule 'Tea.Prelude'
   loadPreludeNames: ->
@@ -772,7 +775,8 @@ exports.Mode = class extends TextMode
       module = eval compiler.compileModule (@memory.loadSource 'Tea.Prelude').value
     catch e
       throw new Error e.message + " in module Tea.Prelude"
-    "[#{(name for own name of module).join ' '}]"
+    names = "[#{(name for own name of module).join ' '}]"
+    "#{names} (require Tea.Prelude #{names}) "
 
   preExecute: (memory) ->
     window.requireModule = (fileName, names) ->

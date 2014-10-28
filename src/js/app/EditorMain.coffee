@@ -259,12 +259,13 @@ module.exports = hyper class EditorMain
     @setState
       compiler: compiler
 
-  handleSourceCompiled: (js) ->
+  handleSourceCompiled: (js, source) ->
     @_hideMessage 'compiler', 'runtime'
 
     @setState
       compiledJs: js
       sourceCompiled: yes
+      source: source
 
   handleSourceFailed: (text) ->
     @displayMessage 'compiler', "Compiler: #{text}"
@@ -361,6 +362,7 @@ module.exports = hyper class EditorMain
       sourceEditorHeight: height
 
   render: ->
+    console.log "rendering", @state.compiledJs
     windowWidth = Math.floor window.innerWidth
     dividerWidth = 20
     leftColumnWidth = (windowWidth - dividerWidth) / 2
@@ -378,6 +380,7 @@ module.exports = hyper class EditorMain
           focus: !@state.sourceEditorFocus
           timeline: @state.timeline
           memory: @memory
+          source: @state.source
         # _compilationIndicator to: 0,
         #   '&middot;'
         _MessageDisplay
