@@ -27,7 +27,7 @@ var jsDump;
     return o + '';
   }
   //TODO: add the indentation size so this is perfect
-  function size( arr, sep ) {  
+  function size( arr, sep ) {
     if( !arr || !arr[0] ) return 0;
     var sepLength = sep.length;
     var length = arr[0].length;
@@ -36,17 +36,17 @@ var jsDump;
     }
     return length;
   }
-  function join( pre, arr, post ){        
+  function join( pre, arr, post ){
     var comma     = ',',
         inlineSep = jsDump.separator(false),
-        base      = jsDump.indent();        
+        base      = jsDump.indent();
 
 
-    // Inline if short   
+    // Inline if short
     var inline = size(arr, comma + inlineSep) < jsDump.lineLimit
     var s = inline ? inlineSep : jsDump.separator(true);
     var inner = inline ? '' : jsDump.indent(1);
-    if( arr.join )      
+    if( arr.join )
       arr = arr.join( comma + s + inner);
     if( !arr )
       return pre + post;
@@ -60,9 +60,9 @@ var jsDump;
     this.down();
     return join( '[', ret, ']' );
   }
-  
+
   var reName = /^function (\w+)/;
-  
+
   jsDump = {
     parse:function( obj, type ){//type is used mostly internally, you can fix a (custom)type in advance
       var parser = this.parsers[ type || this.typeOf(obj) ];
@@ -117,7 +117,7 @@ var jsDump;
       return type;
     },
     lineLimit: 80,
-    separator:function(multiline){      
+    separator:function(multiline){
       return this.multiline && multiline ? this.HTML ? '<br />' : '\n' : this.HTML ? '&nbsp;' : ' ';
     },
     indent:function( extra ){// extra can be a number, shortcut for increasing-calling-decreasing
@@ -138,7 +138,7 @@ var jsDump;
       this.parsers[name] = parser;
     },
     // The next 3 are exposed so you can use them
-    quote:quote, 
+    quote:quote,
     literal:literal,
     join:join,
     _depth_: 1,
@@ -167,7 +167,7 @@ var jsDump;
       object:function( map ){
         if (this._depth_ >= this.maxDepth) {
           this._depth_ = 1; // Reset for future use
-          throw new Error("Object nesting exceeded jsDump.maxDepth (" + jsDump.maxDepth + ")");          
+          throw new Error("Object nesting exceeded jsDump.maxDepth (" + jsDump.maxDepth + ")");
         }
         var ret = [ ];
         this.up();
@@ -199,7 +199,7 @@ var jsDump;
       key:literal, //object calls it internally, the key part of an item in a map
       functionCode:'[code]', //function calls it internally, it's the content of the function
       attribute:quote, //node calls it internally, it's an html attribute value
-      string:emptyQuote,
+      string:quote,
       date:quote,
       regexp:literal, //regex
       number:literal,
