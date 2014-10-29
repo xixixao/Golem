@@ -15,7 +15,7 @@ var jsDump;
 
 (function(){
   function quote( str ){
-    return '"' + str.toString().replace(/"/g, '\\"') + '"';
+    return "<span style='color: #FEDF6B'>" + '"' + str.toString().replace(/"/g, '\\"') + '"' + "</span>";
   }
   function emptyQuote( str ){
     str = str.toString()
