@@ -5,23 +5,29 @@ ace = require 'ace/ace'
 jsDump = require 'vendor/jsDump'
 
 {Mode} = require 'compilers/teascript/mode'
+compiler = require 'compilers/teascript/compiler'
 
 module.exports = hyper class UpdatingDisplay
 
   parseValue: (value) ->
-    _pre {},
+    _pre dangerouslySetInnerHTML: __html:
       if not value?
         "Nothing"
       else if typeof value is 'function'
         value.toString()
       else
-        jsDump.parse value
+        compiler.syntaxedExpHtml jsDump.parse value
 
   runSource: ->
+    if @props.compiledExpression instanceof Error
+      @displayError @props.compiledExpression
     try
       result = eval @props.compiledSource + @props.compiledExpression
       @parseValue result
     catch error
+      @displayError error
+
+  displayError: (error) ->
       _span style: color: '#cc0000',
         "#{error}"
 
@@ -29,7 +35,7 @@ module.exports = hyper class UpdatingDisplay
     => @props.onCommand name, @editor
 
   componentDidMount: ->
-    @editor = editor = ace.edit @refs.ace.getDOMNode(), new Mode, "ace/theme/tea"
+    @editor = editor = ace.edit @refs.ace.getDOMNode(), (new Mode yes), "ace/theme/tea"
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2
     editor.setHighlightActiveLine false
