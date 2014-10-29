@@ -41,8 +41,14 @@ class TeaScriptBehaviour extends Behaviour
           text: quote + selected + quote
           selection: false
         else
-          text: quote + quote
-          selection: [1, 1]
+          mode = session.getMode()
+          currentActiveToken = mode.activeToken()
+          if currentActiveToken
+            text: " " + quote + quote
+            selection: [2, 2]
+          else
+            text: quote + quote
+            selection: [1, 1]
 
     @add "quotes", "deletion", (state, action, editor, session, range) ->
       selected = session.doc.getTextRange(range)
@@ -227,7 +233,9 @@ exports.Mode = class extends TextMode
     @highlightToken token
     if token.label is 'string'
       range = @tokenToEditableRange token
-      @editor.selection.setSelectionRange Range.fromPoints range.end, range.end
+      cursor = @editor.getCursorPosition()
+      if cursor.column == range.end.column + 1
+        @editor.selection.setSelectionRange Range.fromPoints range.end, range.end
 
   highlightToken: (token) ->
     # 1-based for multiselect, 0 is the single-select
