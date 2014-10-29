@@ -17,7 +17,8 @@ exports.Worker = class extends Mirror
         result: if @isSource
             compiler.compileModule value
           else
-            ";" + compiler.compileExp value
+            [res, warnings] = compiler.compileExp value
+            [";" + res, warnings]
 
     catch e
       # loc = e.location
