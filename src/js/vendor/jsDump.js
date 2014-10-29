@@ -15,7 +15,7 @@ var jsDump;
 
 (function(){
   function quote( str ){
-    return "<span style='color: #FEDF6B'>" + '"' + str.toString().replace(/"/g, '\\"') + '"' + "</span>";
+    return '"' + str.toString().replace(/"/g, '\\"') + '"';
   }
   function emptyQuote( str ){
     str = str.toString()
@@ -37,7 +37,7 @@ var jsDump;
     return length;
   }
   function join( pre, arr, post ){
-    var comma     = ',',
+    var comma     = '',
         inlineSep = jsDump.separator(false),
         base      = jsDump.indent();
 
