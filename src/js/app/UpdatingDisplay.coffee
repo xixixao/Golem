@@ -44,6 +44,7 @@ module.exports = hyper class UpdatingDisplay
     editor.renderer.setShowGutter false
     # editor.setReadOnly true
     editor.setValue @props.expression, 1
+    editor.moveCursorTo 0, 0
     editor.session.getMode().attachToSession editor.session
 
     for name, command of editor.session.getMode().commands
