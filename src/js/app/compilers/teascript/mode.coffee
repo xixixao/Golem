@@ -780,11 +780,11 @@ exports.Mode = class extends TextMode
   # window.requireModule 'Tea.Prelude'
   loadPreludeNames: ->
     try
-      module = eval compiler.compileModule (@memory.loadSource 'Tea.Prelude').value
+      names = compiler.exportList (@memory.loadSource 'Tea.Prelude').value
     catch e
       throw new Error e.message + " in module Tea.Prelude"
-    names = "[#{(name for own name of module).join ' '}]"
-    "#{names} (require Tea.Prelude #{names}) "
+    joinedNames = "[#{names.join ' '}]"
+    "#{joinedNames} (require Tea.Prelude #{joinedNames}) "
 
   preExecute: (memory) ->
     window.requireModule = (fileName, names) ->
