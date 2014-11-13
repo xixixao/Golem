@@ -156,7 +156,7 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
   }
 
   .ace-tea .ace_token_operator {
-    color: #cceeff
+    color: #67B3DD
   }
 
   .ace-tea .ace_token_normal {

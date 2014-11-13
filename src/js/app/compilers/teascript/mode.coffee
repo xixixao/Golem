@@ -666,7 +666,7 @@ exports.Mode = class extends TextMode
     not token.isWs and not @isDelim token
 
   isDelim: (token) ->
-    token.label in ['paren', 'bracket', 'brace']
+    /[\(\)\[\]\{\}]/.test token.token
 
   deselect: =>
     @editor.selection.clearSelection()
