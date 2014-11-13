@@ -12,6 +12,7 @@ class TeaScriptBehaviour extends Behaviour
   bracketHelper = (open, close) ->
     (state, action, editor, session, text) ->
       if text is open
+        # Create pair
         currentActiveToken = session.manipulatedTokens.active.main
         if currentActiveToken and currentActiveToken.label in ['string', 'regex']
           return
@@ -42,7 +43,7 @@ class TeaScriptBehaviour extends Behaviour
           selection: false
         else
           mode = session.getMode()
-          currentActiveToken = mode.activeToken()
+          currentActiveToken = mode.mainManipulatedToken()
           if currentActiveToken
             text: " " + quote + quote
             selection: [2, 2]
@@ -200,7 +201,7 @@ exports.Mode = class extends TextMode
       # whitespace is handled by command
       if token.isWs
         return
-      wasActive = @activeToken()?
+      wasActive = @mainManipulatedToken()?
       @deselect()
       @unhighlightActive()
       if @isDelim token
@@ -284,7 +285,7 @@ exports.Mode = class extends TextMode
 
   activeOrSelectedTokens: ->
     if @manipulatedTokens().active.length > 1
-      [@activeToken()]
+      [@mainManipulatedToken()]
     else
       @editor.selection.tokens
 
@@ -300,15 +301,15 @@ exports.Mode = class extends TextMode
     else
       @manipulatedTokens().activeMarkers
 
-  activeToken: ->
+  mainManipulatedToken: ->
     @manipulatedTokens().active.main
 
   leftActiveToken: ->
-    @activeToken() or
+    @mainManipulatedToken() or
       @editor.selection.tokens and @editor.selection.tokens[0]
 
   rightActiveToken: ->
-    @activeToken() or
+    @mainManipulatedToken() or
       @editor.selection.tokens and @editor.selection.tokens[@editor.selection.tokens.length - 1]
 
   detachFromSession: (session) ->
@@ -367,10 +368,10 @@ exports.Mode = class extends TextMode
         exec: =>
           # todo: select lowest common ancenstor when using multiple selections
           if @editor.selection.tokens and [token] = @editor.selection.tokens
-            if token.parent?.pos?
+            if token.parent?.pos? # check for real token by checking pos
               # select parent node
               @selectToken token.parent
-          else if token = @activeToken()
+          else if token = @mainManipulatedToken()
             # select whole token
             @selectToken token
           else
@@ -454,7 +455,7 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Space', mac: 'Space'
         exec: =>
           if (token = @rightActiveToken()) and token.parent
-            unless token.label is 'string' and token is @activeToken()
+            unless token.label is 'string' and token is @mainManipulatedToken()
               @deselect()
               @unhighlightActive()
               @editor.moveCursorToPosition @tokenVisibleEnd token
@@ -475,7 +476,7 @@ exports.Mode = class extends TextMode
       'remove token and preceding whitespace or delete a character':
         bindKey: win: 'Backspace', mac: 'Backspace'
         exec: =>
-          if @activeToken()
+          if @mainManipulatedToken()
             # remove single character
             end = @editor.getCursorPosition()
             butOne = row: end.row, column: end.column - 1
@@ -502,6 +503,19 @@ exports.Mode = class extends TextMode
               @selectToken @expressionAfterCursor @editor if nextToken?
             else
               @selectToken @expressionBeforeCursor @editor
+
+      'add new sibling to parent':
+        bindKey: win: ')', mac: ')'
+        exec: =>
+          activeToken = @rightActiveToken()
+          if activeToken and activeToken.parent?.parent
+            parent = activeToken.parent
+          else
+            parent = (@tokenBeforeCursor @editor).parent
+          @deselect()
+          @unhighlightActive()
+          @editor.moveCursorToPosition @tokenVisibleEnd parent
+          @editor.insert ' '
 
       'replace parent with current selection':
         bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
@@ -601,7 +615,7 @@ exports.Mode = class extends TextMode
   activeRange: ->
     if @editor.selection.tokens
       @editor.selection.getRange()
-    else if token = @activeToken()
+    else if token = @mainManipulatedToken()
       @tokenToVisibleRange token
     else
       undefined
@@ -738,14 +752,17 @@ exports.Mode = class extends TextMode
     end = @editor.session.doc.indexToPosition token.pos + token.size - 1
     Range.fromPoints start, end
 
+  # S-Exp -> Range
   tokenToActualRange: (token) ->
     start = @editor.session.doc.indexToPosition token.wsPos
     end = @editor.session.doc.indexToPosition token.wsPos + token.totalSize
     Range.fromPoints start, end
 
+  # S-Exp -> Position
   tokenVisibleEnd: (token) ->
     @editor.session.doc.indexToPosition token.pos + token.size
 
+  # S-Exp -> Position
   tokenVisibleStart: (token) ->
     @editor.session.doc.indexToPosition token.pos
 
