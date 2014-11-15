@@ -727,7 +727,8 @@ exports.Mode = class extends TextMode
     @unhighlightActive()
     if event.getShiftKey()
       token = @tokenNextToCursor @editor
-      @highlightToken token
+      unless @isDelim token
+        @highlightToken token
     else
       # select clicked word or its parent if whitespace selected
       token = @expressionBeforeCursor @editor
