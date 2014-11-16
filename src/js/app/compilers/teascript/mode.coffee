@@ -780,8 +780,8 @@ exports.Mode = class extends TextMode
 
       # HUGE HACK to load prelude by default
       # window.requireModule 'Tea.Prelude'
-      if @memory
-        @prefixWorker @loadPreludeNames()
+      # if @memory
+      #   @prefixWorker @loadPreludeNames()
 
       worker.on "error", (e) ->
         session.setAnnotations [e.data]
