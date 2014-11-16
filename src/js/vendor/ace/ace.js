@@ -18085,43 +18085,40 @@ var lang = require("../lib/lang");
 var event = require("../lib/event");
 var searchboxCss = "\
 .ace_search {\
-background-color: #ddd;\
-border: 1px solid #cbcbcb;\
-border-top: 0 none;\
-max-width: 325px;\
+background-color: rgba(34, 34, 34, 0.9);\
+color: white;\
+width: 100%;\
 overflow: hidden;\
 margin: 0;\
-padding: 4px;\
-padding-right: 6px;\
-padding-bottom: 0;\
+padding: 0;\
 position: absolute;\
-top: 0px;\
+bottom: 0px;\
 z-index: 99;\
 white-space: normal;\
 }\
 .ace_search.left {\
 border-left: 0 none;\
-border-radius: 0px 0px 5px 0px;\
-left: 0;\
+border-radius: 0px 10px 0px 0px;\
+left: 40px;\
 }\
 .ace_search.right {\
-border-radius: 0px 0px 0px 5px;\
+border-radius: 10px 0px 0px 0px;\
 border-right: 0 none;\
 right: 0;\
 }\
+.ace_search_forms {\
+    float:left;\
+}\
 .ace_search_form, .ace_replace_form {\
-border-radius: 3px;\
-border: 1px solid #cbcbcb;\
-float: left;\
-margin-bottom: 4px;\
+padding: 2px;\
+margin-top: 1px;\
 overflow: hidden;\
 }\
-.ace_search_form.ace_nomatch {\
-outline: 1px solid red;\
+input.ace_search_form.ace_nomatch {\
+color: red;\
 }\
 .ace_search_field {\
-background-color: white;\
-border-right: 1px solid #cbcbcb;\
+background-color: rgba(16, 16, 16, 0.6);\
 border: 0 none;\
 -webkit-box-sizing: border-box;\
 -moz-box-sizing: border-box;\
@@ -18133,31 +18130,42 @@ padding: 0 7px;\
 width: 214px;\
 margin: 0;\
 }\
+input.ace_search_field {\
+    color: #fff;\
+    font-size: 13px;\
+}\
 .ace_searchbtn,\
 .ace_replacebtn {\
-background: #fff;\
 border: 0 none;\
-border-left: 1px solid #dcdcdc;\
+background: rgba(16, 16, 16, 0.6);\
 cursor: pointer;\
 float: left;\
 height: 22px;\
-margin: 0;\
+margin: 0 0 0 1px;\
 padding: 0;\
 position: relative;\
 }\
 .ace_searchbtn:last-child,\
 .ace_replacebtn:last-child {\
-border-top-right-radius: 3px;\
-border-bottom-right-radius: 3px;\
+border-top-right-radius: 2px;\
+border-bottom-right-radius: 2px;\
 }\
 .ace_searchbtn:disabled {\
 background: none;\
 cursor: default;\
 }\
+button.ace_searchbtn,\
+button.ace_replacebtn {\
+    color: #777;\
+    font-size: 13px;\
+}\
 .ace_searchbtn {\
 background-position: 50% 50%;\
 background-repeat: no-repeat;\
 width: 27px;\
+}\
+.ace_replacebtn {\
+    min-width: 27px;\
 }\
 .ace_searchbtn.prev {\
 background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAFCAYAAAB4ka1VAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAADFJREFUeNpiSU1NZUAC/6E0I0yACYskCpsJiySKIiY0SUZk40FyTEgCjGgKwTRAgAEAQJUIPCE+qfkAAAAASUVORK5CYII=);    \
@@ -18171,7 +18179,7 @@ border-radius: 50%;\
 border: 0 none;\
 color: #656565;\
 cursor: pointer;\
-float: right;\
+float: left;\
 font: 16px/16px Arial;\
 height: 14px;\
 margin: 5px 1px 9px 5px;\
@@ -18180,7 +18188,6 @@ text-align: center;\
 width: 14px;\
 }\
 .ace_searchbtn_close:hover {\
-background-color: #656565;\
 background-position: 50% 100%;\
 color: white;\
 }\
@@ -18199,56 +18206,59 @@ cursor: pointer;\
 -ms-user-select: none;\
 user-select: none;\
 overflow: hidden;\
-opacity: 0.7;\
-border: 1px solid rgba(100,100,100,0.23);\
-padding: 1px;\
+border-radius: 2px;\
+padding: 3px;\
 -moz-box-sizing: border-box;\
 box-sizing:    border-box;\
-color: black;\
+background-color: rgba(16, 16, 16, 0.2);\
+color: #555;\
 }\
 .ace_button:hover {\
-background-color: #eee;\
-opacity:1;\
+background-color: rgba(16, 16, 16, 0.6);\
 }\
 .ace_button:active {\
 background-color: #ddd;\
 }\
 .ace_button.checked {\
-border-color: #3399ff;\
-opacity:1;\
+    background-color: rgba(16, 16, 16, 0.6);\
+    color: #ccc;\
 }\
 .ace_search_options{\
-margin-bottom: 3px;\
-text-align: right;\
--webkit-user-select: none;\
--moz-user-select: none;\
--o-user-select: none;\
--ms-user-select: none;\
-user-select: none;\
+    float: left;\
+    padding: 5px;\
+    text-align: right;\
+    -webkit-user-select: none;\
+    -moz-user-select: none;\
+    -o-user-select: none;\
+    -ms-user-select: none;\
+    user-select: none;\
+    color: #fff;\
 }";
 var HashHandler = require("../keyboard/hash_handler").HashHandler;
 var keyUtil = require("../lib/keys");
 
 dom.importCssString(searchboxCss, "ace_searchbox");
 
-var html = '<div class="ace_search right">\
-    <button type="button" action="hide" class="ace_searchbtn_close"></button>\
-    <div class="ace_search_form">\
-        <input class="ace_search_field" placeholder="Search for" spellcheck="false"></input>\
-        <button type="button" action="findNext" class="ace_searchbtn next"></button>\
-        <button type="button" action="findPrev" class="ace_searchbtn prev"></button>\
-        <button type="button" action="findAll" class="ace_searchbtn" title="Alt-Enter">All</button>\
-    </div>\
-    <div class="ace_replace_form">\
-        <input class="ace_search_field" placeholder="Replace with" spellcheck="false"></input>\
-        <button type="button" action="replaceAndFindNext" class="ace_replacebtn">Replace</button>\
-        <button type="button" action="replaceAll" class="ace_replacebtn">All</button>\
-    </div>\
+var html = '<div class="ace_search left">\
     <div class="ace_search_options">\
         <span action="toggleRegexpMode" class="ace_button" title="RegExp Search">.*</span>\
         <span action="toggleCaseSensitive" class="ace_button" title="CaseSensitive Search">Aa</span>\
         <span action="toggleWholeWords" class="ace_button" title="Whole Word Search">\\b</span>\
     </div>\
+    <div class="ace_search_forms">\
+        <div class="ace_search_form">\
+            <input class="ace_search_field" placeholder="Search for" spellcheck="false"></input>\
+            <button type="button" action="findNext" class="ace_searchbtn next"></button>\
+            <button type="button" action="findPrev" class="ace_searchbtn prev"></button>\
+            <button type="button" action="findAll" class="ace_searchbtn" title="Alt-Enter">All</button>\
+        </div>\
+        <div class="ace_replace_form">\
+            <input class="ace_search_field" placeholder="Replace with" spellcheck="false"></input>\
+            <button type="button" action="replaceAndFindNext" class="ace_replacebtn">Replace</button>\
+            <button type="button" action="replaceAll" class="ace_replacebtn">All</button>\
+        </div>\
+    </div>\
+    <button type="button" action="hide" class="ace_searchbtn_close"></button>\
 </div>'.replace(/>\s+/g, ">");
 
 var SearchBox = function(editor, range, showReplaceForm) {
