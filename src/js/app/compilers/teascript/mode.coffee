@@ -517,6 +517,27 @@ exports.Mode = class extends TextMode
           @editor.moveCursorToPosition @tokenVisibleEnd parent
           @editor.insert ' '
 
+      'add label':
+        bindKey: win: ':', mac: ':'
+        exec: =>
+          if (token = @rightActiveToken())
+            @deselect()
+            @unhighlightActive()
+            @editor.insert ':'
+          else
+            @editor.insert ':'
+            {row, column} = @editor.getCursorPosition()
+            @editor.selection.setSelectionRange @rangeOfPos row: row, column: column - 1
+
+      # Temporary
+      'show type of expression':
+        bindKey: win: 'Ctrl-T', mac: 'Ctrl-T'
+        exec: =>
+          expression = @leftActiveToken()
+          console.log expression
+          if expression
+            window.log expression.tea
+
       'replace parent with current selection':
         bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
         exec: =>
@@ -583,18 +604,6 @@ exports.Mode = class extends TextMode
             """
             #{token.value} _"""
 
-
-      'add label':
-        bindKey: win: ':', mac: ':'
-        exec: =>
-          if (token = @rightActiveToken())
-            @deselect()
-            @unhighlightActive()
-            @editor.insert ':'
-          else
-            @editor.insert ':'
-            {row, column} = @editor.getCursorPosition()
-            @editor.selection.setSelectionRange @rangeOfPos row: row, column: column - 1
 
   findParentFunction: (token) ->
     if token.parent
