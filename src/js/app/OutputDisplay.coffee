@@ -65,7 +65,21 @@ module.exports = hyper class OutputDisplay
       _pre jsDump.parse value
 
   singleDisplay: (key, value) ->
-    _div id: key, key: key, className: 'log', style: 'max-width': @props.width - 45,
+    _div
+      id: key
+      key: key
+      className: 'log'
+      dangerouslySetInnerHTML: __html: value
+      style:
+        'max-width': @props.width - 45
+
+  singleReactDisplay: (key, value) ->
+    _div
+      id: key
+      key: key
+      className: 'log'
+      style:
+        'max-width': @props.width - 45
       value
 
   render: ->
@@ -77,7 +91,7 @@ module.exports = hyper class OutputDisplay
         overflow: 'auto'
       for [key, value] in @props.logs
         if React.isValidComponent value
-          @singleDisplay key, value
+          @singleReactDisplay key, value
         else if value.source
           {source, compiled} = value
           _UpdatingDisplay
@@ -88,5 +102,5 @@ module.exports = hyper class OutputDisplay
             maxWidth: @props.width - 45
             onCommand: @props.onCommand
         else
-          @singleDisplay key, @parseValue value
+          @singleDisplay key, value
 

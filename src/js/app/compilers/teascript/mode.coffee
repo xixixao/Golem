@@ -534,9 +534,13 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Ctrl-T', mac: 'Ctrl-T'
         exec: =>
           expression = @leftActiveToken()
-          console.log expression
+          prettyPrintType = (type) ->
+            if Array.isArray type
+              "(Fn #{type.map(prettyPrintType).join ' '})"
+            else
+              type
           if expression
-            window.log expression.tea
+            window.log compiler.syntaxedExpHtml prettyPrintType expression.tea
 
       'replace parent with current selection':
         bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
