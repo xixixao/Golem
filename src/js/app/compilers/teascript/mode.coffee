@@ -483,6 +483,7 @@ exports.Mode = class extends TextMode
             @editor.session.doc.remove Range.fromPoints butOne, end
             @unhighlightActive()
             # TODO: this doesn't work if the trailing space is last in the file
+            # e.g. when the user just deleted the last token in the file
             # because the compiler trims it
             # fix: have the compiler output whitespace tokens instead of coalescing them
             maybeActiveToken = @tokenBeforeCursor @editor
