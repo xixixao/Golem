@@ -51,8 +51,8 @@ module.exports = hyper class OutputDisplay
     window.addEventListener 'resize', @windowResized
     @windowResized()
 
-  componentDidUpdate: (prevProps, prevState, rootNode) ->
-    $this = $ rootNode
+  componentDidUpdate: (prevProps, prevState) ->
+    $this = $ @getDOMNode()
     duration = $this.scrollTop() / 10
     $this.animate
       scrollTop: 0
