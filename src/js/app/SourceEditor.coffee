@@ -71,6 +71,7 @@ module.exports = hyper class SourceEditor
 
   handleMouseEnter: ->
     @editor.focus()
+    @props.onFocus()
 
   _getEditorNode: ->
     @refs.ace.getDOMNode()

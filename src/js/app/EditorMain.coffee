@@ -222,8 +222,12 @@ module.exports = hyper class EditorMain
   getInitialState: ->
     @memory = new Memory
     @logId = 0
+    @focus =
+      sourceEditor: 'sourceEditor'
+      commandLine: 'commandLine'
+      output: 'output'
 
-    sourceEditorFocus: yes
+    focused: @focus.sourceEditor
     timeline: new TimeLine
     logs: []
     message: {}
@@ -317,13 +321,9 @@ module.exports = hyper class EditorMain
   handleCommandFailed: (text) ->
     @displayMessage 'command', "Command Line: #{text}"
 
-  handleCommandLineLeave: ->
-    @setState
-      sourceEditorFocus: yes
-
-  handleSourceEditorLeave: ->
-    @setState
-      sourceEditorFocus: no
+  handleFocus: (to) ->
+    =>
+      @setState focused: to
 
   componentWillMount: ->
 
@@ -376,8 +376,10 @@ module.exports = hyper class EditorMain
           ref: 'commandLine'
           onCommandExecution: @handleCommandExecution
           onCommandFailed: @handleCommandFailed
-          onLeave: @handleCommandLineLeave
-          focus: !@state.sourceEditorFocus
+          onLeave: @handleFocus @focus.sourceEditor
+          onFocus: @handleFocus @focus.commandLine
+          onFocusOutput: @handleFocus @focus.output
+          focus: @state.focused is @focus.commandLine
           timeline: @state.timeline
           memory: @memory
           source: @state.source
@@ -392,14 +394,16 @@ module.exports = hyper class EditorMain
           onCompilerLoad: @handleCompilerLoad
           onSourceCompiled: @handleSourceCompiled
           onSourceFailed: @handleSourceFailed
-          onLeave: @handleSourceEditorLeave
+          onLeave: @handleFocus @focus.commandLine
+          onFocus: @handleFocus @focus.sourceEditor
           memory: @memory
-          focus: @state.sourceEditorFocus
+          focus: @state.focused is @focus.sourceEditor
           height: @state.sourceEditorHeight
       ''
       _OutputDisplay
         logs: @state.logs
         compiledSource: @state.compiledJs
         onCommand: @handleExpressionCommand
+        focus: @state.focused is @focus.output
 
 hyper.render document.getElementById('editor'), module.exports()

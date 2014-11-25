@@ -20,6 +20,7 @@ module.exports = hyper class CommandLine
 
   handleMouseEnter: ->
     @editor.focus()
+    @props.onFocus()
 
   _getEditorNode: ->
     @refs.ace.getDOMNode()
@@ -77,6 +78,11 @@ module.exports = hyper class CommandLine
       bindKey: win: 'Esc', mac: 'Esc'
       exec: @props.onLeave
 
+    editor.commands.addCommand
+      name: 'jump to output'
+      bindKey: win: 'Tab', mac: 'Tab'
+      exec: @props.onFocusOutput
+
     editor.session.on 'changeMode', =>
       commandWorker = editor.session.getMode().worker
 
@@ -91,7 +97,7 @@ module.exports = hyper class CommandLine
           @props.memory.saveCommands timeline
           editor.setValue ""
           editor.session.getMode().unhighlightActive()
-          editor.focus()
+          # editor.focus()
 
       commandWorker.on 'error', ({data: {text}}) =>
         @props.onCommandFailed text

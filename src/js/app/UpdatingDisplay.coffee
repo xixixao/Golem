@@ -1,6 +1,7 @@
 {_div, _pre, _span} = hyper = require 'hyper'
 
 React = require 'React'
+cx = React.addons.classSet
 ace = require 'ace/ace'
 jsDump = require 'vendor/jsDump'
 
@@ -50,8 +51,19 @@ module.exports = hyper class UpdatingDisplay
     for name, command of editor.session.getMode().commands
       command.exec = @handleCommand name
 
+  componentWillReceiveProps: ({focus}) ->
+    if focus
+      @editor.focus()
+
   render: ->
-    _div id: @props.key, key: @props.key, className: 'log', style: 'max-width': @props.maxWidth,
+    _div
+      id: @props.key
+      key: @props.key
+      className: cx
+        log: yes
+        selected: @props.focus
+      style:
+        'max-width': @props.maxWidth
       _div ref: 'ace', style: width: '100%', height: 22
       _div style: height: 0, margin: '0 4px', overflow: 'hidden', @props.expression
       _div style: padding: '0 4px', @runSource()

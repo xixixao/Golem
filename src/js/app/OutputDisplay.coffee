@@ -1,6 +1,7 @@
 {_div, _pre} = hyper = require 'hyper'
 
 React = require 'React'
+cx = React.addons.classSet
 $ = require 'ejquery'
 ace = require 'ace/ace'
 jsDump = require 'vendor/jsDump'
@@ -43,6 +44,9 @@ _UpdatingDisplay = require './UpdatingDisplay'
 
 module.exports = hyper class OutputDisplay
 
+  getInitialState: ->
+    focusedOutput: undefined
+
   windowResized: ->
     @setState
       height: window.innerHeight
@@ -50,6 +54,10 @@ module.exports = hyper class OutputDisplay
   componentWillMount: ->
     window.addEventListener 'resize', @windowResized
     @windowResized()
+
+  componentWillReceiveProps: ({focus}) ->
+    if focus and not @state.focusedOutput?
+      @setState focusedOutput: 0
 
   componentDidUpdate: (prevProps, prevState) ->
     $this = $ @getDOMNode()
@@ -64,20 +72,24 @@ module.exports = hyper class OutputDisplay
     else
       _pre jsDump.parse value
 
-  singleDisplay: (key, value) ->
+  singleDisplay: (key, isSelected, value) ->
     _div
       id: key
       key: key
-      className: 'log'
+      className: cx
+        log: yes
+        selected: isSelected
       dangerouslySetInnerHTML: __html: value
       style:
         'max-width': @props.width - 45
 
-  singleReactDisplay: (key, value) ->
+  singleReactDisplay: (key, isSelected, value) ->
     _div
       id: key
       key: key
-      className: 'log'
+      className: cx
+        log: yes
+        selected: isSelected
       style:
         'max-width': @props.width - 45
       value
@@ -89,18 +101,20 @@ module.exports = hyper class OutputDisplay
         height: @state.height - 25
         padding: '15px 20px 10px 0px'
         overflow: 'auto'
-      for [key, value] in @props.logs
+      for [key, value], i in @props.logs
+        isSelected = @props.focus and i is @state.focusedOutput
         if React.isValidComponent value
-          @singleReactDisplay key, value
+          @singleReactDisplay key, isSelected, value
         else if value.source
           {source, compiled} = value
           _UpdatingDisplay
             key: key
+            focus: isSelected
             expression: source
             compiledExpression: compiled
             compiledSource: @props.compiledSource
             maxWidth: @props.width - 45
             onCommand: @props.onCommand
         else
-          @singleDisplay key, value
+          @singleDisplay key, isSelected, value
 
