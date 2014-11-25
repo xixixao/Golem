@@ -34,7 +34,7 @@ class TeaScriptBehaviour extends Behaviour
     @add "braces", "insertion", bracketHelper "{", "}"
 
     @add "quotes", "insertion", (state, action, editor, session, text) ->
-      if text is "\""
+      if text in ['"', "'"]
         quote = text
         selection = editor.getSelectionRange()
         selected = session.doc.getTextRange(selection)
