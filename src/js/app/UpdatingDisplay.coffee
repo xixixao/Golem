@@ -52,18 +52,11 @@ module.exports = hyper class UpdatingDisplay
       command.exec = @handleCommand name
 
   componentWillReceiveProps: ({focus}) ->
-    if focus
-      @editor.focus()
+    # if focus
+      # @editor.focus()
 
   render: ->
-    _div
-      id: @props.key
-      key: @props.key
-      className: cx
-        log: yes
-        selected: @props.focus
-      style:
-        'max-width': @props.maxWidth
+    _div {},
       _div ref: 'ace', style: width: '100%', height: 22
       _div style: height: 0, margin: '0 4px', overflow: 'hidden', @props.expression
       _div style: padding: '0 4px', @runSource()

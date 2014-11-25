@@ -1,4 +1,4 @@
-{_div, _pre} = hyper = require 'hyper'
+{_div, _pre, _input} = hyper = require 'hyper'
 
 React = require 'React'
 cx = React.addons.classSet
@@ -6,6 +6,7 @@ $ = require 'ejquery'
 ace = require 'ace/ace'
 jsDump = require 'vendor/jsDump'
 
+_OutputBox = require './OutputBox'
 _UpdatingDisplay = require './UpdatingDisplay'
 
 
@@ -55,7 +56,7 @@ module.exports = hyper class OutputDisplay
     window.addEventListener 'resize', @windowResized
     @windowResized()
 
-  componentWillReceiveProps: ({focus}) ->
+  componentWillReceiveProps: ({focus, logs}) ->
     if focus and not @state.focusedOutput?
       @setState focusedOutput: 0
 
@@ -72,28 +73,6 @@ module.exports = hyper class OutputDisplay
     else
       _pre jsDump.parse value
 
-  singleDisplay: (key, isSelected, value) ->
-    _div
-      id: key
-      key: key
-      className: cx
-        log: yes
-        selected: isSelected
-      dangerouslySetInnerHTML: __html: value
-      style:
-        'max-width': @props.width - 45
-
-  singleReactDisplay: (key, isSelected, value) ->
-    _div
-      id: key
-      key: key
-      className: cx
-        log: yes
-        selected: isSelected
-      style:
-        'max-width': @props.width - 45
-      value
-
   render: ->
     _div
       className: 'output'
@@ -102,19 +81,24 @@ module.exports = hyper class OutputDisplay
         padding: '15px 20px 10px 0px'
         overflow: 'auto'
       for [key, value], i in @props.logs
-        isSelected = @props.focus and i is @state.focusedOutput
-        if React.isValidComponent value
-          @singleReactDisplay key, isSelected, value
-        else if value.source
-          {source, compiled} = value
-          _UpdatingDisplay
-            key: key
-            focus: isSelected
-            expression: source
-            compiledExpression: compiled
-            compiledSource: @props.compiledSource
-            maxWidth: @props.width - 45
-            onCommand: @props.onCommand
-        else
-          @singleDisplay key, isSelected, value
-
+        isBareReact = React.isValidComponent value
+        isSourceLine = value.source
+        isHtml = not isBareReact and not isSourceLine
+        _OutputBox
+          id: key
+          key: key
+          focus: @props.focus and i is @state.focusedOutput
+          width: @props.width - 45
+          html: if isHtml then value else undefined
+          onDelete: @props.onDelete
+          if isBareReact
+            value
+          else if isSourceLine
+            {source, compiled} = value
+            _UpdatingDisplay
+              key: key
+              expression: source
+              compiledExpression: compiled
+              compiledSource: @props.compiledSource
+              maxWidth: @props.width - 45
+              onCommand: @props.onCommand

@@ -5,7 +5,6 @@ $ = require 'ejquery'
 ace = require 'ace/ace'
 
 CommandMode = require './CommandMode'
-Memory = require './Memory'
 _require = require
 
 module.exports = hyper class CommandLine
@@ -35,6 +34,8 @@ module.exports = hyper class CommandLine
   componentWillReceiveProps: ({focus}) ->
     if focus
       @editor.focus()
+    else
+      $('input').blur()
 
   componentDidMount: ->
     @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/tea"

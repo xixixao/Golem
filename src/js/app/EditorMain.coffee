@@ -1,4 +1,4 @@
-{_div} = hyper = require 'hyper'
+{_div, _input} = hyper = require 'hyper'
 
 jsDump = require 'vendor/jsDump'
 
@@ -323,6 +323,9 @@ module.exports = hyper class EditorMain
 
   handleFocus: (to) ->
     =>
+      # if to is @focus.output
+      #   console.log "hey", @refs.fakeInput.getDOMNode()
+      #   @refs.fakeInput.getDOMNode().focus()
       @setState focused: to
 
   componentWillMount: ->
@@ -351,6 +354,10 @@ module.exports = hyper class EditorMain
   log: (input) ->
     @setState
       logs: [["log#{@logId++}", input]].concat @state.logs
+
+  handleOutputDelete: (id) ->
+    @setState
+      logs: @state.logs.filter ([someId]) -> someId isnt id
 
   handleExpressionCommand: (name, editor) ->
     @refs.sourceEditor.editor.execCommand name, targetEditor: editor
@@ -405,5 +412,6 @@ module.exports = hyper class EditorMain
         compiledSource: @state.compiledJs
         onCommand: @handleExpressionCommand
         focus: @state.focused is @focus.output
+        onDelete: @handleOutputDelete
 
 hyper.render document.getElementById('editor'), module.exports()
