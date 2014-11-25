@@ -67,6 +67,15 @@ module.exports = hyper class OutputDisplay
       scrollTop: 0
     , duration
 
+  handleDelete: (id, position) ->
+    @setState
+      focusedOutput:
+        if @props.logs.length is 1
+          undefined
+        else
+          Math.min(@props.logs.length - 2, position + 1)
+    @props.onDelete id
+
   parseValue: (value) ->
     if typeof value is 'function'
       _pre value.toString()
@@ -87,10 +96,11 @@ module.exports = hyper class OutputDisplay
         _OutputBox
           id: key
           key: key
+          position: i
           focus: @props.focus and i is @state.focusedOutput
           width: @props.width - 45
           html: if isHtml then value else undefined
-          onDelete: @props.onDelete
+          onDelete: @handleDelete
           if isBareReact
             value
           else if isSourceLine

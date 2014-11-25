@@ -12,7 +12,7 @@ module.exports = hyper class OutputDisplay
   handleKeyPress: (e) ->
     switch e.key
       when 'Backspace'
-        @props.onDelete @props.key
+        @props.onDelete @props.key, @props.position
         e.preventDefault()
 
   render: ->
@@ -30,7 +30,6 @@ module.exports = hyper class OutputDisplay
           height: 0
         _input
           ref: 'fakeInput'
-          value: 'Hello'
           style:
             outline: 'none'
           onKeyDown: @handleKeyPress

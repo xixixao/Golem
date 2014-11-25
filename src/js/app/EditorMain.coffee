@@ -356,6 +356,8 @@ module.exports = hyper class EditorMain
       logs: [["log#{@logId++}", input]].concat @state.logs
 
   handleOutputDelete: (id) ->
+    if @state.logs.length is 1
+      do @handleFocus @focus.commandLine
     @setState
       logs: @state.logs.filter ([someId]) -> someId isnt id
 
