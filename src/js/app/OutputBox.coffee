@@ -14,6 +14,10 @@ module.exports = hyper class OutputDisplay
       when 'Backspace'
         @props.onDelete @props.key, @props.position
         e.preventDefault()
+      when 'ArrowRight'
+        @props.onFocusSibling @props.position, 1
+      when 'ArrowLeft'
+        @props.onFocusSibling @props.position, -1
 
   render: ->
     _div

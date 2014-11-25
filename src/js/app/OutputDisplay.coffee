@@ -70,11 +70,18 @@ module.exports = hyper class OutputDisplay
   handleDelete: (id, position) ->
     @setState
       focusedOutput:
-        if @props.logs.length is 1
+        if @numBoxes() is 1
           undefined
         else
-          Math.min(@props.logs.length - 2, position + 1)
+          Math.min(@numBoxes() - 2, position + 1)
     @props.onDelete id
+
+  handleFocusSibling: (position, offset) ->
+    @setState
+      focusedOutput: Math.max 0, Math.min position + offset, @numBoxes() - 1
+
+  numBoxes: ->
+    @props.logs.length
 
   parseValue: (value) ->
     if typeof value is 'function'
@@ -101,6 +108,7 @@ module.exports = hyper class OutputDisplay
           width: @props.width - 45
           html: if isHtml then value else undefined
           onDelete: @handleDelete
+          onFocusSibling: @handleFocusSibling
           if isBareReact
             value
           else if isSourceLine
