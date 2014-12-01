@@ -32,6 +32,7 @@ module.exports = hyper class OutputDisplay
         style:
           overflow: 'hidden'
           height: 0
+          width: 0
         _input
           ref: 'fakeInput'
           style:
