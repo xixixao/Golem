@@ -206,7 +206,7 @@ exports.Mode = class extends TextMode
       @unhighlightActive()
       if @isDelim token
         parenOrChild = @lastChild token.parent
-        if @isEmpty token.parent
+        if @isEmpty(token.parent) or parenOrChild.isWs
           # added empty parens, put cursor inside
           @editor.moveCursorToPosition @tokenVisibleEnd parenOrChild
         else
@@ -391,7 +391,7 @@ exports.Mode = class extends TextMode
             # or go inside brackets
             @deselect()
             inside = @editor.session.doc.indexToPosition token.pos + 1
-            @editor.selection.setSelectionRange Range.fromPoints inside, inside
+            @editor.moveCursorToPosition inside
           else
             # start editing
             @deselect()
@@ -528,7 +528,14 @@ exports.Mode = class extends TextMode
           else
             @editor.insert ':'
             {row, column} = @editor.getCursorPosition()
-            @editor.selection.setSelectionRange @rangeOfPos row: row, column: column - 1
+            @editor.moveCursorToPosition row: row, column: column - 1
+
+      'add comment':
+        bindKey: win: '#', mac: '#'
+        exec: =>
+          @editor.insert '(# )'
+          {row, column} = @editor.getCursorPosition()
+          @editor.moveCursorToPosition row: row, column: column
 
       # Temporary
       'show type of expression':
