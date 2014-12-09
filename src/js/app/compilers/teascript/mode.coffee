@@ -718,7 +718,7 @@ exports.Mode = class extends TextMode
       token.parent
 
   getTokenAfter: (editor, row, col) ->
-    {tokens} = editor.session.$mode.$tokenizer.getLineTokens "", "", row, editor.session.doc
+    {tokens} = @lineTokens editor, row
     c = 0
     for token, i in tokens
       if c >= col
@@ -726,15 +726,17 @@ exports.Mode = class extends TextMode
       c += token.value.length
 
   getTokenBefore: (editor, row, col) ->
-    {tokens} = editor.session.$mode.$tokenizer.getLineTokens "", "", row, editor.session.doc
+    {tokens} = @lineTokens editor, row
     c = 0
     for token, i in tokens
       c += token.value.length
       if c >= col
         return token
+    # Must be a whitespace not produced by the compiler
+    return
 
   getTokenNextTo: (editor, row, col) ->
-    {tokens} = editor.session.$mode.$tokenizer.getLineTokens "", "", row, editor.session.doc
+    {tokens} = @lineTokens editor, row
     c = 0
     for token, i in tokens
       c += token.value.length
@@ -742,6 +744,9 @@ exports.Mode = class extends TextMode
         return token
       if c > col
         return token
+
+  lineTokens: (editor, row) ->
+    editor.session.$mode.$tokenizer.getLineTokens "", "", row, editor.session.doc
 
   handleClick: (event) =>
     @deselect()
