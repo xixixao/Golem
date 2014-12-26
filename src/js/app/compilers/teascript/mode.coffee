@@ -349,6 +349,16 @@ exports.Mode = class extends TextMode
         @editor.insert '\n'
 
     @editor.commands.addCommand
+      name: 'add new sibling to parent expression on new line'
+      bindKey: win: 'Ctrl-Enter', mac: 'Ctrl-Enter'
+      exec: =>
+        if (token = @rightActiveToken()) and parent = token.parent
+          @deselect()
+          @unhighlightActive()
+          @editor.moveCursorToPosition @tokenVisibleEnd parent
+          @editor.insert '\n'
+
+    @editor.commands.addCommand
       name: 'add new sibling expression on previous line'
       bindKey: win: 'Shift-Enter', mac: 'Shift-Enter'
       exec: =>
