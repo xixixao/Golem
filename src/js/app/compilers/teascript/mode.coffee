@@ -97,11 +97,13 @@ exports.Mode = class extends TextMode
     else
       tokenizingFunction = compiler.tokenize
     value = if doc?.getValue then doc.getValue() else @editor.getValue()
-    try
-      ast = tokenizingFunction value
-      @ast = (@labelTokens ast)[0]
-    catch
-      @ast = undefined
+    if value isnt ''
+      try
+        ast = tokenizingFunction value
+        @ast = (@labelTokens ast)[0]
+      catch e
+        console.log "Error while tokenizing", e
+        @ast = undefined
 
   labelTokens: (ast) =>
     if Array.isArray ast
