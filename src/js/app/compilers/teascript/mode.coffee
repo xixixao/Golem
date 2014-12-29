@@ -102,7 +102,7 @@ exports.Mode = class extends TextMode
         ast = tokenizingFunction value
         @ast = (@labelTokens ast)[0]
       catch e
-        console.log "Error while tokenizing", e
+        # console.log "Error while tokenizing", e
         @ast = undefined
 
   labelTokens: (ast) =>
