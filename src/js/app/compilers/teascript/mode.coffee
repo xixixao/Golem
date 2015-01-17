@@ -5,7 +5,7 @@ TextMode     = require("ace/mode/text").Mode
 Behaviour    = require("ace/mode/behaviour").Behaviour
 WorkerClient = require("ace/worker/worker_client").WorkerClient
 
-compiler = require './compiler'
+{isForm, concat, map, filter} = compiler = require './compiler'
 
 class TeaScriptBehaviour extends Behaviour
 
@@ -65,45 +65,42 @@ class TeaScriptBehaviour extends Behaviour
 exports.Mode = class extends TextMode
   constructor: (@isSingleLineInput, @memory) ->
     @$tokenizer = getLineTokens: (line, state, row, doc) =>
-      start = doc.positionToIndex {row, column: 0}
-      end = doc.positionToIndex {row: row + 1, column: 0}
-
-      tokensOnLine = []
-      addOnLine = (ast) ->
-        if Array.isArray ast
-          if start < ast.pos + ast.size and ast.pos < end
-            addOnLine node for node in ast
-        else
-          if start <= ast.pos < end
-            tokensOnLine.push ast
-        return
-
-      if !@ast
-        @onDocumentChange doc
-      if !@ast
-        return tokens: [value: line, type: 'text']
-      addOnLine @ast
-      tokens: tokensOnLine
-
+      if tokens = @tokensOnLine row, doc
+        tokens: map convertToAceToken, tokens
+      else
+        tokens: [value: line, type: 'text']
 
     @$outdent = new Outdent
     @foldingRules = new FoldMode
     @$behaviour = new TeaScriptBehaviour
 
+  tokensOnLine: (row, doc) =>
+    start = doc.positionToIndex {row, column: 0}
+    end = doc.positionToIndex {row: row + 1, column: 0}
+
+    if not @ast
+      @onDocumentChange doc
+    if not @ast
+      return undefined
+    findTokensBetween (topList @ast), start, end
+
   onDocumentChange: (doc) =>
     # console.log "tokenizing document", @editor.getValue()
-    if @isSingleLineInput
-      tokenizingFunction = compiler.tokenizeExp
-    else
-      tokenizingFunction = compiler.tokenize
-    value = if doc?.getValue then doc.getValue() else @editor.getValue()
-    if value isnt ''
-      try
-        ast = tokenizingFunction value
-        @ast = (@labelTokens ast)[0]
-      catch e
-        # console.log "Error while tokenizing", e
-        @ast = undefined
+    if not @ast
+      @initAST if doc?.getValue then doc.getValue() else @editor.getValue()
+
+    compileFunction =
+      if @isSingleLineInput
+        compiler.compileExpression
+      else
+        compiler.compileTopLevel
+    # value = if doc?.getValue then doc.getValue() else @editor.getValue()
+    # try
+    if @ast
+      compileFunction @ast
+    # catch e
+    #   throw e
+    #   console.log "Error while compiling", e
 
   labelTokens: (ast) =>
     if Array.isArray ast
@@ -201,14 +198,14 @@ exports.Mode = class extends TextMode
     token = @getTokenBefore @editor, row, column
     if token
       # whitespace is handled by command
-      if token.isWs
+      if isWs token
         return
       wasActive = @mainManipulatedToken()?
       @deselect()
       @unhighlightActive()
       if @isDelim token
         parenOrChild = @lastChild token.parent
-        if @isEmpty(token.parent) or parenOrChild.isWs
+        if @isEmpty(token.parent) or isWs parenOrChild
           # added empty parens, put cursor inside
           @editor.moveCursorToPosition @tokenVisibleEnd parenOrChild
         else
@@ -322,7 +319,9 @@ exports.Mode = class extends TextMode
   attachToSession: (session) ->
     return unless session.getEditor()
 
-    @ast = undefined
+    # Initial parse
+    @initAST session.getDocument().getValue()
+
     @editor = session.getEditor()
     session.manipulatedTokens =
       active: []
@@ -336,6 +335,13 @@ exports.Mode = class extends TextMode
       @addVerticalCommands session
     @addCommands session
 
+  initAST: (value) ->
+    @ast =
+      if @isSingleLineInput
+        if value isnt ''
+          compiler.astizeExpression value
+      else
+          compiler.astizeList value
 
   addVerticalCommands: (session) ->
     @editor.commands.addCommand
@@ -380,7 +386,7 @@ exports.Mode = class extends TextMode
         exec: =>
           # todo: select lowest common ancenstor when using multiple selections
           if @editor.selection.tokens and [token] = @editor.selection.tokens
-            if token.parent?.pos? # check for real token by checking pos
+            if token.parent?.start? # check for real token by checking start
               # select parent node
               @selectToken token.parent
           else if token = @mainManipulatedToken()
@@ -402,7 +408,7 @@ exports.Mode = class extends TextMode
                 return
             # or go inside brackets
             @deselect()
-            inside = @editor.session.doc.indexToPosition token.pos + 1
+            inside = @editor.session.doc.indexToPosition token.start + 1
             @editor.moveCursorToPosition inside
           else
             # start editing
@@ -511,7 +517,7 @@ exports.Mode = class extends TextMode
               else
                 [token]
             {tokens, isFirst, nextToken} = @surroundingWhitespace tokens
-            @editor.session.doc.remove @tokensToActualRange tokens
+            @editor.session.doc.remove @tokensToVisibleRange tokens
             if isFirst
               @selectToken @expressionAfterCursor @editor if nextToken?
             else
@@ -610,7 +616,7 @@ exports.Mode = class extends TextMode
             i = 0
             args = []
             for t in token.parent
-              if t is token or t.isWs or @isDelim t
+              if t is token or (isWs t) or @isDelim t
                 continue
               if labeled
                 labeled = false
@@ -638,7 +644,7 @@ exports.Mode = class extends TextMode
 
   findParamList: (token) ->
     if Array.isArray(token)
-      if token[0].isWs
+      if isWs token[0]
         [_, paren, kw, params] = token
       else
         [paren, kw, params]
@@ -652,10 +658,6 @@ exports.Mode = class extends TextMode
       @tokenToVisibleRange token
     else
       undefined
-
-  tokensToActualRange: (tokens) ->
-    [first, ..., last] = tokens
-    Range.fromPoints (@tokenToActualRange first).start, (@tokenToActualRange last).end
 
   tokensToVisibleRange: (tokens) ->
     [first, ..., last] = tokens
@@ -671,7 +673,7 @@ exports.Mode = class extends TextMode
       # find the first token and erase all preceding whitespace tokens
       for t in first.parent by -1
         if found
-          if t.isWs
+          if isWs t
             tokens.unshift t
           else
             if @isSelectable t
@@ -684,7 +686,7 @@ exports.Mode = class extends TextMode
       if isFirst
         for t in first.parent
           if found
-            if t.isWs
+            if isWs t
               tokens.push t
             else
               if @isSelectable t
@@ -696,7 +698,7 @@ exports.Mode = class extends TextMode
 
 
   isSelectable: (token) ->
-    not token.isWs and not @isDelim token
+    not (isWs token) and not @isDelim token
 
   isDelim: (token) ->
     /[\(\)\[\]\{\}]/.test token.token
@@ -724,41 +726,42 @@ exports.Mode = class extends TextMode
     @getTokenNextTo editor, pos.row, pos.column
 
   getExpression: (token) ->
-    if @isSelectable token
-      token
-    else
-      token.parent
+    if token
+      if @isSelectable token
+        token
+      else
+        token.parent
 
   getTokenAfter: (editor, row, col) ->
-    {tokens} = @lineTokens editor, row
+    tokens = @lineTokens editor, row
     c = 0
     for token, i in tokens
       if c >= col
         return token
-      c += token.value.length
+      c += token.end - token.start
 
   getTokenBefore: (editor, row, col) ->
-    {tokens} = @lineTokens editor, row
+    tokens = @lineTokens editor, row
     c = 0
     for token, i in tokens
-      c += token.value.length
+      c += token.end - token.start
       if c >= col
         return token
-    # Must be a whitespace not produced by the compiler
+    # Must be a whitespace not produced by the compiler or empty editor
     return
 
   getTokenNextTo: (editor, row, col) ->
-    {tokens} = @lineTokens editor, row
+    tokens = @lineTokens editor, row
     c = 0
     for token, i in tokens
-      c += token.value.length
-      if c == col and !token.isWs
+      c += token.end - token.start
+      if c == col and not isWs token
         return token
       if c > col
         return token
 
   lineTokens: (editor, row) ->
-    editor.session.$mode.$tokenizer.getLineTokens "", "", row, editor.session.doc
+    editor.session.$mode.tokensOnLine row, editor.session.doc
 
   handleClick: (event) =>
     @deselect()
@@ -769,8 +772,10 @@ exports.Mode = class extends TextMode
         @highlightToken token
     else
       # select clicked word or its parent if whitespace selected
-      token = @expressionBeforeCursor @editor
-      @selectToken token
+      expression = @expressionBeforeCursor @editor
+      console.log  "selecting after click", expression
+      if expression
+        @selectToken expression
 
   selectToken: (token) ->
     @unhighlightActive()
@@ -787,23 +792,24 @@ exports.Mode = class extends TextMode
     Range.fromPoints start, end
 
   tokenStringToEditableRange: (token) ->
-    start = @editor.session.doc.indexToPosition token.pos + 1
-    end = @editor.session.doc.indexToPosition token.pos + token.size - 1
+    start = @editor.session.doc.indexToPosition token.start + 1
+    end = @editor.session.doc.indexToPosition token.end - 1
     Range.fromPoints start, end
 
-  # S-Exp -> Range
-  tokenToActualRange: (token) ->
-    start = @editor.session.doc.indexToPosition token.wsPos
-    end = @editor.session.doc.indexToPosition token.wsPos + token.totalSize
-    Range.fromPoints start, end
+  # Dont have different sizes anymore
+  # # S-Exp -> Range
+  # tokenToActualRange: (token) ->
+  #   start = @editor.session.doc.indexToPosition token.wsPos
+  #   end = @editor.session.doc.indexToPosition token.wsPos + token.totalSize
+  #   Range.fromPoints start, end
 
   # S-Exp -> Position
   tokenVisibleEnd: (token) ->
-    @editor.session.doc.indexToPosition token.pos + token.size
+    @editor.session.doc.indexToPosition token.end
 
   # S-Exp -> Position
   tokenVisibleStart: (token) ->
-    @editor.session.doc.indexToPosition token.pos
+    @editor.session.doc.indexToPosition token.start
 
   createWorker: (session) ->
     worker = new WorkerClient ["ace", "compilers"],
@@ -845,8 +851,41 @@ exports.Mode = class extends TextMode
   preExecute: (memory) ->
     window.requireModule = (fileName, names) ->
       try
-        module = eval compiler.compileModule (memory.loadSource fileName).value
+        # module = eval compiler.compileModule (memory.loadSource fileName).value
       catch e
         throw new Error e.message + " in module #{fileName}"
       for name in names
         module[name]
+
+isWs = (token) ->
+  token.label is 'whitespace'
+
+findTokensBetween = (expression, start, end) ->
+  if isForm expression
+    if start < expression.end and expression.start < end
+      concat (for expr in expression
+        findTokensBetween expr, start, end)
+    else
+      []
+  else
+    if start <= expression.start < end
+      [expression]
+    else
+      []
+
+convertToAceToken = (token) ->
+  value: token.symbol
+  type:
+    switch token.label
+      when 'whitespace' then 'text'
+      else
+        if token.label
+          'token_' + token.label
+        else
+          'text'
+
+topList = (ast) ->
+  inside = ast[1...-1]
+  inside.start = ast.start + 1
+  inside.end = ast.end - 1
+  inside

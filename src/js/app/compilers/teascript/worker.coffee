@@ -14,11 +14,13 @@ exports.Worker = class extends Mirror
     value = (@prefix or '') + @doc.getValue()
     try
       @sender.emit "ok",
-        result: if @isSource
-            compiler.compileModule value
+        result:
+          if @isSource
+            compiler.compileTopLevel compiler.astizeList value
           else
-            [res, warnings] = compiler.compileExp value
-            [";" + res, warnings]
+            # [res, warnings] = compiler.compileExp value
+            # [";" + res, warnings]
+            compiler.compileExpression compiler.astizeExpression value
 
     catch e
       # loc = e.location
