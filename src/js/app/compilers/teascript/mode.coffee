@@ -8,7 +8,6 @@ WorkerClient = require("ace/worker/worker_client").WorkerClient
 
 {
   isForm
-  isAtom
   concat
   map
   filter
@@ -276,65 +275,65 @@ exports.Mode = class extends TextMode
   # Traverses the AST in order, fixing positions
   repositionAst: ->
     currentPosition = @ast.start
-    stack = [@ast]
-    while node = stack.pop()
+    stack = [[@ast, yes]]
+    while next = stack.pop()
+      [node, push] = next
       if isForm node
-        for n in node by -1
-          stack.push n
+        if push
+          node.start = currentPosition
+          stack.push [node, no]
+          for n in node by -1
+            stack.push [n, yes]
+        else
+          node.end = currentPosition
       else
         offset = currentPosition - node.start
         node.start = currentPosition
         node.end += offset
         currentPosition = node.end
 
-
   addVerticalCommands: (session) ->
     @editor.commands.addCommand
       name: 'add new sibling expression on new line'
       bindKey: win: 'Enter', mac: 'Enter'
       exec: =>
-        if (token = @rightActiveToken()) and token.parent
-          @deselect()
-          @unhighlightActive()
-
-        @editor.insert '\n'
+        @addWhitespaceAtCursor '\n'
 
     @editor.commands.addCommand
       name: 'add new sibling to parent expression on new line'
       bindKey: win: 'Ctrl-Enter', mac: 'Ctrl-Enter'
       exec: =>
-        if (token = @rightActiveToken()) and parent = token.parent
-          @deselect()
-          @unhighlightActive()
-          @editor.moveCursorToPosition @tokenVisibleEnd parent
-          @editor.insert '\n'
+        # if (token = @rightActiveToken()) and parent = token.parent
+        #   @deselect()
+        #   @unhighlightActive()
+        #   @editor.moveCursorToPosition @tokenVisibleEnd parent
+        #   @editor.insert '\n'
 
     @editor.commands.addCommand
       name: 'add new sibling expression on previous line'
       bindKey: win: 'Shift-Enter', mac: 'Shift-Enter'
       exec: =>
-        if (token = @leftActiveToken()) and token.parent
-          @deselect()
-          @unhighlightActive()
-
-          {start} = @tokenToVisibleRange token
-          @editor.moveCursorToPosition start
+        if (expression = @activeExpression())
+          start = @startPos expression
+          @addBefore '\n', expression
         else
-          start = @editor.getCursorPosition()
-        @editor.session.insert start, '\n'
-        @editor.moveCursorToPosition start
+          start = @cursorPosition()
+          @addAtInsertPosition '\n'
+        @setInsertPositionAt start, expression.parent
 
   addCommands: (session) ->
     @editor.commands.addCommands @commands =
       'up the tree':
         bindKey: win: 'Up', mac: 'Up'
         exec: =>
-          if expression = @selectedExpression()
+          expression = @selectionExpression()
+          if @isSelecting()
             if isReal expression.parent
               @selectExpression expression.parent
           else
             # If editing or inserting
-            @selectExpression @selectionExpression()
+            if isReal expression
+              @selectExpression expression
 
       'down the tree':
         bindKey: win: 'Down', mac: 'Down'
@@ -356,13 +355,13 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Right', mac: 'Right'
         exec: =>
           if @isSelectingOrEditing()
-            @selectExpression nextExpression @selectionExpression()
+            @selectExpression nextExpression @activeExpression()
 
       'previous in expression':
         bindKey: win: 'Left', mac: 'Left'
         exec: =>
           if @isSelectingOrEditing()
-            @selectExpression previousExpression @selectionExpression()
+            @selectExpression previousExpression @activeExpression()
 
 
       'include next expression':
@@ -402,7 +401,7 @@ exports.Mode = class extends TextMode
               @replaceSelected string
             else
               # todo need to create a new token
-              @addAtInsertPosition string
+              @editAtCursor @addAtInsertPosition string
           else
             # TODO: see above
             editor.insert string
@@ -412,20 +411,12 @@ exports.Mode = class extends TextMode
       'add new sibling expression':
         bindKey: win: 'Space', mac: 'Space'
         exec: =>
-          if (expression = @selectionExpression())
-            if @isEditing() and isDelimitedAtom expression
-              @addToEditedAtomAtCursor ' '
-            else if @selectedExpression() or @isEditing()
-              @addAfter ' ', expression
-              @setCursor @idxToPos expression.end + 1
-              @setInsertPositionAtCursorTo expression.parent
-            else
-              @addAtInsertPosition ' '
+          @addWhitespaceAtCursor ' '
 
       'add new sibling expression before current':
         bindKey: win: 'Shift-Space', mac: 'Shift-Space'
         exec: =>
-          if (expression = @selectionExpression())
+          if (expression = @activeExpression())
             start = @startPos expression
             @addBefore ' ', expression
             @setInsertPositionAt start, expression.parent
@@ -462,9 +453,9 @@ exports.Mode = class extends TextMode
               # TODO: remove all preceding whitespace
               @editor.remove("left")
               @removeNode prevToken
-            if leftNeighbor
+            if isExpression leftNeighbor
               @selectExpression leftNeighbor
-            else if rightNeigbor
+            else if isExpression rightNeigbor
               @selectExpression rightNeigbor
             else
               @setInsertPositionAtCursorTo expression.parent
@@ -646,11 +637,21 @@ exports.Mode = class extends TextMode
             found = true
     {tokens, isFirst, nextToken}
 
+  addWhitespaceAtCursor: (string) ->
+    if (expression = @selectionExpression())
+      if @isEditing() and isDelimitedAtom expression
+        @addToEditedAtomAtCursor string
+      else if @isSelectingOrEditing()
+        @addAfter string, expression
+        @setCursor @idxToPos expression.end + string.length
+        @setInsertPositionAtCursorTo expression.parent
+      else
+        @addAtInsertPosition string
 
   addAtInsertPosition: (string) ->
-    prevNode = nodeBefore @selectionExpression(), @posToIdx @cursorPosition()
-    added = @addAfter string, prevNode
-    @editAtCursor added
+    # console.log "adding at insert position", string, @selectionExpression(), @posToIdx @cursorPosition()
+    prevNode = nodeBeforeIn @selectionExpression(), @posToIdx @cursorPosition()
+    @addAfter string, prevNode
 
   replaceSelected: (string) ->
     expression = @selectedExpression()
@@ -771,11 +772,20 @@ exports.Mode = class extends TextMode
 
   # Proc (Maybe Expression)
   selectedExpression: ->
-    if @isSelectingOrEditing() and not @isEditing()
+    if @isSelecting()
       @selectionExpression()
 
+  isSelecting: ->
+    @isSelectingOrEditing() and not @isEditing()
+
+  # Proc Bool
   isSelectingOrEditing: ->
     not @editor.selection.$teaInside
+
+  # Proc (Maybe Expression)
+  activeExpression: ->
+    if @isSelectingOrEditing
+      @selectionExpression()
 
   # Proc (Maybe Expression)
   selectionExpression: ->
@@ -971,6 +981,9 @@ exports.Mode = class extends TextMode
 isExpression = (node) ->
   not (isWs node) and not (isDelim node)
 
+isAtom = (node) ->
+  (isExpression node) and not isForm node
+
 isDelimitedAtom = (atom) ->
   atom.label in ['string', 'regex']
 
@@ -999,6 +1012,7 @@ isReal = (expression) ->
   expression.start >= 0
 
 findTokensBetween = (expression, start, end) ->
+  # console.log "looking between #{start} and #{end} in", expression
   if isForm expression
     if start < expression.end and expression.start < end
       concat (for expr in expression
@@ -1013,7 +1027,9 @@ findTokensBetween = (expression, start, end) ->
 
 # Converts TeaScript tokens to Ace tokens
 convertToAceLineTokens = (tokens) ->
+  # console.log  "tokens on line", tokens
   converted = map convertToAceToken, tokens
+  # console.log "converted", converted
   # Strip newlines characters
   if (last = converted[converted.length - 1]) and last.value is '\n'
     converted.pop()
@@ -1079,11 +1095,11 @@ indexWithin = (what, array) ->
   throw new Error "what is not inside of array in indexWithin"
 
 # Fn Form Idx Node
-nodeBefore = (form, idx) ->
+nodeBeforeIn = (form, idx) ->
   for node in form
     if node.end >= idx
       return node
-  throw new Error "idx out of form supplied in nodeBefore"
+  throw new Error "idx out of form supplied in nodeBeforeIn"
 
 
   # labelTokens: (ast) =>
