@@ -45,7 +45,7 @@ class TeaScriptBehaviour extends Behaviour
       if text is open
         # Create pair
         currentActiveToken = session.manipulatedTokens.active.main
-        if currentActiveToken and currentActiveToken.label in ['string', 'regex']
+        if currentActiveToken and isDelimitedAtom currentActiveToken
           return
         if currentActiveToken
           session.getMode().selectToken currentActiveToken
@@ -210,6 +210,40 @@ exports.Mode = class extends TextMode
   lastChild: (expression) ->
     expression[expression.length - 2]
 
+  addAtInsertPosition: (string) ->
+    prevNode = nodeBefore @selectionExpression(), @posToIdx @cursorPosition()
+    added = @addAfter string, prevNode
+    @editAtCursor added
+
+  replaceSelected: (string) ->
+    expression = @selectedExpression()
+    added = (compiler.astizeExpression string)
+    @replace expression, added
+    @editor.session.replace (@range expression), string
+    @editAtCursor added
+
+  replace: (replaced, added) ->
+    added.parent = replaced.parent
+    replaced.parent.splice (childIndex replaced), 1, added
+    @repositionAst()
+
+  addAfter: (string, node) ->
+    @addAt string, node.parent, (childIndex node) + 1
+
+  addBefore: (string, node) ->
+    @addAt string, node.parent, (childIndex node) - 1
+
+  addAt: (string, parent, idx) ->
+    added = compiler.astizeExpression string
+    @addNodeAt added, parent, idx
+    @editor.session.insert (@startPos parent[idx]), string
+    added
+
+  addNodeAt: (node, parent, idx) ->
+    node.parent = parent
+    parent.splice idx, 0, node
+    @repositionAst()
+
   removeNode: (node) ->
     node.parent.splice (childIndex node), 1
     @repositionAst()
@@ -226,6 +260,7 @@ exports.Mode = class extends TextMode
     #    we would add up offsets from previous tokens
     atom.end += string.length
     @repositionAst()
+    @editor.insert string
     @updateEditingMarker()
 
   removeCharacterFromEditedAtomAtCursor: ->
@@ -249,9 +284,13 @@ exports.Mode = class extends TextMode
     @setCursor @selectionRange().end
     @updateEditingMarker()
 
+  editAtCursor: (atom) ->
+    @setSelectionExpression atom, no
+    @setCursor @cursorPosition()
+    @updateEditingMarker()
+
   updateEditingMarker: ->
     @clearEditingMarker()
-    console.log @selectionExpression(), @editableRange @selectionExpression()
     range = @editableRange @selectionExpression()
     id = @editor.session.addMarker range, 'ace_active-token'
     @editor.selection.$editMarker = id
@@ -279,8 +318,11 @@ exports.Mode = class extends TextMode
     @setCursor inside
     @setSelectionExpression expression, yes
 
-  setInsertPositionAtCursor: (enclosingExpression) ->
-    @setCursor @cursorPosition()
+  setInsertPositionAtCursorTo: (enclosingExpression) ->
+    @setInsertPositionAt @cursorPosition(), enclosingExpression
+
+  setInsertPositionAt: (position, enclosingExpression) ->
+    @setCursor position
     @setSelectionExpression enclosingExpression, yes
 
   # Sets the expression on the current selection
@@ -292,8 +334,11 @@ exports.Mode = class extends TextMode
 
   # Proc (Maybe Expression)
   selectedExpression: ->
-    if not @editor.selection.$teaInside and not @isEditing()
+    if @isSelectingOrEditing() and not @isEditing()
       @selectionExpression()
+
+  isSelectingOrEditing: ->
+    not @editor.selection.$teaInside
 
   # Proc (Maybe Expression)
   selectionExpression: ->
@@ -509,28 +554,14 @@ exports.Mode = class extends TextMode
       'next in expression':
         bindKey: win: 'Right', mac: 'Right'
         exec: =>
-          if (token = @rightActiveToken()) and token.parent
-            # select first sibling node
-            found = false
-            for t in token.parent
-              if found and @isSelectable t
-                @selectToken t
-                return
-              if t is token
-                found = true
+          if @isSelectingOrEditing()
+            @selectExpression nextExpression @selectionExpression()
 
       'previous in expression':
         bindKey: win: 'Left', mac: 'Left'
         exec: =>
-          if (token = @leftActiveToken()) and token.parent
-            # select first sibling node
-            found = false
-            for t in token.parent by -1
-              if found and @isSelectable t
-                @selectToken t
-                return
-              if t is token
-                found = true
+          if @isSelectingOrEditing()
+            @selectExpression previousExpression @selectionExpression()
 
 
       'include next expression':
@@ -561,42 +592,42 @@ exports.Mode = class extends TextMode
 
 
       'insertstring': # This is the default unhandled command name
-        exec: (editor, str) =>
+        exec: (editor, string) =>
           # Will have to handle pasting of expressions by parsing them first
-          if not /\s/.test str
+          if not /\s/.test string
             if @isEditing()
-              editor.insert str # must come first
-              @addToEditedAtomAtCursor str
+              @addToEditedAtomAtCursor string
+            else if @selectedExpression()
+              @replaceSelected string
             else
               # todo need to create a new token
-              null
+              @addAtInsertPosition string
           else
             # TODO: see above
-            editor.insert str
+            editor.insert string
         multiSelectAction: 'forEach'
         scrollIntoView: 'cursor'
 
       'add new sibling expression':
         bindKey: win: 'Space', mac: 'Space'
         exec: =>
-          if (token = @rightActiveToken()) and token.parent
-            unless token.label is 'string' and token is @mainManipulatedToken()
-              @deselect()
-              @unhighlightActive()
-              @editor.moveCursorToPosition @tokenVisibleEnd token
-            @editor.insert ' '
+          if (expression = @selectionExpression())
+            if @isEditing() and isDelimitedAtom expression
+              @addToEditedAtomAtCursor ' '
+            else if @selectedExpression() or @isEditing()
+              @addAfter ' ', expression
+              @setCursor @idxToPos expression.end + 1
+              @setInsertPositionAtCursorTo expression.parent
+            else
+              @addAtInsertPosition ' '
 
       'add new sibling expression before current':
         bindKey: win: 'Shift-Space', mac: 'Shift-Space'
         exec: =>
-          if (token = @leftActiveToken()) and token.parent
-            @deselect()
-            @unhighlightActive()
-
-            start = @tokenVisibleStart token
-            @editor.moveCursorToPosition start
-            @editor.session.insert start, ' '
-            @editor.moveCursorToPosition start
+          if (expression = @selectionExpression())
+            start = @startPos expression
+            @addBefore ' ', expression
+            @setInsertPositionAt start, expression.parent
 
       'remove token and preceding whitespace or delete a character':
         bindKey: win: 'Backspace', mac: 'Backspace'
@@ -616,6 +647,8 @@ exports.Mode = class extends TextMode
           else if expression = @selectedExpression()
             prevToken = previous expression
             nextToken = next expression
+            leftNeighbor = previous prevToken
+            rightNeigbor = next nextToken
             @editor.remove()
             @removeNode expression
             if isSpace prevToken
@@ -628,14 +661,16 @@ exports.Mode = class extends TextMode
               # TODO: remove all preceding whitespace
               @editor.remove("left")
               @removeNode prevToken
-            leftNeighbor = previous prevToken
-            rightNeigbor = next nextToken
             if leftNeighbor
               @selectExpression leftNeighbor
             else if rightNeigbor
               @selectExpression rightNeigbor
             else
-              @setInsertPositionAtCursor expression.parent
+              @setInsertPositionAtCursorTo expression.parent
+          else
+            # TODO: fix this, for now its useful to be able to erase spaces
+            @editor.remove("left")
+          return
 
       'add new sibling to parent':
         bindKey: win: ')', mac: ')'
@@ -872,9 +907,10 @@ exports.Mode = class extends TextMode
 
   handleClick: (event) =>
     if event.getShiftKey?()
+      # TODO rename tokenNextToCursor
       token = @tokenNextToCursor @editor
-      unless @isDelim token
-        @highlightToken token
+      unless isDelim token
+        @editAtCursor token
     else
       # TODO: show what will be selected on mousemove
       # Select preceding expression
@@ -882,12 +918,13 @@ exports.Mode = class extends TextMode
       #   or set insert position
       # select clicked word or its parent if whitespace selected
       token = @tokenBeforeCursor @editor
-      if (isWs token) and (isReal token.parent) or (isClosingDelim token)
-        @selectExpression token.parent
-      else if isSelectable token
-        @selectExpression token
-      else
-        @setInsertPositionAtCursor token.parent
+      if token
+        if (isWs token) and (isReal token.parent) or (isClosingDelim token)
+          @selectExpression token.parent
+        else if isAtom token
+          @selectExpression token
+        else
+          @setInsertPositionAtCursorTo token.parent
 
   # selectToken: (token) ->
   #   @unhighlightActive()
@@ -974,9 +1011,12 @@ exports.Mode = class extends TextMode
       for name in names
         module[name]
 
-# Fn Expression Bool
-isSelectable = (expression) ->
-  not (isWs expression) and (isAtom expression) and not (isDelim expression)
+# Fn Node Bool
+isExpression = (node) ->
+  not (isWs node) and not (isDelim node)
+
+isDelimitedAtom = (atom) ->
+  atom.label in ['string', 'regex']
 
 # Fn Atom Bool
 isDelim = (atom) ->
@@ -1044,15 +1084,35 @@ topList = (ast) ->
 spliceString = (string, index, count, add) ->
   string[0...index] + add + string[index + count...]
 
+previousExpression = (expression) ->
+  reached = no
+  for node in expression.parent by -1
+    if reached and isExpression node
+      return node
+    if node is expression
+      reached = yes
+  # Default for now to the same expression
+  expression
+
+nextExpression = (expression) ->
+  reached = no
+  for node in expression.parent
+    if reached and isExpression node
+      return node
+    if node is expression
+      reached = yes
+  # Default for now to the same expression
+  expression
+
 # Proc Expression (Maybe Node)
 previous = (expression) ->
-  expression[(childIndex expression) - 1]
+  expression.parent[(childIndex expression) - 1]
 
 # Proc Expression (Maybe Node)
 next = (expression) ->
-  expression[(childIndex expression) + 1]
+  expression.parent[(childIndex expression) + 1]
 
-# Proc Expression Int
+# Fn Expression Int
 childIndex = (expression) ->
   indexWithin expression, expression.parent
 
@@ -1061,6 +1121,14 @@ indexWithin = (what, array) ->
     if element is what
       return i
   throw new Error "what is not inside of array in indexWithin"
+
+# Fn Form Idx Node
+nodeBefore = (form, idx) ->
+  for node in form
+    if node.end >= idx
+      return node
+  throw new Error "idx out of form supplied in nodeBefore"
+
 
   # labelTokens: (ast) =>
   #   if Array.isArray ast
