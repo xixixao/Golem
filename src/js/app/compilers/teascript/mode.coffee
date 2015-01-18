@@ -144,7 +144,6 @@ exports.Mode = class extends TextMode
   commentLine = /^(\s*)# ?/
   hereComment = /^\s*###(?!#)/
   indentation = /^\s*/
-
   toggleCommentLines: (state, doc, startRow, endRow) ->
     range = new Range 0, 0, 0, 0
 
@@ -169,197 +168,46 @@ exports.Mode = class extends TextMode
   autoOutdent: (state, doc, row) ->
     @$outdent.autoOutdent doc, row
 
-  selectInserted: ({data}) =>
-    if data.action is 'insertText'
-      #pos = @editor.getCursorPosition()
-      {row, column} = data.range.end
-      @highlightTokenAt row, column
+  # selectInserted: ({data}) =>
+  #   if data.action is 'insertText'
+  #     #pos = @editor.getCursorPosition()
+  #     {row, column} = data.range.end
+  #     @highlightTokenAt row, column
 
-  highlightTokenAt: (row, column) ->
-    token = @getTokenBefore @editor, row, column
-    if token
-      # whitespace is handled by command
-      if isWs token
-        return
-      wasActive = @mainManipulatedToken()?
-      @deselect()
-      @unhighlightActive()
-      if @isDelim token
-        parenOrChild = @lastChild token.parent
-        if @isEmpty(token.parent) or isWs parenOrChild
-          # added empty parens, put cursor inside
-          @editor.moveCursorToPosition @tokenVisibleEnd parenOrChild
-        else
-          # wrapped token in parens
-          @selectToken parenOrChild
-      # normal insert
-      else
-        @editToken token
+  # highlightTokenAt: (row, column) ->
+  #   token = @getTokenBefore @editor, row, column
+  #   if token
+  #     # whitespace is handled by command
+  #     if isWs token
+  #       return
+  #     wasActive = @mainManipulatedToken()?
+  #     @deselect()
+  #     @unhighlightActive()
+  #     if @isDelim token
+  #       parenOrChild = @lastChild token.parent
+  #       if @isEmpty(token.parent) or isWs parenOrChild
+  #         # added empty parens, put cursor inside
+  #         @editor.moveCursorToPosition @tokenVisibleEnd parenOrChild
+  #       else
+  #         # wrapped token in parens
+  #         @selectToken parenOrChild
+  #     # normal insert
+  #     else
+  #       @editToken token
 
-  isEmpty: (expression) ->
-    parenOrChild = @lastChild expression
-    parenOrChild.token in ['(', '[', '{']
+  # isEmpty: (expression) ->
+  #   parenOrChild = @lastChild expression
+  #   parenOrChild.token in ['(', '[', '{']
 
-  rangeOfEnd: (token) ->
-    end = @tokenVisibleEnd token
-    @posToRange end
+  # rangeOfEnd: (token) ->
+  #   end = @tokenVisibleEnd token
+  #   @posToRange end
 
-  posToRange: (pos) ->
-    Range.fromPoints pos, pos
+  # posToRange: (pos) ->
+  #   Range.fromPoints pos, pos
 
-  lastChild: (expression) ->
-    expression[expression.length - 2]
-
-  addAtInsertPosition: (string) ->
-    prevNode = nodeBefore @selectionExpression(), @posToIdx @cursorPosition()
-    added = @addAfter string, prevNode
-    @editAtCursor added
-
-  replaceSelected: (string) ->
-    expression = @selectedExpression()
-    added = (compiler.astizeExpression string)
-    @replace expression, added
-    @editor.session.replace (@range expression), string
-    @editAtCursor added
-
-  replace: (replaced, added) ->
-    added.parent = replaced.parent
-    replaced.parent.splice (childIndex replaced), 1, added
-    @repositionAst()
-
-  addAfter: (string, node) ->
-    @addAt string, node.parent, (childIndex node) + 1
-
-  addBefore: (string, node) ->
-    @addAt string, node.parent, (childIndex node) - 1
-
-  addAt: (string, parent, idx) ->
-    added = compiler.astizeExpression string
-    @addNodeAt added, parent, idx
-    @editor.session.insert (@startPos parent[idx]), string
-    added
-
-  addNodeAt: (node, parent, idx) ->
-    node.parent = parent
-    parent.splice idx, 0, node
-    @repositionAst()
-
-  removeNode: (node) ->
-    node.parent.splice (childIndex node), 1
-    @repositionAst()
-
-  # Proc String ()
-  addToEditedAtomAtCursor: (string) ->
-    atom = @selectionExpression()
-    at = @posToIdx @cursorPosition()
-    atom.symbol = spliceString atom.symbol, at - atom.start, 0, string
-    # Here we update the ast with new position data
-    #  this is cheaper than reparsing the tree, but still could take a while
-    #  even better would be to use an offset table
-    #    every token would map to an index in the table, to get actual positions
-    #    we would add up offsets from previous tokens
-    atom.end += string.length
-    @repositionAst()
-    @editor.insert string
-    @updateEditingMarker()
-
-  removeCharacterFromEditedAtomAtCursor: ->
-    atom = @selectionExpression()
-    at = @posToIdx @cursorPosition()
-    atom.symbol = spliceString atom.symbol, at - atom.start, 1, ''
-    atom.end--
-    @repositionAst()
-    @updateEditingMarker()
-
-  # Proc Bool
-  isEditing: ->
-    !!@editor.selection.$editMarker
-
-  editedAtom: ->
-    if @isEditing()
-      @selectionExpression()
-
-  # Start editing currently selected atom
-  editAtom: ->
-    @setCursor @selectionRange().end
-    @updateEditingMarker()
-
-  editAtCursor: (atom) ->
-    @setSelectionExpression atom, no
-    @setCursor @cursorPosition()
-    @updateEditingMarker()
-
-  updateEditingMarker: ->
-    @clearEditingMarker()
-    range = @editableRange @selectionExpression()
-    id = @editor.session.addMarker range, 'ace_active-token'
-    @editor.selection.$editMarker = id
-
-  clearEditingMarker: ->
-    if id = @editor.selection.$editMarker
-      @editor.session.removeMarker id
-      @editor.selection.$editMarker = undefined
-
-  editableRange: (atom) ->
-    if atom.label in ['string', 'regex']
-      @delimitedAtomRange atom
-    else
-      @range atom
-
-  # Proc (Maybe Expression) ()
-  selectExpression: (expression) ->
-    @setSelectionRange @range expression
-    @setSelectionExpression expression, no
-
-  # Expects an empty form
-  # Proc Form ()
-  setInsertPositionInside: (form) ->
-    inside = @idxToPos form[0].end
-    @setCursor inside
-    @setSelectionExpression expression, yes
-
-  setInsertPositionAtCursorTo: (enclosingExpression) ->
-    @setInsertPositionAt @cursorPosition(), enclosingExpression
-
-  setInsertPositionAt: (position, enclosingExpression) ->
-    @setCursor position
-    @setSelectionExpression enclosingExpression, yes
-
-  # Sets the expression on the current selection
-  #   inside - no when the expression is selected
-  #            yes when the insert position is inside the expression
-  setSelectionExpression: (expression, inside) ->
-    @editor.selection.$teaExpression = expression
-    @editor.selection.$teaInside = inside
-
-  # Proc (Maybe Expression)
-  selectedExpression: ->
-    if @isSelectingOrEditing() and not @isEditing()
-      @selectionExpression()
-
-  isSelectingOrEditing: ->
-    not @editor.selection.$teaInside
-
-  # Proc (Maybe Expression)
-  selectionExpression: ->
-    @editor.selection.$teaExpression # TODO: what if multi?
-
-  # Proc Range
-  selectionRange: ->
-    @editor.getSelectionRange()
-
-  # Proc Pos ()
-  setCursor: (position) ->
-    @setSelectionRange Range.fromPoints position, position
-
-  # Proc Range ()
-  setSelectionRange: (range) ->
-    @editor.selection.setSelectionRange range
-    @clearEditingMarker()
-
-  # Proc Pos
-  cursorPosition: ->
-    @editor.getCursorPosition()
+  # lastChild: (expression) ->
+  #   expression[expression.length - 2]
 
   # editToken: (token) ->
     # @highlightToken token
@@ -369,73 +217,26 @@ exports.Mode = class extends TextMode
     #   if cursor.column == range.end.column + 1
     #     @editor.selection.setSelectionRange Range.fromPoints range.end, range.end
 
-  highlightToken: (token) ->
-    # 1-based for multiselect, 0 is the single-select
-    index = (@editor.selection.index ? -1)
-    if @isMultiEditing()
-      @manipulatedTokens().active[@editor.selection.index] = token
-      # update all active
-      for token, i in @manipulatedTokens().active when token
-        @highlightTokenAtIndex token, i
-    else
-      @manipulatedTokens().active.main = token
-      markerId = @highlightTokenReturnId token
-      @manipulatedTokens().activeMarkers.main = markerId
+  # highlightToken: (token) ->
+  #   # 1-based for multiselect, 0 is the single-select
+  #   index = (@editor.selection.index ? -1)
+  #   if @isMultiEditing()
+  #     @manipulatedTokens().active[@editor.selection.index] = token
+  #     # update all active
+  #     for token, i in @manipulatedTokens().active when token
+  #       @highlightTokenAtIndex token, i
+  #   else
+  #     @manipulatedTokens().active.main = token
+  #     markerId = @highlightTokenReturnId token
+  #     @manipulatedTokens().activeMarkers.main = markerId
 
-  highlightTokenAtIndex: (token, index) ->
-    markerId = @highlightTokenReturnId token
-    @manipulatedTokens().activeMarkers[index] = markerId
+  # highlightTokenAtIndex: (token, index) ->
+  #   markerId = @highlightTokenReturnId token
+  #   @manipulatedTokens().activeMarkers[index] = markerId
 
-  highlightTokenReturnId: (token) ->
-    range = @tokenToEditableRange token
-    @editor.session.addMarker range, 'ace_active-token'
-
-  unhighlightActive: ->
-    # remove all markers
-    for id in @activeMarkers()
-      @editor.session.removeMarker id
-    @manipulatedTokens().activeMarkers = []
-    if @isMultiEditing()
-      @manipulatedTokens().active.main = undefined
-    else
-      # forget tokens including main
-      @manipulatedTokens().active = []
-    return
-
-  isMultiEditing: ->
-    @editor.multiSelect.ranges.length > 1
-
-  manipulatedTokens: ->
-    @editor.session.manipulatedTokens
-
-  activeOrSelectedTokens: ->
-    if @manipulatedTokens().active.length > 1
-      [@mainManipulatedToken()]
-    else
-      @editor.selection.tokens
-
-  activeTokens: ->
-    if @manipulatedTokens().active.main
-      [@manipulatedTokens().active.main]
-    else
-      @manipulatedTokens().active
-
-  activeMarkers: ->
-    if @manipulatedTokens().activeMarkers.main
-      [@manipulatedTokens().activeMarkers.main]
-    else
-      @manipulatedTokens().activeMarkers
-
-  mainManipulatedToken: ->
-    @manipulatedTokens().active.main
-
-  leftActiveToken: ->
-    @mainManipulatedToken() or
-      @editor.selection.tokens and @editor.selection.tokens[0]
-
-  rightActiveToken: ->
-    @mainManipulatedToken() or
-      @editor.selection.tokens and @editor.selection.tokens[@editor.selection.tokens.length - 1]
+  # highlightTokenReturnId: (token) ->
+  #   range = @tokenToEditableRange token
+  #   @editor.session.addMarker range, 'ace_active-token'
 
   detachFromSession: (session) ->
     session.removeListener 'change', @onDocumentChange
@@ -844,6 +645,161 @@ exports.Mode = class extends TextMode
           if t is last
             found = true
     {tokens, isFirst, nextToken}
+
+
+  addAtInsertPosition: (string) ->
+    prevNode = nodeBefore @selectionExpression(), @posToIdx @cursorPosition()
+    added = @addAfter string, prevNode
+    @editAtCursor added
+
+  replaceSelected: (string) ->
+    expression = @selectedExpression()
+    added = (compiler.astizeExpression string)
+    @replace expression, added
+    @editor.session.replace (@range expression), string
+    @editAtCursor added
+
+  replace: (replaced, added) ->
+    added.parent = replaced.parent
+    replaced.parent.splice (childIndex replaced), 1, added
+    @repositionAst()
+
+  addAfter: (string, node) ->
+    @addAt string, node.parent, (childIndex node) + 1
+
+  addBefore: (string, node) ->
+    @addAt string, node.parent, (childIndex node) - 1
+
+  addAt: (string, parent, idx) ->
+    added = compiler.astizeExpression string
+    @addNodeAt added, parent, idx
+    @editor.session.insert (@startPos parent[idx]), string
+    added
+
+  addNodeAt: (node, parent, idx) ->
+    node.parent = parent
+    parent.splice idx, 0, node
+    @repositionAst()
+
+  removeNode: (node) ->
+    node.parent.splice (childIndex node), 1
+    @repositionAst()
+
+  # Proc String ()
+  addToEditedAtomAtCursor: (string) ->
+    atom = @selectionExpression()
+    at = @posToIdx @cursorPosition()
+    atom.symbol = spliceString atom.symbol, at - atom.start, 0, string
+    # Here we update the ast with new position data
+    #  this is cheaper than reparsing the tree, but still could take a while
+    #  even better would be to use an offset table
+    #    every token would map to an index in the table, to get actual positions
+    #    we would add up offsets from previous tokens
+    atom.end += string.length
+    @repositionAst()
+    @editor.insert string
+    @updateEditingMarker()
+
+  removeCharacterFromEditedAtomAtCursor: ->
+    atom = @selectionExpression()
+    at = @posToIdx @cursorPosition()
+    atom.symbol = spliceString atom.symbol, at - atom.start, 1, ''
+    atom.end--
+    @repositionAst()
+    @updateEditingMarker()
+
+  # Proc Bool
+  isEditing: ->
+    !!@editor.selection.$editMarker
+
+  editedAtom: ->
+    if @isEditing()
+      @selectionExpression()
+
+  # Start editing currently selected atom
+  editAtom: ->
+    @setCursor @selectionRange().end
+    @updateEditingMarker()
+
+  editAtCursor: (atom) ->
+    @setSelectionExpression atom, no
+    @setCursor @cursorPosition()
+    @updateEditingMarker()
+
+  updateEditingMarker: ->
+    @clearEditingMarker()
+    range = @editableRange @selectionExpression()
+    id = @editor.session.addMarker range, 'ace_active-token'
+    @editor.selection.$editMarker = id
+
+  clearEditingMarker: ->
+    if id = @editor.selection.$editMarker
+      @editor.session.removeMarker id
+      @editor.selection.$editMarker = undefined
+
+  editableRange: (atom) ->
+    if atom.label in ['string', 'regex']
+      @delimitedAtomRange atom
+    else
+      @range atom
+
+  # Proc (Maybe Expression) ()
+  selectExpression: (expression) ->
+    @setSelectionRange @range expression
+    @setSelectionExpression expression, no
+
+  # Expects an empty form
+  # Proc Form ()
+  setInsertPositionInside: (form) ->
+    inside = @idxToPos form[0].end
+    @setCursor inside
+    @setSelectionExpression expression, yes
+
+  setInsertPositionAtCursorTo: (enclosingExpression) ->
+    @setInsertPositionAt @cursorPosition(), enclosingExpression
+
+  setInsertPositionAt: (position, enclosingExpression) ->
+    @setCursor position
+    @setSelectionExpression enclosingExpression, yes
+
+  # Sets the expression on the current selection
+  #   inside - no when the expression is selected
+  #            yes when the insert position is inside the expression
+  setSelectionExpression: (expression, inside) ->
+    @editor.selection.$teaExpression = expression
+    @editor.selection.$teaInside = inside
+
+  # Proc (Maybe Expression)
+  selectedExpression: ->
+    if @isSelectingOrEditing() and not @isEditing()
+      @selectionExpression()
+
+  isSelectingOrEditing: ->
+    not @editor.selection.$teaInside
+
+  # Proc (Maybe Expression)
+  selectionExpression: ->
+    @editor.selection.$teaExpression # TODO: what if multi?
+
+  # Proc Range
+  selectionRange: ->
+    @editor.getSelectionRange()
+
+  # Proc Pos ()
+  setCursor: (position) ->
+    @setSelectionRange Range.fromPoints position, position
+
+  # Proc Range ()
+  setSelectionRange: (range) ->
+    @editor.selection.setSelectionRange range
+    @clearEditingMarker()
+
+  # Proc Pos
+  cursorPosition: ->
+    @editor.getCursorPosition()
+
+  isMultiEditing: ->
+    @editor.multiSelect.ranges.length > 1
 
   deselect: =>
     @editor.selection.clearSelection()
