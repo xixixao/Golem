@@ -28,7 +28,7 @@ module.exports =
             superTokenizer.getLineTokens line, state, row, doc
           else
             @disableSuper() if line is ":" and not @commandMode
-            @unhighlightActive()
+            @clearEditingMarker()
             tokens: [value: line, type: 'text']
 
       disableSuper: ->

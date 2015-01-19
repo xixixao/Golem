@@ -92,6 +92,7 @@ module.exports = hyper class SourceEditor
 
       @editor.session.$worker.on 'error', ({data: {text}}) =>
         console.log "from source worker", text
+        console.log "current (maybe not the same) editor content", @editor.getValue()
         @props.onSourceFailed text
       @mode = modeId # save mode
 

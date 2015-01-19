@@ -13,6 +13,7 @@ class DumpCommand
 
   @execute = (args, state, editor) ->
     ifCompiled state, editor, ->
+      console.log state.compiledJs
       editor.logResult state.compiledJs
 
 class RunCommand

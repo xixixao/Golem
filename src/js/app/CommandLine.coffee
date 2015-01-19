@@ -97,7 +97,7 @@ module.exports = hyper class CommandLine
           @props.onCommandExecution source, result, type
           @props.memory.saveCommands timeline
           editor.setValue ""
-          editor.session.getMode().unhighlightActive()
+          editor.session.getMode().clearEditingMarker()
           # editor.focus()
 
       commandWorker.on 'error', ({data: {text}}) =>

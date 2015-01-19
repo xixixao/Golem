@@ -69,8 +69,9 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
   .ace-tea .ace_marker-layer .ace_active-token {
     position: absolute;
     border-radius: 1px;
-    border: 2px solid rgba(0, 170, 255, 0.25);
-    border-width: 0 0 2px 0
+    border: 2px solid #194459;/*rgba(0, 170, 255, 0.25);*/
+    border-width: 0 0 2px 0;
+    z-index: 3;
   }
 
   .ace-tea.ace_multiselect .ace_selection.ace_start {
