@@ -16,11 +16,12 @@ exports.Worker = class extends Mirror
       @sender.emit "ok",
         result:
           if @isSource
-            compiler.compileTopLevel compiler.astizeList value
+            compiler.compileTopLevel value
           else
             # [res, warnings] = compiler.compileExp value
             # [";" + res, warnings]
-            compiler.compileExpression compiler.astizeExpression value
+            res = compiler.compileTopLevelAndExpression value
+            [res, []]
 
     catch e
       # loc = e.location

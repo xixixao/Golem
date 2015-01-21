@@ -23,10 +23,10 @@ module.exports =
 
         @$tokenizer = getLineTokens: (line, state, row, doc) =>
           if line[0] isnt ':'
-            if line isnt ''
-              @enableSuper() if @commandMode
+            @enableSuper() if @commandMode
             superTokenizer.getLineTokens line, state, row, doc
           else
+            console.log "command result", line
             @disableSuper() if line is ":" and not @commandMode
             @clearEditingMarker()
             tokens: [value: line, type: 'text']

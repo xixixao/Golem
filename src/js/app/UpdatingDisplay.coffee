@@ -23,7 +23,8 @@ module.exports = hyper class UpdatingDisplay
     if @props.compiledExpression instanceof Error
       @displayError @props.compiledExpression
     try
-      result = eval @props.compiledSource + @props.compiledExpression
+      # result = eval @props.compiledSource + @props.compiledExpression
+      result = eval @props.compiledExpression
       @parseValue result
     catch error
       @displayError error
@@ -36,7 +37,10 @@ module.exports = hyper class UpdatingDisplay
     => @props.onCommand name, @editor
 
   componentDidMount: ->
-    @editor = editor = ace.edit @refs.ace.getDOMNode(), (new Mode yes), "ace/theme/tea"
+    mode = new Mode yes
+    @editor = editor = ace.edit @refs.ace.getDOMNode(), mode, "ace/theme/tea"
+    mode.editor = editor
+    mode.initAst @props.expression
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2
     editor.setHighlightActiveLine false
@@ -46,9 +50,9 @@ module.exports = hyper class UpdatingDisplay
     # editor.setReadOnly true
     editor.setValue @props.expression, 1
     editor.moveCursorTo 0, 0
-    editor.session.getMode().attachToSession editor.session
+    # editor.session.getMode().attachToSession editor.session
 
-    for name, command of editor.session.getMode().commands
+    for name, command of editor.session.getMode().commands when command.indirect
       command.exec = @handleCommand name
 
   componentWillReceiveProps: ({focus}) ->

@@ -211,14 +211,17 @@ exports.Mode = class extends TextMode
     console.log "initing ast with", value
     @ast =
       if @isSingleLineInput
-        if value isnt ''
-          compiler.astizeExpression value
+        compiler.astizeExpressionWithWrapper value
       else
         compiler.astizeList value
 
     # Set up selection
     if @ast
       @handleClick {}
+
+  # Called after worker compiles
+  updateAst: (ast) ->
+    duplicateProperties ast, @ast
 
   # Traverses the AST in order, fixing positions
   repositionAst: ->
@@ -276,7 +279,7 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach'
         scrollIntoView: 'cursor'
         exec: (editor, string) =>
-          if not @ast
+          if @commandMode or @editor.getValue() is '' and string is ':'
             editor.insert string
             return
           # Will have to handle pasting of expressions by parsing them first
@@ -400,6 +403,7 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Backspace', mac: 'Backspace'
         multiSelectAction: 'forEach'
         exec: =>
+          console.log "backasdsapdsad"
           if atom = @editedAtom()
             if @cursorPosition() is atom.start
               prevToken = previous atom # WARNING: relies on space separation
@@ -446,6 +450,8 @@ exports.Mode = class extends TextMode
         exec: =>
           if (expression = @activeExpression())
             @wrap '(', ')', expression
+          else
+            @addAtInsertPositionAndSetCursorAtOffset '()', -1
           return
 
       'wrap in brackets':
@@ -454,6 +460,8 @@ exports.Mode = class extends TextMode
         exec: =>
           if (expression = @activeExpression())
             @wrap '[', ']', expression
+          else
+            @addAtInsertPositionAndSetCursorAtOffset '[]', -1
           return
 
       'wrap in braces':
@@ -462,6 +470,8 @@ exports.Mode = class extends TextMode
         exec: =>
           if (expression = @activeExpression())
             @wrap '{', '}', expression
+          else
+            @addAtInsertPositionAndSetCursorAtOffset '{}', -1
           return
 
       # 'add new sibling to parent':
@@ -493,9 +503,7 @@ exports.Mode = class extends TextMode
       'add comment':
         bindKey: win: '#', mac: '#'
         exec: =>
-          added = @addAtInsertPosition '(# )'
-          {row, column} = @editor.getCursorPosition()
-          @setInsertPositionAt (row: row, column: column - 1), added
+          @addAtInsertPositionAndSetCursorAtOffset '(# )', -1
 
       # Temporary
       # 'show type of expression':
@@ -680,6 +688,10 @@ exports.Mode = class extends TextMode
       else
         @addAtInsertPosition string
 
+  addAtInsertPositionAndSetCursorAtOffset: (string, offset) ->
+    added = @addAtInsertPosition string
+    @setInsertPositionAt (@idxToPos (@posToIdx @cursorPosition()) - 1), added
+
   addAtInsertPosition: (string) ->
     # console.log "adding at insert position", string, @selectionExpression(), @posToIdx @cursorPosition()
     prevNode = nodeBeforeIn @selectionExpression(), @posToIdx @cursorPosition()
@@ -823,7 +835,7 @@ exports.Mode = class extends TextMode
 
   # Proc (Maybe Expression)
   activeExpression: ->
-    if @isSelectingOrEditing
+    if @isSelectingOrEditing()
       @selectionExpression()
 
   # Proc (Maybe Expression)
@@ -925,7 +937,6 @@ exports.Mode = class extends TextMode
       # select clicked word or its parent if whitespace selected
       if @ast
         @editor.execCommand 'select by click', @editor
-        console.log "after clicking", @editor.selection
 
   handleRangeDeselect: ({ranges}) =>
     console.log "deselect", ranges
@@ -1012,12 +1023,12 @@ exports.Mode = class extends TextMode
 
   preExecute: (memory) ->
     window.requireModule = (fileName, names) ->
-      try
-        # module = eval compiler.compileModule (memory.loadSource fileName).value
-      catch e
-        throw new Error e.message + " in module #{fileName}"
-      for name in names
-        module[name]
+      # try
+      #   module = eval compiler.compileModule (memory.loadSource fileName).value
+      # catch e
+      #   throw new Error e.message + " in module #{fileName}"
+      # for name in names
+      #   module[name]
 
 
 replaceChildNodeWith = (replaced, added) ->
@@ -1153,6 +1164,13 @@ nodeBeforeIn = (form, idx) ->
       return node
   throw new Error "idx out of form supplied in nodeBeforeIn"
 
+duplicateProperties = (newAst, oldAst) ->
+  # for now let's duplicate labels
+  if isForm newAst
+    for node, i in newAst
+      duplicateProperties node, oldAst[i]
+  else
+    oldAst.label = newAst.label
 
   # labelTokens: (ast) =>
   #   if Array.isArray ast

@@ -89,6 +89,8 @@ module.exports = hyper class SourceEditor
 
       @editor.session.$worker.on 'ok', ({data: {result}}) =>
         @props.onSourceCompiled result, @editor.getValue()
+        # console.log "worker finished ok", result, result.ast, result.types
+        @editor.session.getMode().updateAst result.ast
 
       @editor.session.$worker.on 'error', ({data: {text}}) =>
         console.log "from source worker", text
@@ -96,7 +98,7 @@ module.exports = hyper class SourceEditor
         @props.onSourceFailed text
       @mode = modeId # save mode
 
-  componentWillReceiveProps: ({focus, fileName}) ->
+  componentWillReceiveProps: ({focus, fileName, compiled}) ->
     if focus and not @props.focus
       @editor.focus()
 
