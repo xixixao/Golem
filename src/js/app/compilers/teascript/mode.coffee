@@ -6,6 +6,9 @@ Behaviour    = require("ace/mode/behaviour").Behaviour
 Selection    = require("ace/selection").Selection
 WorkerClient = require("ace/worker/worker_client").WorkerClient
 
+oop = require("ace/lib/oop")
+EventEmitter = require("ace/lib/event_emitter").EventEmitter
+
 {
   isForm
   concat
@@ -41,40 +44,42 @@ WorkerClient = require("ace/worker/worker_client").WorkerClient
 
 exports.Mode = class extends TextMode
   constructor: (@isSingleLineInput, @memory) ->
-    @$tokenizer = getLineTokens: (line, state, row, doc) =>
-      if tokens = @tokensOnLine row, doc
-        tokens: convertToAceLineTokens tokens
-      else
-        tokens: [value: line, type: 'text']
+    @$tokenizer =
+      getLineTokens: (line, state, row, doc) =>
+        if tokens = @tokensOnLine row, doc
+          tokens: convertToAceLineTokens tokens
+        else
+          tokens: [value: line, type: 'text']
+    oop.implement @$tokenizer, EventEmitter
 
     @$outdent = new Outdent
     @foldingRules = new FoldMode
     @$behaviour = undefined
 
   tokensOnLine: (row, doc) =>
-    start = doc.positionToIndex {row, column: 0}
-    end = doc.positionToIndex {row: row + 1, column: 0}
+    start = doc.positionToIndex row: row, column: 0
+    end = doc.positionToIndex row: row + 1, column: 0
 
-    if not @ast
-      @onDocumentChange doc
+    # if not @ast
+    #   @onDocumentChange doc
     if not @ast
       return undefined
     findTokensBetween (topList @ast), start, end
 
-  onDocumentChange: (doc) =>
-    # console.log "tokenizing document", @editor.getValue()
-    if not @ast
-      @initAst if doc?.getValue then doc.getValue() else @editor.getValue()
+  # onDocumentChange: (doc) =>
+  #   # console.log "tokenizing document", @editor.getValue()
+  #   if not @ast
+  #     @initAst if doc?.getValue then doc.getValue() else @editor.getValue()
 
-    compileFunction =
-      if @isSingleLineInput
-        compiler.compileExpression
-      else
-        compiler.compileTopLevel
-    # value = if doc?.getValue then doc.getValue() else @editor.getValue()
-    # try
-    if @ast
-      compileFunction @ast
+  #   compileFunction =
+  #     if @isSingleLineInput
+  #       compiler.compileExpression
+  #     else
+  #       compiler.compileTopLevel
+  #   # value = if doc?.getValue then doc.getValue() else @editor.getValue()
+  #   # try
+  #   if @ast
+  #     compileFunction @ast
     # catch e
     #   throw e
     #   console.log "Error while compiling", e
@@ -222,6 +227,7 @@ exports.Mode = class extends TextMode
   # Called after worker compiles
   updateAst: (ast) ->
     duplicateProperties ast, @ast
+    @$tokenizer._signal 'update', data: rows: first: 1
 
   # Traverses the AST in order, fixing positions
   repositionAst: ->
