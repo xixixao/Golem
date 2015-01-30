@@ -117,7 +117,7 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
   }
 
   .ace-tea .ace_token_typename {
-    color: #9C49B6
+    color: #FEDF6B
   }
 
   .ace-tea .ace_token_label {
