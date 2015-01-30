@@ -308,8 +308,9 @@ module.exports = hyper class EditorMain
     else
       # result = @execute @state.compiledJs + result
       @state.compiler.preExecute? @memory
-      [code, warnings] = result
-      @log source: source, compiled: code, warnings: warnings
+      # [code, warnings] = result
+      # @log source: source, compiled: code, warnings: warnings
+      @log source: source, ast: result.ast, compiled: result.compiled#, warnings: warnings
       # @log _div {},
       #   _div source
       #   if result not instanceof Error

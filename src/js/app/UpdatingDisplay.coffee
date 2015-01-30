@@ -41,6 +41,7 @@ module.exports = hyper class UpdatingDisplay
     @editor = editor = ace.edit @refs.ace.getDOMNode(), mode, "ace/theme/tea"
     mode.editor = editor
     mode.initAst @props.expression
+    mode.updateAst @props.ast
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2
     editor.setHighlightActiveLine false

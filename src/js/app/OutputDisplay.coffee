@@ -112,10 +112,11 @@ module.exports = hyper class OutputDisplay
           if isBareReact
             value
           else if isSourceLine
-            {source, compiled} = value
+            {source, ast, compiled} = value
             _UpdatingDisplay
               key: key
               expression: source
+              ast: ast
               compiledExpression: compiled
               compiledSource: @props.compiledSource
               maxWidth: @props.width - 45

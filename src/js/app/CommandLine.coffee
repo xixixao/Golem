@@ -31,11 +31,12 @@ module.exports = hyper class CommandLine
       @editor.session.setMode new (CommandMode.inherit Mode) "compilers/#{sourceModeId}", @props.memory
       @sourceModeId = sourceModeId
 
-  componentWillReceiveProps: ({focus}) ->
+  componentWillReceiveProps: ({focus, source}) ->
     if focus
       @editor.focus()
     else
       $('input').blur()
+    @editor.session.getMode().prefixWorker? source
 
   componentDidMount: ->
     @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/tea"
@@ -54,7 +55,7 @@ module.exports = hyper class CommandLine
       bindKey: win: 'Enter', mac: 'Enter'
       exec: =>
         # WARNING Another massive hack to get the prelude and source compiled with the expression
-        editor.session.getMode().prefixWorker editor.session.getMode().loadPreludeNames() + @props.source
+        # editor.session.getMode().prefixWorker editor.session.getMode().loadPreludeNames() + @props.source
         editor.session.getMode().updateWorker()
 
     timeline = @props.timeline
@@ -64,14 +65,14 @@ module.exports = hyper class CommandLine
       bindKey: win: 'Ctrl-Up', mac: 'Command-Up'
       exec: ->
         timeline.temp editor.getValue() unless timeline.isInPast()
-        editor.setValue timeline.goBack()
+        editor.session.getMode().initAst timeline.goBack()
         editor.clearSelection()
 
     editor.commands.addCommand
       name: 'following'
       bindKey: win: 'Ctrl-Down', mac: 'Command-Down'
       exec: ->
-        editor.setValue timeline.goForward() if timeline.isInPast()
+        editor.session.getMode().initAst timeline.goForward() if timeline.isInPast()
         editor.clearSelection()
 
     editor.commands.addCommand
@@ -87,19 +88,26 @@ module.exports = hyper class CommandLine
     editor.session.on 'changeMode', =>
       commandWorker = editor.session.getMode().worker
 
-      # CommandWorker only compiles on user enter, hence this is an order to execute
-      # the source and the command
+      # CommandWorker compiles either on change or on enter
       commandWorker.on 'ok', ({data: {result, type}}) =>
         # TODO use prelude trim
         source = $.trim editor.getValue()
-        if source.length > 0
-          timeline.push source
-          @props.onCommandExecution source, result, type
-          @props.memory.saveCommands timeline
-          editor.setValue ""
-          editor.session.getMode().initAst ""
-          editor.session.getMode().clearEditingMarker()
-          # editor.focus()
+
+        # Extract the last but one node from the compound tree
+        # The compound tree will have
+        #          (source nodes..., commandExpression)
+        if result.ast
+          result.ast.splice 1, result.ast.length - 3
+        if type in ['execute', 'command']
+          if source.length > 0
+            timeline.push source
+            @props.onCommandExecution source, result, type
+            @props.memory.saveCommands timeline
+            editor.session.getMode().initAst ""
+            editor.session.getMode().clearEditingMarker()
+            # editor.focus()
+        else
+          editor.session.getMode().updateAst result.ast
 
       commandWorker.on 'error', ({data: {text}}) =>
         @props.onCommandFailed text

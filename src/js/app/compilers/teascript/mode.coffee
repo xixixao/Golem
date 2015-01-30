@@ -213,7 +213,8 @@ exports.Mode = class extends TextMode
     @initAst session.getDocument().getValue()
 
   initAst: (value) ->
-    console.log "initing ast with", value
+    # console.log "initing ast with", value
+    @editor.session.getDocument().setValue value
     @ast =
       if @isSingleLineInput
         compiler.astizeExpressionWithWrapper value
@@ -226,6 +227,7 @@ exports.Mode = class extends TextMode
 
   # Called after worker compiles
   updateAst: (ast) ->
+    # console.log ast, @ast if @isSingleLineInput
     duplicateProperties ast, @ast
     @$tokenizer._signal 'update', data: rows: first: 1
 
@@ -480,6 +482,14 @@ exports.Mode = class extends TextMode
             @addAtInsertPositionAndSetCursorAtOffset '{}', -1
           return
 
+      'add quotes':
+        bindKey: win: '"', mac: '"'
+        multiSelectAction: 'forEach'
+        exec: =>
+          if not (expression = @activeExpression())
+            @addAtInsertPositionAndSetCursorAtOffset '""', -1
+          return
+
       # 'add new sibling to parent':
       #   bindKey: win: ')', mac: ')'
       #   exec: =>
@@ -696,7 +706,11 @@ exports.Mode = class extends TextMode
 
   addAtInsertPositionAndSetCursorAtOffset: (string, offset) ->
     added = @addAtInsertPosition string
-    @setInsertPositionAt (@idxToPos (@posToIdx @cursorPosition()) - 1), added
+    pos = (@shiftPosBy @cursorPosition(), offset)
+    if isAtom added
+      @editAt pos, added
+    else
+      @setInsertPositionAt pos, added
 
   addAtInsertPosition: (string) ->
     # console.log "adding at insert position", string, @selectionExpression(), @posToIdx @cursorPosition()
@@ -773,7 +787,10 @@ exports.Mode = class extends TextMode
 
   # Start editing currently selected atom
   editAtom: ->
-    @setCursor @selectionRange().end
+    if isDelimitedAtom @selectedExpression()
+      @setCursor @shiftPosBy @selectionRange().end, -1
+    else
+      @setCursor @selectionRange().end
     @updateEditingMarker()
 
   editAtCursor: (atom) ->
@@ -796,7 +813,7 @@ exports.Mode = class extends TextMode
       @editor.selection.$editMarker = undefined
 
   editableRange: (atom) ->
-    if atom.label in ['string', 'regex']
+    if isDelimitedAtom atom
       @delimitedAtomRange atom
     else
       @range atom
@@ -960,9 +977,8 @@ exports.Mode = class extends TextMode
 
   # For strings, regexes etc.
   delimitedAtomRange: (atom) ->
-    start = (@startPos atom) + 1
-    end = (@endPos atom) - 1
-    Range.fromPoints start, end
+    {start, end} = @range atom
+    Range.fromPoints (@shiftPosBy start, 1), (@shiftPosBy end, -1)
 
   range: (node) ->
     start = @startPos node
@@ -988,12 +1004,15 @@ exports.Mode = class extends TextMode
   posToIdx: (pos) ->
     @editor.session.doc.positionToIndex pos
 
+  # Proc Pos Pos
+  shiftPosBy: (pos, offset) ->
+    @idxToPos (@posToIdx pos) + offset
+
   createWorker: (session) ->
     worker = new WorkerClient ["ace", "compilers"],
       "compilers/teascript/worker",
       "Worker",
-      null,
-      yes
+      null
     @worker = worker
 
     if session
@@ -1012,8 +1031,8 @@ exports.Mode = class extends TextMode
 
     worker
 
-  prefixWorker: (input) ->
-    @worker.emit 'prefix', data: data: input
+  # prefixWorker: (input) ->
+  #   @worker.emit 'prefix', data: data: input
 
   # HUGE HACK to load prelude by default
   # window.requireModule 'Tea.Prelude'
@@ -1172,6 +1191,8 @@ nodeBeforeIn = (form, idx) ->
 
 duplicateProperties = (newAst, oldAst) ->
   # for now let's duplicate labels
+  #   WARNING the position of newAst might be off if it comes from a larger prefixed expression
+  #     like compiling a command line together with source
   if isForm newAst
     for node, i in newAst
       duplicateProperties node, oldAst[i]

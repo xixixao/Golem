@@ -4,25 +4,20 @@ compiler = require "./compiler"
 window.addEventListener = ->
 
 exports.Worker = class extends Mirror
-  constructor: (sender, @isSource) ->
+  constructor: (sender) ->
     super sender
     @setTimeout 250
 
-    @sender.on 'prefix', ({data: {data: @prefix}}) =>
+    @compiler = compiler
+
+    # @sender.on 'prefix', ({data: {data: @prefix}}) =>
 
   onUpdate: ->
-    value = (@prefix or '') + @doc.getValue()
+    value = @doc.getValue()
     try
       @sender.emit "ok",
         result:
-          if @isSource
-            compiler.compileTopLevel value
-          else
-            # [res, warnings] = compiler.compileExp value
-            # [";" + res, warnings]
-            res = compiler.compileTopLevelAndExpression value
-            [res, []]
-
+          compiler.compileTopLevel value
     catch e
       # loc = e.location
       # if loc

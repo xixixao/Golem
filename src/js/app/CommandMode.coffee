@@ -1,5 +1,8 @@
 WorkerClient = require("ace/worker/worker_client").WorkerClient
 
+oop = require("ace/lib/oop")
+EventEmitter = require("ace/lib/event_emitter").EventEmitter
+
 module.exports =
   inherit: (Mode) ->
 
@@ -26,10 +29,10 @@ module.exports =
             @enableSuper() if @commandMode
             superTokenizer.getLineTokens line, state, row, doc
           else
-            console.log "command result", line
             @disableSuper() if line is ":" and not @commandMode
             @clearEditingMarker()
             tokens: [value: line, type: 'text']
+        oop.implement @$tokenizer, EventEmitter
 
       disableSuper: ->
         @editor.moveCursorToPosition row: 0, column: 1
@@ -51,8 +54,14 @@ module.exports =
 
         @doc = session.getDocument()
 
+        # Attach to document for recompilation on change
+        @worker.attachToDocument @doc
+
         @worker
+
+      prefixWorker: (source) ->
+        @worker.call 'prefix', [source]
 
       updateWorker: ->
         @worker.call 'setValue', [@doc.getValue()]
-        @worker.call 'onUpdate', []
+        @worker.call 'onUpdate', [true]
