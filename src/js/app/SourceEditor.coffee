@@ -88,6 +88,7 @@ module.exports = hyper class SourceEditor
       @props.onCompilerLoad @editor.session.getMode(), modeId
 
       @editor.session.$worker.on 'ok', ({data: {result}}) =>
+        console.log "worker ok", +new Date
         @props.onSourceCompiled result, @editor.getValue()
         # console.log "worker finished ok", result, result.ast, result.types
         @editor.session.getMode().updateAst result.ast

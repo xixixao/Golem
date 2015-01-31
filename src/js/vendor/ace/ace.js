@@ -8467,6 +8467,7 @@ var EditSession = function(text, mode) {
     this.getUseWorker = function() { return this.$useWorker; };
     this.onReloadTokenizer = function(e) {
         var rows = e.data;
+        console.log("start tokenization", +new Date())
         this.bgTokenizer.start(rows.first);
         this._signal("tokenizerUpdate", e);
     };
@@ -13697,6 +13698,8 @@ var Text = function(parentEl) {
             var tokens = this.$getFoldLineTokens(row, foldLine);
         else
             var tokens = this.session.getTokens(row);
+
+        if (row === 7) console.log("layer got tokens", +new Date)
 
 
         if (!onlyContents) {
