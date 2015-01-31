@@ -46,7 +46,6 @@ exports.Mode = class extends TextMode
   constructor: (@isSingleLineInput, @memory) ->
     @$tokenizer =
       getLineTokens: (line, state, row, doc) =>
-        console.log "asking for tokens", +new Date if row is 7
         if tokens = @tokensOnLine row, doc
           tokens: convertToAceLineTokens tokens
         else
@@ -230,7 +229,6 @@ exports.Mode = class extends TextMode
   updateAst: (ast) ->
     # console.log ast, @ast if @isSingleLineInput
     duplicateProperties ast, @ast
-    console.log "updated ast", +new Date
     @$tokenizer._signal 'update', data: rows: first: 1
 
   # Traverses the AST in order, fixing positions
@@ -297,7 +295,6 @@ exports.Mode = class extends TextMode
             if @isEditing()
               @addToEditedAtomAtCursor string
             else if @selectedExpression()
-              console.log "insert from editor", +new Date
               @replaceSelected string
             else
               # todo need to create a new token
@@ -726,7 +723,6 @@ exports.Mode = class extends TextMode
     added = (compiler.astizeExpression string)
     @replace expression, added
     @editor.session.replace (@range expression), string
-    console.log "replaced in editor", +new Date
     @editAtCursor added
 
   pasteOver: (replaced, moved) ->
