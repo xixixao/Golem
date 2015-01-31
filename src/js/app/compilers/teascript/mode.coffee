@@ -714,8 +714,12 @@ exports.Mode = class extends TextMode
 
   addAtInsertPosition: (string) ->
     # console.log "adding at insert position", string, @selectionExpression(), @posToIdx @cursorPosition()
+    # TODO: this should handle all possible strings, including AST from elsewhere??
     prevNode = nodeBeforeIn @selectionExpression(), @posToIdx @cursorPosition()
-    @addAfter string, prevNode
+    if string is ' ' and isWs prevNode
+      prevNode.symbol += string
+    else
+      @addAfter string, prevNode
 
   # TODO should decide whether to edit or select
   replaceSelected: (string) ->
@@ -828,7 +832,7 @@ exports.Mode = class extends TextMode
   setInsertPositionInside: (form) ->
     inside = @idxToPos form[0].end
     @setCursor inside
-    @setSelectionExpression expression, yes
+    @setSelectionExpression form, yes
 
   setInsertPositionAtCursorTo: (enclosingExpression) ->
     @setInsertPositionAt @cursorPosition(), enclosingExpression
@@ -933,6 +937,7 @@ exports.Mode = class extends TextMode
     # Must be a whitespace not produced by the compiler or empty editor
     return @ast[0]
 
+  # Returns a preceding token unless it is whitespace, or surrounding token
   getTokenNextTo: (editor, row, col) ->
     tokens = @lineTokens editor, row
     c = 0
@@ -948,10 +953,11 @@ exports.Mode = class extends TextMode
 
   handleClick: (event) =>
     if event.getShiftKey?()
-      # TODO rename tokenNextToCursor
-      token = @tokenNextToCursor @editor
-      unless isDelim token
+      token = @tokenBeforeCursor @editor
+      if isAtom token
         @editAtCursor token
+      else
+        @setInsertPositionAtCursorTo token.parent
     else
       # TODO: show what will be selected on mousemove
       # Select preceding expression
@@ -1182,6 +1188,7 @@ indexWithin = (what, array) ->
       return i
   throw new Error "what is not inside of array in indexWithin"
 
+# Returns node preceding or containing idx, inside given form
 # Fn Form Idx Node
 nodeBeforeIn = (form, idx) ->
   for node in form
