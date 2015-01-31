@@ -6,7 +6,7 @@ window.addEventListener = ->
 exports.Worker = class extends Mirror
   constructor: (sender) ->
     super sender
-    @setTimeout 250
+    @setTimeout 0
 
     @compiler = compiler
 
