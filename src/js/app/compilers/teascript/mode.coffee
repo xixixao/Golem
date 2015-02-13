@@ -227,7 +227,7 @@ exports.Mode = class extends TextMode
 
   # Called after worker compiles
   updateAst: (ast) ->
-    # console.log ast, @ast if @isSingleLineInput
+    # console.log ast, @ast
     duplicateProperties ast, @ast
     @$tokenizer._signal 'update', data: rows: first: 1
 
@@ -257,6 +257,10 @@ exports.Mode = class extends TextMode
       bindKey: win: 'Enter', mac: 'Enter'
       exec: =>
         @addWhitespaceAtCursor '\n'
+        # TODO: add indent
+        indent = (repeat (depthOf @tokenAfterCursor @editor), '  ')
+        if indent.length > 0
+          @addWhitespaceAtCursor indent
 
     @editor.commands.addCommand
       name: 'add new sibling to parent expression on new line'
@@ -411,7 +415,7 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Backspace', mac: 'Backspace'
         multiSelectAction: 'forEach'
         exec: =>
-          console.log "backasdsapdsad"
+          # console.log "backasdsapdsad"
           if atom = @editedAtom()
             if @cursorPosition() is atom.start
               prevToken = previous atom # WARNING: relies on space separation
@@ -1061,6 +1065,11 @@ exports.Mode = class extends TextMode
       # for name in names
       #   module[name]
 
+depthOf = (node) ->
+  if not isReal node
+    -1
+  else
+    1 + depthOf node.parent
 
 replaceChildNodeWith = (replaced, added) ->
   added.parent = replaced.parent
@@ -1104,6 +1113,9 @@ isNewLine = (token) ->
 # Fn Expression Bool
 isReal = (expression) ->
   expression.start >= 0
+
+repeat = (n, string) ->
+  (new Array n + 1).join string
 
 findTokensBetween = (expression, start, end) ->
   # console.log "looking between #{start} and #{end} in", expression

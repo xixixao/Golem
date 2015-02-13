@@ -89,25 +89,26 @@ module.exports = hyper class CommandLine
       commandWorker = editor.session.getMode().worker
 
       # CommandWorker compiles either on change or on enter
-      commandWorker.on 'ok', ({data: {result, type}}) =>
+      commandWorker.on 'ok', ({data: {result, type, commandSource}}) =>
         # TODO use prelude trim
         source = $.trim editor.getValue()
 
         # Extract the last but one node from the compound tree
         # The compound tree will have
         #          (source nodes..., commandExpression)
-        if result.ast
-          result.ast.splice 1, result.ast.length - 3
-        if type in ['execute', 'command']
-          if source.length > 0
-            timeline.push source
-            @props.onCommandExecution source, result, type
-            @props.memory.saveCommands timeline
-            editor.session.getMode().initAst ""
-            editor.session.getMode().clearEditingMarker()
-            # editor.focus()
-        else
-          editor.session.getMode().updateAst result.ast
+        if source is commandSource #TODO: investigate why these get out of sync
+          if result.ast
+            result.ast.splice 1, result.ast.length - 3
+          if type in ['execute', 'command']
+            if source.length > 0
+              timeline.push source
+              @props.onCommandExecution source, result, type
+              @props.memory.saveCommands timeline
+              editor.session.getMode().initAst ""
+              editor.session.getMode().clearEditingMarker()
+              # editor.focus()
+          else
+            editor.session.getMode().updateAst result.ast
 
       commandWorker.on 'error', ({data: {text}}) =>
         @props.onCommandFailed text
