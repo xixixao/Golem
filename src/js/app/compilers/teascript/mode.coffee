@@ -490,7 +490,10 @@ exports.Mode = class extends TextMode
         bindKey: win: '"', mac: '"'
         multiSelectAction: 'forEach'
         exec: =>
-          if not (expression = @activeExpression())
+          if (expression = @activeExpression())
+            if expression.label is 'string'
+              @addToEditedAtomAtCursor '\\"'
+          else
             @addAtInsertPositionAndSetCursorAtOffset '""', -1
           return
 
@@ -746,7 +749,7 @@ exports.Mode = class extends TextMode
     @addAt string, node.parent, (childIndex node) + 1
 
   addBefore: (string, node) ->
-    @addAt string, node.parent, (childIndex node) - 1
+    @addAt string, node.parent, (childIndex node)
 
   addAt: (string, parent, idx) ->
     added = compiler.astizeExpression string
