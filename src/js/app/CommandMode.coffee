@@ -60,7 +60,10 @@ module.exports =
         @worker
 
       prefixWorker: (source) ->
+        oldPrefix = @workerPrefix
+        @workerPrefix = source
         @worker.call 'prefix', [source]
+        oldPrefix isnt source
 
       updateWorker: ->
         @worker.call 'setValue', [@doc.getValue()]

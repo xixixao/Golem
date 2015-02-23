@@ -116,6 +116,7 @@ module.exports = hyper class OutputDisplay
             _UpdatingDisplay
               key: key
               expression: source
+              source: @props.source
               ast: ast
               compiledExpression: compiled
               compiledSource: @props.compiledSource

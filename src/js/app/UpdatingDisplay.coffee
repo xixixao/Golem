@@ -5,10 +5,14 @@ cx = React.addons.classSet
 ace = require 'ace/ace'
 jsDump = require 'vendor/jsDump'
 
+CommandMode = require './CommandMode'
 {Mode} = require 'compilers/teascript/mode'
 compiler = require 'compilers/teascript/compiler'
 
 module.exports = hyper class UpdatingDisplay
+
+  getInitialState: ->
+    compiled: undefined
 
   parseValue: (value) ->
     _pre dangerouslySetInnerHTML: __html:
@@ -17,14 +21,20 @@ module.exports = hyper class UpdatingDisplay
       else if typeof value is 'function'
         value.toString()
       else
-        compiler.syntaxedExpHtml jsDump.parse value
+        compiler.syntaxedExpHtml jsDump.parse @converFromImmutable value
 
-  runSource: ->
-    if @props.compiledExpression instanceof Error
-      @displayError @props.compiledExpression
+  converFromImmutable: (value) ->
+    if Immutable?.Iterable.isIterable value
+      value.toJS()
+    else
+      value
+
+  runSource: (compiled = @props.compiledExpression) ->
+    if compiled instanceof Error
+      @displayError compiled
     try
       # result = eval @props.compiledSource + @props.compiledExpression
-      result = eval @props.compiledExpression
+      result = eval compiled
       @parseValue result
     catch error
       @displayError error
@@ -37,7 +47,8 @@ module.exports = hyper class UpdatingDisplay
     => @props.onCommand name, @editor
 
   componentDidMount: ->
-    mode = new Mode yes
+    # mode = new Mode yes
+    mode = new (CommandMode.inherit Mode) "compilers/teascript"
     @editor = editor = ace.edit @refs.ace.getDOMNode(), mode, "ace/theme/tea"
     mode.editor = editor
     mode.initAst @props.expression
@@ -51,17 +62,41 @@ module.exports = hyper class UpdatingDisplay
     # editor.setReadOnly true
     editor.setValue @props.expression, 1
     editor.moveCursorTo 0, 0
-    # editor.session.getMode().attachToSession editor.session
+    editor.session.getMode().attachToSession editor.session
+
+    commandWorker = mode.worker
+
+    # CommandWorker compiles either on change or on enter
+    commandWorker.on 'ok', ({data: {result, type, commandSource}}) =>
+      # TODO use prelude trim
+      source = $.trim editor.getValue()
+
+      # Extract the last but one node from the compound tree
+      # The compound tree will have
+      #          (source nodes..., commandExpression)
+      if source is commandSource #TODO: investigate why these get out of sync
+        if result.ast
+          result.ast.splice 1, result.ast.length - 3
+        mode.updateAst result.ast
+
+        @setState
+          compiled: result.compiled
+
+    commandWorker.on 'error', ({data: {text}}) =>
+      console.log "updaitng display error", text
+
 
     for name, command of editor.session.getMode().commands when command.indirect
       command.exec = @handleCommand name
 
-  componentWillReceiveProps: ({focus}) ->
+  componentWillReceiveProps: ({source}) ->
     # if focus
       # @editor.focus()
+    if @editor.session.getMode().prefixWorker source
+      @editor.session.getMode().updateWorker()
 
   render: ->
     _div {},
       _div ref: 'ace', style: width: '100%', height: 22
       _div style: height: 0, margin: '0 4px', overflow: 'hidden', @props.expression
-      _div style: padding: '0 4px', @runSource()
+      _div style: padding: '0 4px', @runSource @state.compiled

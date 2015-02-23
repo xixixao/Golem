@@ -412,7 +412,8 @@ module.exports = hyper class EditorMain
       ''
       _OutputDisplay
         logs: @state.logs
-        compiledSource: @state.compiledJs
+        # compiledSource: @state.compiledJs
+        source: @state.source
         onCommand: @handleExpressionCommand
         focus: @state.focused is @focus.output
         onDelete: @handleOutputDelete
