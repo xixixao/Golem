@@ -57,6 +57,7 @@ exports.Mode = class extends TextMode
     @$behaviour = undefined
 
   tokensOnLine: (row, doc) =>
+
     start = doc.positionToIndex row: row, column: 0
     end = doc.positionToIndex row: row + 1, column: 0
 
@@ -129,14 +130,14 @@ exports.Mode = class extends TextMode
   #   token = @getTokenBefore @editor, row, column
   #   if token
   #     # whitespace is handled by command
-  #     if isWs token
+  #     if isWhitespace token
   #       return
   #     wasActive = @mainManipulatedToken()?
   #     @deselect()
   #     @unhighlightActive()
   #     if @isDelim token
   #       parenOrChild = @lastChild token.parent
-  #       if @isEmpty(token.parent) or isWs parenOrChild
+  #       if @isEmpty(token.parent) or isWhitespace parenOrChild
   #         # added empty parens, put cursor inside
   #         @editor.moveCursorToPosition @tokenVisibleEnd parenOrChild
   #       else
@@ -255,17 +256,18 @@ exports.Mode = class extends TextMode
     @editor.commands.addCommand
       name: 'add new sibling expression on new line'
       bindKey: win: 'Enter', mac: 'Enter'
+      multiSelectAction: 'forEach'
       exec: =>
-        @addWhitespaceAtCursor '\n'
-        # TODO: add indent
-        indent = (repeat (depthOf @tokenAfterCursor @editor), '  ')
-        if indent.length > 0
-          @addWhitespaceAtCursor indent
+        @insertSpace FORWARD, '\n'
+        # @addWhitespaceAtCursor '\n'
+        # indent = (repeat (depthOf @tokenAfterCursor @editor), '  ')
+        # if indent.length > 0
+        #   @addWhitespaceAtCursor indent
 
-    @editor.commands.addCommand
-      name: 'add new sibling to parent expression on new line'
-      bindKey: win: 'Ctrl-Enter', mac: 'Ctrl-Enter'
-      exec: =>
+    # @editor.commands.addCommand
+    #   name: 'add new sibling to parent expression on new line'
+    #   bindKey: win: 'Ctrl-Enter', mac: 'Ctrl-Enter'
+    #   exec: =>
         # if (token = @rightActiveToken()) and parent = token.parent
         #   @deselect()
         #   @unhighlightActive()
@@ -275,227 +277,291 @@ exports.Mode = class extends TextMode
     @editor.commands.addCommand
       name: 'add new sibling expression on previous line'
       bindKey: win: 'Shift-Enter', mac: 'Shift-Enter'
+      multiSelectAction: 'forEach'
       exec: =>
-        if (expression = @activeExpression())
-          start = @startPos expression
-          @addBefore '\n', expression
-        else
-          start = @cursorPosition()
-          @addAtInsertPosition '\n'
-        @setInsertPositionAt start, expression.parent
+        @insertSpace BACKWARD, '\n'
+        # if (expression = @activeExpression())
+        #   start = @startPos expression
+        #   @addBefore '\n', expression
+        # else
+        #   start = @cursorPosition()
+        #   @addAtInsertPosition '\n'
+        # @setInsertPositionAt start, expression.parent
 
   addCommands: (session) ->
-    # Never remove this command, it text insertion
+    # Never remove this command, it handles text insertion
     @editor.commands.addCommands
       'insertstring': # This is the default unhandled command name
         multiSelectAction: 'forEach'
         scrollIntoView: 'cursor'
         exec: (editor, string) =>
-          if @commandMode or @editor.getValue() is '' and string is ':'
-            editor.insert string
+          if @commandMode or (@editor.getValue() is '') and (string is ':')
+            @editor.insert string
             return
           # Will have to handle pasting of expressions by parsing them first
-          if not /\s/.test string
-            if @isEditing()
-              @addToEditedAtomAtCursor string
-            else if @selectedExpression()
-              @replaceSelected string
-            else
-              # todo need to create a new token
-              @editAtCursor @addAtInsertPosition string
-          else
-            # TODO: see above
-            editor.insert string
+          @insertString string
+          # if not /\s/.test string
+          #   if @isEditing()
+          #     @addToEditedAtomAtCursor string
+          #   else if @selectedExpression()
+          #     @replaceSelected string
+          #   else
+          #     # todo need to create a new token
+          #     @editAtCursor @addAtInsertPosition string
+          # else
+          #   # TODO: see above
+          #   editor.insert string
+          return
 
     @editor.commands.addCommands @commands =
       'select by click':
-        multiSelectAction: 'forEach'
+        # multiSelectAction: 'forEach' <- makes no sense
         exec: =>
-          if (token = @tokenBeforeCursor())
-            if (isWs token) and (isReal token.parent) or (isClosingDelim token)
-              @selectExpression token.parent
-            else if isAtom token
-              @selectExpression token
-            else
-              @setInsertPositionAtCursorTo token.parent
-            # console.log "after click", @selectionExpression()
+          @moveTo @tangibleAtPos @cursorPosition()
+          return
+          # if isAtom node
+          #   @selectExpression atom
+          # else
+          #   delimiter = firstThat isDelim, surroundingTokens
+          #   if delimiter
+          #     @selectExpression parentOf delimiter
+          #   else
+          #     @setInsertAt lastOf surroundingTokens
+
+          # if (token = @tokenBeforeCursor())
+          #   if (isWhitespace token) and (isReal token.parent) or (isClosingDelim token)
+          #     @selectExpression token.parent
+          #   else if isAtom token
+          #     @selectExpression token
+          #   else
+          #     @setInsertPositionAtCursorTo token.parent
+          #   # console.log "after click", @selectionExpression()
+
+      'edit by click':
+        exec: =>
+          @editAtCursor()
+          return
 
       'up the tree':
-        bindKey: win: 'Up', mac: 'Up'
+        bindKey: win: 'Ctrl-Up', mac: 'Command-Up'
         multiSelectAction: 'forEach'
         exec: =>
-          expression = @selectionExpression()
-          if @isSelecting()
-            if isReal expression.parent
-              @selectExpression expression.parent
+          if @isWithinAtom()
+            @moveTo @nodeAtCursor()
           else
-            # If editing or inserting
-            if isReal expression
-              @selectExpression expression
+            @moveTo parentOf @nodeAtCursor()
+          return
 
       'down the tree':
-        bindKey: win: 'Down', mac: 'Down'
+        bindKey: win: 'Ctrl-Down', mac: 'Command-Down'
         multiSelectAction: 'forEach'
         exec: =>
           # Traverse down
-          # console.log "down", @selectedExpression()
           if expression = @selectedExpression()
             if isForm expression
-              # select first child node
-              terms = _terms expression
-              if _notEmpty terms
-                @selectExpression terms[0]
-              else
-                # or go inside delimiters
-                @setInsertPositionInside expression
-            # Start editing
+              @moveTo tangible NEXT, expression[0]
+              # # select first child node
+              # terms = _terms expression
+              # if _notEmpty terms
+              #   @selectExpression terms[0]
+              # else
+              #   # or go inside delimiters
+              #   @setInsertInside expression
             else
-              @editAtom()
+              @editSelectedAtom()
           return
 
-      'next in expression':
+      'next atom or position':
         bindKey: win: 'Right', mac: 'Right'
         multiSelectAction: 'forEach'
         exec: =>
-          if @isSelectingOrEditing()
-            @selectExpression nextExpression @activeExpression()
+          @moveTo followingTangibleToken NEXT, @nodeAtCursor()
+          return
 
-      'previous in expression':
+      'previous atom or position':
         bindKey: win: 'Left', mac: 'Left'
         multiSelectAction: 'forEach'
         exec: =>
-          if @isSelectingOrEditing()
-            @selectExpression previousExpression @activeExpression()
+          @moveTo followingTangibleToken PREVIOUS, @nodeAtCursor()
+          # node = @nodeAtCursor()
+          # if @isSelectingOrInAtom()
+          #   @selectExpression previousExpression @activeExpression()
+          return
 
+      'next sibling':
+        bindKey: win: 'Ctrl-Right', mac: 'Command-Right'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @moveTo siblingTangible NEXT, @nodeAtCursor()
+          return
+
+      'previous sibling':
+        bindKey: win: 'Ctrl-Left', mac: 'Command-Left'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @moveTo siblingTangible PREVIOUS, @nodeAtCursor()
+          return
 
       'include next expression':
         bindKey: win: 'Shift-Right', mac: 'Shift-Right'
         multiSelectAction: 'forEach'
         exec: =>
-          if (tokens = @activeOrSelectedTokens()) and tokens[0].parent
-            [..., last] = tokens
-            found = false
-            for t in last.parent
-              if found and @isSelectable t
-                @selectTokens tokens.concat [t]
-                return
-              if t is last
-                found = true
+          if tokens = @selectedRange()
+            @expandSelectedRange FORWARD
+          return
+
+          # if (tokens = @activeOrSelectedTokens()) and tokens[0].parent
+          #   [..., last] = tokens
+          #   found = false
+          #   for t in last.parent
+          #     if found and @isSelectable t
+          #       @selectTokens tokens.concat [t]
+          #       return
+          #     if t is last
+          #       found = true
 
       'include previous expression':
         bindKey: win: 'Shift-Left', mac: 'Shift-Left'
         multiSelectAction: 'forEach'
         exec: =>
-          if (tokens = @activeOrSelectedTokens()) and tokens[0].parent
-            [first] = tokens
-            found = false
-            for t in first.parent by -1
-              if found and @isSelectable t
-                @selectTokens [t].concat tokens
-                return
-              if t is first
-                found = true
+          if tokens = @selectedRange()
+            @expandSelectedRange BACKWARD
+          return
+          # if (tokens = @activeOrSelectedTokens()) and tokens[0].parent
+          #   [first] = tokens
+          #   found = false
+          #   for t in first.parent by -1
+          #     if found and @isSelectable t
+          #       @selectTokens [t].concat tokens
+          #       return
+          #     if t is first
+          #       found = true
 
       'add new sibling expression':
         bindKey: win: 'Space', mac: 'Space'
         multiSelectAction: 'forEach'
         exec: =>
-          @addWhitespaceAtCursor ' '
+          @insertSpace FORWARD, ' '
+          return
+          # @addWhitespaceAtCursor ' '
 
       'add new sibling expression before current':
         bindKey: win: 'Shift-Space', mac: 'Shift-Space'
         multiSelectAction: 'forEach'
         exec: =>
-          if (expression = @activeExpression())
-            start = @startPos expression
-            @addBefore ' ', expression
-            @setInsertPositionAt start, expression.parent
+          @insertSpace BACKWARD ' '
+          return
+          # if (expression = @activeExpression())
+          #   start = @startPos expression
+          #   @addBefore ' ', expression
+          #   @setInsertPositionAt start, expression.parent
 
       'remove token and preceding whitespace or delete a character':
         bindKey: win: 'Backspace', mac: 'Backspace'
         multiSelectAction: 'forEach'
         exec: =>
-          # console.log "backasdsapdsad"
-          if atom = @editedAtom()
-            if @cursorPosition() is atom.start
-              prevToken = previous atom # WARNING: relies on space separation
-              if isSpace prevToken
-                leftNeighbor = previous prevToken
-                # TODO: join atoms if possible
-              else if isNewLine prevToken
-                @editor.remove("left")
-                @removeNode prevToken
-            else
-              @editor.remove("left")
-              @removeCharacterFromEditedAtomAtCursor()
-          else if expression = @selectedExpression()
-            prevToken = previous expression
-            nextToken = next expression
-            leftNeighbor = previous prevToken
-            rightNeigbor = next nextToken
-            @editor.remove()
-            @removeNode expression
-            if isSpace prevToken
-              @editor.remove("left")
-              @removeNode prevToken
-            else if isSpace nextToken
-              @editor.remove("right")
-              @removeNode nextToken
-            else if (isNewLine prevToken) and (isNewLine nextToken)
-              # TODO: remove all preceding whitespace
-              @editor.remove("left")
-              @removeNode prevToken
-            if leftNeighbor and isExpression leftNeighbor
-              @selectExpression leftNeighbor
-            else if rightNeigbor and isExpression rightNeigbor
-              @selectExpression rightNeigbor
-            else
-              @setInsertPositionAtCursorTo expression.parent
-          else
-            # TODO: fix this, for now its useful to be able to erase spaces
-            @editor.remove("left")
+          @remove BACKWARD
           return
+
+      'remove backwards':
+        bindKey: win: 'Delete', mac: 'Delete'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @remove FORWARD
+          return
+
+          # if atom = @editedAtom()
+          #   if @cursorPosition() is atom.start
+          #     prevToken = previous atom # WARNING: relies on space separation
+          #     if isSpace prevToken
+          #       leftNeighbor = previous prevToken
+          #       # TODO: join atoms if possible
+          #     else if isNewLine prevToken
+          #       @editor.remove("left")
+          #       @removeNode prevToken
+          #   else
+          #     @editor.remove("left")
+          #     @removeCharacterFromEditedAtomAtCursor()
+          # else if expression = @selectedExpression()
+          #   prevToken = previous expression
+          #   nextToken = next expression
+          #   leftNeighbor = previous prevToken
+          #   rightNeigbor = next nextToken
+          #   @editor.remove()
+          #   @removeNode expression
+          #   if isSpace prevToken
+          #     @editor.remove("left")
+          #     @removeNode prevToken
+          #   else if isSpace nextToken
+          #     @editor.remove("right")
+          #     @removeNode nextToken
+          #   else if (isNewLine prevToken) and (isNewLine nextToken)
+          #     # TODO: remove all preceding whitespace
+          #     @editor.remove("left")
+          #     @removeNode prevToken
+          #   if leftNeighbor and isExpression leftNeighbor
+          #     @selectExpression leftNeighbor
+          #   else if rightNeigbor and isExpression rightNeigbor
+          #     @selectExpression rightNeigbor
+          #   else
+          #     @setInsertPositionAtCursorTo expression.parent
+          # else
+          #   # TODO: fix this, for now its useful to be able to erase spaces
+          #   @editor.remove("left")
+          # return
 
       'wrap in parens':
         bindKey: win: '(', mac: '('
         multiSelectAction: 'forEach'
         exec: =>
-          if (expression = @activeExpression())
-            @wrap '(', ')', expression
-          else
-            @addAtInsertPositionAndSetCursorAtOffset '()', -1
+          @wrapIn '(', ')', 1
+          # if (expression = @activeExpression())
+          #   @wrap '(', ')', expression
+          # else
+          #   @addAtInsertPositionAndSetCursorAtOffset '()', -1
+          # return
           return
 
       'wrap in brackets':
         bindKey: win: '[', mac: '['
         multiSelectAction: 'forEach'
         exec: =>
-          if (expression = @activeExpression())
-            @wrap '[', ']', expression
-          else
-            @addAtInsertPositionAndSetCursorAtOffset '[]', -1
+          @wrapIn '[', ']', 1
           return
+          # if (expression = @activeExpression())
+          #   @wrap '[', ']', expression
+          # else
+          #   @addAtInsertPositionAndSetCursorAtOffset '[]', -1
+          # return
 
       'wrap in braces':
         bindKey: win: '{', mac: '{'
         multiSelectAction: 'forEach'
         exec: =>
-          if (expression = @activeExpression())
-            @wrap '{', '}', expression
-          else
-            @addAtInsertPositionAndSetCursorAtOffset '{}', -1
+          @wrapIn '{', '}', 1
           return
+          # if (expression = @activeExpression())
+          #   @wrap '{', '}', expression
+          # else
+          #   @addAtInsertPositionAndSetCursorAtOffset '{}', -1
+          # return
 
       'add quotes':
         bindKey: win: '"', mac: '"'
         multiSelectAction: 'forEach'
         exec: =>
-          if (expression = @activeExpression())
-            if expression.label is 'string'
-              @addToEditedAtomAtCursor '\\"'
+          if atom = @editedAtom()
+            if atom.label is 'string'
+              @insertString '\\"'
           else
-            @addAtInsertPositionAndSetCursorAtOffset '""', -1
+            selected = escape '"', '\\"', @selectedText()
+            @removeSelected()
+            @insertString '"' + selected + '"'
           return
+      'close parent, same as up':
+        bindKey: win: ')', mac: ')'
+        exec: =>
+          @editor.execCommand 'up the tree', @editor
 
       # 'add new sibling to parent':
       #   bindKey: win: ')', mac: ')'
@@ -514,19 +580,28 @@ exports.Mode = class extends TextMode
         bindKey: win: ':', mac: ':'
         exec: =>
           if @isSingleLineInput and @editor.getValue() is ''
-            return false
-          if @isEditing()
-            false
-          else if not @isSelecting()
-            added = @addAtInsertPosition ':'
-            {row, column} = @cursorPosition()
-            @editAt (row: row, column: column - 1), added
-            true
+            return no
+          if atom = selectedAtom()
+            if isDelimitedAtom atom
+              yes
+            else
+              @editSelectedAtom()
+              @insertString ':'
+              @selectExpression @editedAtom()
+          else if @isSelecting()
+            yes
+          else
+            @insertString ':'
+            @shiftCursor -1
+            # {row, column} = @cursorPosition()
+            # @editAt (row: row, column: column - 1), added
+            yes
 
       'add comment':
         bindKey: win: '#', mac: '#'
         exec: =>
-          @addAtInsertPositionAndSetCursorAtOffset '(# )', -1
+          @wrapIn '(#', ')', 2
+          # @addAtInsertPositionAndSetCursorAtOffset '(# )', -1
 
       # Temporary
       # 'show type of expression':
@@ -551,9 +626,9 @@ exports.Mode = class extends TextMode
       'replace parent with current selection':
         bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
         exec: =>
-          if (expression = @activeExpression())
-            if isReal expression.parent
-              @pasteOver expression.parent, expression
+          if tokens = @selectedRange()
+            if parent = parentOf tokens[0]
+              @pasteOver parent, expression
               @selectExpression expression
           # range = @activeRange()
           # # todo: select lowest common ancenstor when using multiple selections
@@ -603,7 +678,7 @@ exports.Mode = class extends TextMode
             i = 0
             args = []
             for t in token.parent
-              if t is token or (isWs t) or @isDelim t
+              if t is token or (isWhitespace t) or @isDelim t
                 continue
               if labeled
                 labeled = false
@@ -621,6 +696,148 @@ exports.Mode = class extends TextMode
             """
             #{token.value} _"""
 
+  # Moves to a tangible position/expression
+  moveTo: (tangibleNodes...) ->
+    if tangibleNodes[0]
+      @editor.selection.$nodes = tangibleNodes
+      @updateSelectedTextRange()
+      @clearEditingMarker()
+
+  expandSelectedRange: (direction) ->
+    from = @limitNodeAtCursor direction
+    access = if direction is FORWARD then 'push' else 'unshift'
+    sibling = siblingTangible direction, from
+    if sibling.parent isnt from.parent
+      @editor.selection.$nodes = [sibling]
+
+    @editor.selection.$nodes[access] sibling
+    @updateSelectedTextRange()
+
+  updateSelectedTextRange: ->
+    [first, ..., last] = @selectedRange()
+    {start} = @tangibleRange first
+    {end} = @tangibleRange last
+    @selectTextRange positionsToRange start, end
+
+  selectTextRange: (range) ->
+    @editor.selection.setSelectionRange range
+
+  tangibleRange: (node) ->
+    start = @startPos node
+    if isExpression node
+      end = @endPos node
+    else
+      end = start
+    positionsToRange start, end
+
+  nodeAtCursor: ->
+    @selectedRange()[0]
+
+  limitNodeAtCursor: (direction) ->
+    limitOfList direction, @selectedRange()
+
+  selectedRange: ->
+    @editor.selection.$nodes
+
+  # Returns node at cursor (only atoms, not forms)
+  tangibleAtPos: (pos) ->
+    [before, after] = @tokensSurroundingPos pos
+    tangibleSurroundedBy FORWARD, before, after or before
+
+  tokensSurroundingPos: (pos) ->
+    idx = @posToIdx pos
+    findTokensBetween @ast, idx - 1, idx + 1
+
+  insertString: (string) ->
+    nodeLike = not /[\s\\]/.test string
+    if @isWithinAtom()
+      node = @nodeAtCursor()
+      if isDelimitedAtom node
+        @insertInAtom node, (string = escape node[0], "\\#{node[0]}", string)
+      else if nodeLike
+        # simple string can be inserted into token
+        @insertInAtom node, string
+      @repositionAst()
+    else
+      @removeSelected()
+      insertPos = @nodeAtCursor()
+      added = astizeExpressions string, insertPos.parent
+      insertChildNodesAt added, insertPos.parent, childIndex insertPos
+      @repositionAst()
+      @moveTo added...
+    @finishInsert string
+    if nodeLike and string.length is 1
+      @editSelectedAtom()
+
+  insertSpace: (direction, space) ->
+    insertPos = @limitNodeAtCursor direction
+    offset = if direction is FORWARD then 1 else 0
+    added = astizeExpressions space, insertPos.parent
+    insertChildNodesAt added, insertPos.parent, (childIndex insertPos) + offset
+    @setCursor (@limitPos direction, insertPos)
+    @repositionAst()
+    @finishInsert space
+    @moveTo [tangible direction, added[0]]
+
+  insertInAtom: (atom, string) ->
+    at = @posToIdx @cursorPosition()
+    atom.symbol = spliceString atom.symbol, at - atom.start, 0, string
+    atom.end += string.length
+
+  finishInsert: (string) ->
+    @editor.insert string
+    @updateEditingMarker()
+
+  remove: (direction) ->
+    if atom = @editedAtom()
+      if (isDelimitedAtom atom) and @isAtLimit direction, atom
+        @moveTo atom
+        @removeSelected()
+      else
+        @removeString direction
+    else if @isSelecting()
+      @removeSelected()
+    else
+      node = @nodeAtCursor()
+      # TODO: tangible?
+      removeTo = siblingTangible direction, node
+      if isExpression removeTo
+        # Check if we are surrounded by the same expression and if remove it
+        otherSibling = siblingTangible (opposite direction), node
+        if otherSibling is removeTo
+          @moveTo removeTo
+          @removeSelected()
+      else
+        @removeNode if direction is FORWARD then node else sibling direction, node
+
+  removeSelected: ->
+    nodes = @selectedRange()
+    if @isSelecting()
+      newAtCursor = sibling NEXT, @limitNodeAtCursor FORWARD
+      @removeNodes nodes
+      @editor.selection.$nodes = [newAtCursor]
+      @editor.remove()
+
+  removeString: (direction) ->
+    @editor.remove(if direction is FORWARD then "right" else "left")
+    atom = @nodeAtCursor()
+    at = @posToIdx @cursorPosition()
+    atom.symbol = spliceString atom.symbol, at - atom.start, 1, ''
+    atom.end--
+    @repositionAst()
+    @updateEditingMarker()
+
+  removeNodes: (nodes) ->
+    for node in nodes
+      node.parent.splice (childIndex node), 1
+    return
+
+  isAtLimit: (direction, atom) ->
+    idx = @posToIdx @cursorPosition
+    offset = if isDelimitedAtom atom then 1 else 0
+
+    limit = @limitPos direction, atom
+    idx is limit + direction * offset
 
   findParentFunction: (token) ->
     if token.parent
@@ -631,7 +848,7 @@ exports.Mode = class extends TextMode
 
   findParamList: (token) ->
     if Array.isArray(token)
-      if isWs token[0]
+      if isWhitespace token[0]
         [_, paren, kw, params] = token
       else
         [paren, kw, params]
@@ -660,7 +877,7 @@ exports.Mode = class extends TextMode
       # find the first token and erase all preceding whitespace tokens
       for t in first.parent by -1
         if found
-          if isWs t
+          if isWhitespace t
             tokens.unshift t
           else
             if @isSelectable t
@@ -673,7 +890,7 @@ exports.Mode = class extends TextMode
       if isFirst
         for t in first.parent
           if found
-            if isWs t
+            if isWhitespace t
               tokens.push t
             else
               if @isSelectable t
@@ -704,7 +921,7 @@ exports.Mode = class extends TextMode
     if (expression = @selectionExpression())
       if @isEditing() and isDelimitedAtom expression
         @addToEditedAtomAtCursor string
-      else if @isSelectingOrEditing()
+      else if @isSelectingOrInAtom()
         @addAfter string, expression
         @setCursor @idxToPos expression.end + string.length
         @setInsertPositionAtCursorTo expression.parent
@@ -723,7 +940,7 @@ exports.Mode = class extends TextMode
     # console.log "adding at insert position", string, @selectionExpression(), @posToIdx @cursorPosition()
     # TODO: this should handle all possible strings, including AST from elsewhere??
     prevNode = nodeBeforeIn @selectionExpression(), @posToIdx @cursorPosition()
-    if string is ' ' and isWs prevNode
+    if string is ' ' and isWhitespace prevNode
       prevNode.symbol += string
     else
       @addAfter string, prevNode
@@ -766,27 +983,27 @@ exports.Mode = class extends TextMode
     @repositionAst()
 
   # Proc String ()
-  addToEditedAtomAtCursor: (string) ->
-    atom = @selectionExpression()
-    at = @posToIdx @cursorPosition()
-    atom.symbol = spliceString atom.symbol, at - atom.start, 0, string
-    # Here we update the ast with new position data
-    #  this is cheaper than reparsing the tree, but still could take a while
-    #  even better would be to use an offset table
-    #    every token would map to an index in the table, to get actual positions
-    #    we would add up offsets from previous tokens
-    atom.end += string.length
-    @repositionAst()
-    @editor.insert string
-    @updateEditingMarker()
+  # addToEditedAtomAtCursor: (string) ->
+  #   atom = @selectionExpression()
+  #   at = @posToIdx @cursorPosition()
+  #   atom.symbol = spliceString atom.symbol, at - atom.start, 0, string
+  #   # Here we update the ast with new position data
+  #   #  this is cheaper than reparsing the tree, but still could take a while
+  #   #  even better would be to use an offset table
+  #   #    every token would map to an index in the table, to get actual positions
+  #   #    we would add up offsets from previous tokens
+  #   atom.end += string.length
+  #   @repositionAst()
+  #   @editor.insert string
+  #   @updateEditingMarker()
 
-  removeCharacterFromEditedAtomAtCursor: ->
-    atom = @selectionExpression()
-    at = @posToIdx @cursorPosition()
-    atom.symbol = spliceString atom.symbol, at - atom.start, 1, ''
-    atom.end--
-    @repositionAst()
-    @updateEditingMarker()
+  # removeCharacterFromEditedAtomAtCursor: ->
+  #   atom = @selectionExpression()
+  #   at = @posToIdx @cursorPosition()
+  #   atom.symbol = spliceString atom.symbol, at - atom.start, 1, ''
+  #   atom.end--
+  #   @repositionAst()
+  #   @updateEditingMarker()
 
   # Proc Bool
   isEditing: ->
@@ -794,15 +1011,16 @@ exports.Mode = class extends TextMode
 
   editedAtom: ->
     if @isEditing()
-      @selectionExpression()
+      @nodeAtCursor()
 
   # Start editing currently selected atom
-  editAtom: ->
-    if isDelimitedAtom @selectedExpression()
-      @setCursor @shiftPosBy @selectionRange().end, -1
-    else
-      @setCursor @selectionRange().end
-    @updateEditingMarker()
+  editSelectedAtom: ->
+    if not @isWithinAtom()
+      if isDelimitedAtom @selectedExpression()
+        @setCursor @shiftPosBy @selectionRange().end, -1
+      else
+        @setCursor @selectionRange().end
+      @setEditingMarker()
 
   editAtCursor: (atom) ->
     @editAt @cursorPosition(), atom
@@ -813,10 +1031,16 @@ exports.Mode = class extends TextMode
     @updateEditingMarker()
 
   updateEditingMarker: ->
+    isWithin = @isWithinAtom()
     @clearEditingMarker()
-    range = @editableRange @selectionExpression()
+    if isWithin
+      @setEditingMarker()
+
+  setEditingMarker: ->
+    range = @editableRange @selectedExpression()
     id = @editor.session.addMarker range, 'ace_active-token'
     @editor.selection.$editMarker = id
+
 
   clearEditingMarker: (selection = @editor.selection) ->
     if id = selection.$editMarker
@@ -836,7 +1060,7 @@ exports.Mode = class extends TextMode
 
   # Expects an empty form
   # Proc Form ()
-  setInsertPositionInside: (form) ->
+  setInsertInside: (form) ->
     inside = @idxToPos form[0].end
     @setCursor inside
     @setSelectionExpression form, yes
@@ -851,30 +1075,34 @@ exports.Mode = class extends TextMode
   # Sets the expression on the current selection
   #   inside - no when the expression is selected
   #            yes when the insert position is inside the expression
-  setSelectionExpression: (expression, inside) ->
-    @editor.selection.$teaExpression = expression
-    @editor.selection.$teaInside = inside
+  # setSelectionExpression: (expression, inside) ->
+  #   @editor.selection.$teaExpression = expression
+  #   @editor.selection.$teaInside = inside
 
   # Proc (Maybe Expression)
   selectedExpression: ->
     if @isSelecting()
-      @selectionExpression()
+      @nodeAtCursor()
 
   isSelecting: ->
-    @isSelectingOrEditing() and not @isEditing()
+    not @isWithinAtom() and isExpression @nodeAtCursor()
+    # @isSelectingOrInAtom() and not @isEditing()
+
+  isWithinAtom: ->
+    @editor.selection.$editMarker?
 
   # Proc Bool
-  isSelectingOrEditing: ->
+  isSelectingOrInAtom: ->
     not @editor.selection.$teaInside
 
   # Proc (Maybe Expression)
-  activeExpression: ->
-    if @isSelectingOrEditing()
-      @selectionExpression()
+  # activeExpression: ->
+  #   if @isSelectingOrInAtom()
+  #     @selectionExpression()
 
   # Proc (Maybe Expression)
-  selectionExpression: ->
-    @editor.selection.$teaExpression # TODO: what if multi?
+  # selectionExpression: ->
+  #   @editor.selection.$teaExpression # TODO: what if multi?
 
   # Proc Range
   selectionRange: ->
@@ -950,7 +1178,7 @@ exports.Mode = class extends TextMode
     c = 0
     for token, i in tokens
       c += token.end - token.start
-      if c == col and not isWs token
+      if c == col and not isWhitespace token
         return token
       if c > col
         return token
@@ -960,11 +1188,12 @@ exports.Mode = class extends TextMode
 
   handleClick: (event) =>
     if event.getShiftKey?()
-      token = @tokenBeforeCursor @editor
-      if isAtom token
-        @editAtCursor token
-      else
-        @setInsertPositionAtCursorTo token.parent
+      @editor.execCommand 'edit by click', @editor
+      # token = @tokenBeforeCursor @editor
+      # if isAtom token
+      #   @editAtCursor token
+      # else
+      #   @setInsertPositionAtCursorTo token.parent
     else
       # TODO: show what will be selected on mousemove
       # Select preceding expression
@@ -989,14 +1218,17 @@ exports.Mode = class extends TextMode
     @editor.selection.tokens = tokens
 
   # For strings, regexes etc.
-  delimitedAtomRange: (atom) ->
-    {start, end} = @range atom
-    Range.fromPoints (@shiftPosBy start, 1), (@shiftPosBy end, -1)
+  # delimitedAtomRange: (atom) ->
+  #   {start, end} = @range atom
+  #   Range.fromPoints (@shiftPosBy start, 1), (@shiftPosBy end, -1)
 
   range: (node) ->
     start = @startPos node
     end = @endPos node
     Range.fromPoints start, end
+
+  limitPos: (direction, node) ->
+    @idxToPos if direction is FORWARD then node.end else node.start
 
   # Proc Node Pos
   startPos: (node) ->
@@ -1068,6 +1300,47 @@ exports.Mode = class extends TextMode
       # for name in names
       #   module[name]
 
+followingTangibleToken = (direction, node) ->
+  siblingNode = siblingTangible direction, node
+  if not siblingNode and parentOf node
+    followingTangibleToken direction, node.parent
+  else if isForm siblingNode
+    tangible direction, limitToken (opposite direction), siblingNode
+  else
+    siblingNode
+
+# Takes in nodes
+tangibleSurroundedBy = (direction, first, second) ->
+  [before, after] = inOrder direction, first, second
+  if (isClosingDelim before)
+    before.parent
+  else if (isOpeningDelim after)
+    after.parent
+  else if (isExpression before)
+    before
+  else if (isExpression after) or (isOpeningDelim before) or (not isIndent after)
+    after
+  else
+    tangible direction, if direction is FORWARD then after else before
+
+inOrder = (direction, a, b) ->
+  if direction is FORWARD then [a, b] else [b, a]
+
+siblingTangible = (direction, node) ->
+  (other = sibling direction, node) and tangible direction, other
+
+tangible = (direction, node) ->
+  (other = sibling direction, node) and tangibleSurroundedBy direction, node, other
+
+# followingToken = (direction, node) ->
+#   limitToken (opposite direction), (sibling direction, node)
+
+limitToken = (direction, node) ->
+  if isForm node
+    limitToken direction, (limitOfList direction, node)
+  else
+    node
+
 depthOf = (node) ->
   if not isReal node
     -1
@@ -1083,13 +1356,21 @@ insertChildNodeAt = (child, parent, index) ->
   child.parent = parent
   parent.splice index, 0, child
 
+# Proc (Seq Node) Form ()
+insertChildNodesAt = (children, parent, index) ->
+  for child in children
+    child.parent = parent
+  parent.splice index, 0, children...
+
 # Fn Node Bool
 isExpression = (node) ->
-  not (isWs node) and not (isDelim node)
+  not (isWhitespace node) and not (isDelim node)
 
+# Fn Node Bool
 isAtom = (node) ->
   (isExpression node) and not isForm node
 
+# Fn Node Bool
 isDelimitedAtom = (atom) ->
   atom.label in ['string', 'regex']
 
@@ -1097,13 +1378,21 @@ isDelimitedAtom = (atom) ->
 isDelim = (atom) ->
   /[\(\)\[\]\{\}]/.test atom.symbol
 
-# Fn Expression Bool
+# Fn Atom Bool
 isClosingDelim = (atom) ->
   /[\)\]\}]/.test atom.symbol
 
-# Fn Expression Bool
-isWs = (expression) ->
-  expression.label is 'whitespace'
+# Fn Atom Bool
+isOpeningDelim = (atom) ->
+  /[\(\[\{]/.test atom.symbol
+
+# Fn Node Bool
+isWhitespace = (node) ->
+  node.label in ['whitespace', 'indent']
+
+# Fn Node Bool
+isIndent = (node) ->
+  node.label is 'indent'
 
 # Fn Token Bool
 isSpace = (token) ->
@@ -1112,27 +1401,35 @@ isSpace = (token) ->
 isNewLine = (token) ->
   token.symbol is '\n'
 
-# Whether the expression is actually inside current editor
-# Fn Expression Bool
-isReal = (expression) ->
-  expression.start >= 0
+# Whether the node is actually inside current editor
+# Fn Node Bool
+isReal = (node) ->
+  node.start >= 0
+
+escape = (what, replacement, string) ->
+  string.replace ///#{what}///g, replacement
 
 repeat = (n, string) ->
   (new Array n + 1).join string
 
+firstThat = (predicate, [x, xs...]) ->
+  if not x
+    null
+  else if predicate x
+    x
+  else
+    firstThat predicate, xs
+
 findTokensBetween = (expression, start, end) ->
   # console.log "looking between #{start} and #{end} in", expression
-  if isForm expression
-    if start < expression.end and expression.start < end
+  if start < expression.end and expression.start < end
+    if isForm expression
       concat (for expr in expression
         findTokensBetween expr, start, end)
     else
-      []
-  else
-    if start <= expression.start < end
       [expression]
-    else
-      []
+  else
+    []
 
 # Converts TeaScript tokens to Ace tokens
 convertToAceLineTokens = (tokens) ->
@@ -1161,6 +1458,13 @@ topList = (ast) ->
   inside.end = ast.end - 1
   inside
 
+limitOfList = (direction, list) ->
+  [first, ..., last] = list
+  if direction is FORWARD then last else first
+
+positionsToRange = (start, end) ->
+  Range.fromPoints start, end
+
 # Like Array::splice
 spliceString = (string, index, count, add) ->
   string[0...index] + add + string[index + count...]
@@ -1185,17 +1489,25 @@ nextExpression = (expression) ->
   # Default for now to the same expression
   expression
 
-# Proc Expression (Maybe Node)
-previous = (expression) ->
-  expression.parent[(childIndex expression) - 1]
+# Proc Node (Maybe Node)
+parentOf = (node) ->
+  node.parent if isReal node.parent
 
-# Proc Expression (Maybe Node)
-next = (expression) ->
-  expression.parent[(childIndex expression) + 1]
+# Proc Direction Node (Maybe Node)
+sibling = (direction, node) ->
+  node.parent[(childIndex node) + direction]
 
-# Fn Expression Int
-childIndex = (expression) ->
-  indexWithin expression, expression.parent
+# Proc Node (Maybe Node)
+previous = (node) ->
+  node.parent[(childIndex node) - 1]
+
+# Proc Node (Maybe Node)
+next = (node) ->
+  node.parent[(childIndex node) + 1]
+
+# Fn Node Int
+childIndex = (node) ->
+  indexWithin node, node.parent
 
 indexWithin = (what, array) ->
   for element, i in array
@@ -1221,6 +1533,26 @@ duplicateProperties = (newAst, oldAst) ->
   else
     oldAst.label = newAst.label
 
+astizeExpressions = (string, parent) ->
+  wrapped = compiler.astizeExpression "(#{string})"
+  additionalIndent = repeat ((depthOf parent) + 1), '  '
+  addToIndents additionalIndent, wrapped
+  [open, expressions..., close] = wrapped
+  expressions
+
+addToIndents = (added, ast, next) ->
+  if isForm ast
+    addToIndents added, node, node[i + 1] for node, i in ast
+  else if isNewLine ast
+    if isIndent next
+      next.symbol += added
+      next.end += added.length
+    else
+      # Insert new indent token
+      [newLine, newIndent] = astizeExpression "\n#{added}", start: -1
+      insertChildNodeAt newIndent, next.parent, childIndex next
+  return
+
   # labelTokens: (ast) =>
   #   if Array.isArray ast
   #     newNodes = for node in ast
@@ -1232,7 +1564,7 @@ duplicateProperties = (newAst, oldAst) ->
   #     nonWsLength = 0
   #     nonWsPos = undefined
   #     for node in ast
-  #       if !node.isWs and !nonWsPos?
+  #       if !node.isWhitespace and !nonWsPos?
   #         nonWsPos = node.pos
   #       if nonWsPos?
   #         nonWsLength += node.totalSize
@@ -1255,7 +1587,7 @@ duplicateProperties = (newAst, oldAst) ->
   #         createdTokens.push {
   #           value: wsToken,
   #           type: 'text',
-  #           isWs: yes
+  #           isWhitespace: yes
   #           totalSize: size,
   #           size: size,
   #           parent: parent,
@@ -1271,3 +1603,9 @@ duplicateProperties = (newAst, oldAst) ->
   #     token.totalSize = token.size
   #     createdTokens.push token
   #     createdTokens
+
+FORWARD = NEXT = 1
+BACKWARD = PREVIOUS = -1
+
+opposite = (direction) ->
+  direction * -1
