@@ -301,7 +301,7 @@ exports.Mode = class extends TextMode
             return
 
           @mutate(
-            if @isWithinAtom()
+            if @isEditing()
               atom = @editedAtom()
               validString =
                 if isDelimitedAtom atom
@@ -387,7 +387,7 @@ exports.Mode = class extends TextMode
         exec: =>
           @mutate
             selection:
-              if @isWithinAtom()
+              if @isEditing()
                 @editedAtom()
               else
                 parentOf @selectedEdge FIRST
@@ -904,17 +904,20 @@ exports.Mode = class extends TextMode
       else
         defaultMargin = @selectedMargin direction
         removeDirection =
-          if defaultMargin.length is 0
-            opposite direction
-          else
+          if defaultMargin
             direction
+          else
+            opposite direction
         removeMargin = @selectedMargin removeDirection
 
-        if removeMargin.length is 0
-          @removeSelectable [parentOf @selectedEdge FIRST]
-        else
+        if removeMargin
+          previous = (sibling PREVIOUS, (selectionEdge FIRST, removeMargin))
           changeInTree:
-            at: removeMargin)
+            at: removeMargin
+          selection: tangibleSurroundedBy FORWARD,
+            previous, (selectionEdge LAST, removeMargin)
+        else
+          @removeSelectable validSelections [@parentOfSelected()])
 
       # # TODO: tangible?
       # removeTo = siblingTangible direction, node
@@ -930,7 +933,7 @@ exports.Mode = class extends TextMode
   removeSelectable: (nodes) ->
     changeInTree:
       at: nodes
-    selection: sibling NEXT, (edgeOfList LAST, nodes)
+    selection: @selectedEdge LAST, nodes
 
   # removeSelected: ->
   #   nodes = @selectedRange()
@@ -965,8 +968,31 @@ exports.Mode = class extends TextMode
   parentOfSelected: ->
     @selectedNodes().out[0].parent
 
+  # This is only meaningful when we are at an insert position.
+  # It returns the selections corresponding to the whitespace in given
+  # direction surrounding this insert position,
+  # or nothing if there is no space in that direction.
+  selectedMargin: (direction) ->
+    selections = @selectedNodes()
+    [start, end] = selectionEdges selections
+    if direction is FORWARD
+      if isWhitespace end
+        in: selections.out
+        out: [(sibling NEXT, edgeOfList LAST, selections.out)]
+      else
+        null
+    else
+      previous = sibling PREVIOUS, start
+      if isWhitespace previous
+        validSelections if isIndent previous
+          [(sibling PREVIOUS, previous), previous, start]
+        else
+          [previous, start]
+      else
+        null
+
   selectedEdge: (direction) ->
-    edgeOfList direction, selectionEdges @selectedNodes()
+    selectionEdge direction, @selectedNodes()
 
   editedAtom: ->
     if @isEditing()
@@ -1017,6 +1043,7 @@ exports.Mode = class extends TextMode
     if state.changeInTree
       replaced = state.changeInTree.at
       added = state.changeInTree.added or []
+      console.log "change in tree", replaced, state.selection
       removedRange = @rangeOfSelections replaced
       addedString = nodesToString added
       ammendAst replaced, added
@@ -1078,6 +1105,9 @@ exports.Mode = class extends TextMode
 
   isEditing: ->
     @editor.selection.$editing
+
+  isSelecting: ->
+    not @isEditing() and @selectedNodes().in.length > 0
 
   findParentFunction: (token) ->
     if token.parent
@@ -1246,21 +1276,21 @@ exports.Mode = class extends TextMode
   #   @updateEditingMarker()
 
   # Start editing currently selected atom
-  editSelectedAtom: ->
-    if not @isWithinAtom()
-      if isDelimitedAtom @selectedExpression()
-        @setCursor @shiftPosBy @selectionRange().end, -1
-      else
-        @setCursor @selectionRange().end
-      @setEditingMarker()
+  # editSelectedAtom: ->
+  #   if not @isWithinAtom()
+  #     if isDelimitedAtom @selectedExpression()
+  #       @setCursor @shiftPosBy @selectionRange().end, -1
+  #     else
+  #       @setCursor @selectionRange().end
+  #     @setEditingMarker()
 
-  editAtCursor: (atom) ->
-    @editAt @cursorPosition(), atom
+  # editAtCursor: (atom) ->
+  #   @editAt @cursorPosition(), atom
 
-  editAt: (position, atom) ->
-    @setSelectionExpression atom, no
-    @setCursor position
-    @updateEditingMarker()
+  # editAt: (position, atom) ->
+  #   @setSelectionExpression atom, no
+  #   @setCursor position
+  #   @updateEditingMarker()
 
   # updateEditingMarker: ->
   #   isWithin = @isWithinAtom()
@@ -1311,16 +1341,16 @@ exports.Mode = class extends TextMode
   #   @editor.selection.$teaInside = inside
 
   # Proc (Maybe Expression)
-  selectedExpression: ->
-    if @isSelecting()
-      @nodeAtCursor()
+  # selectedExpression: ->
+  #   if @isSelecting()
+  #     @nodeAtCursor()
 
-  isSelecting: ->
-    not @isWithinAtom() and isExpression @nodeAtCursor()
-    # @isSelectingOrInAtom() and not @isEditing()
+  # isSelecting: ->
+  #   not @isWithinAtom() and isExpression @nodeAtCursor()
+  #   # @isSelectingOrInAtom() and not @isEditing()
 
-  isWithinAtom: ->
-    @editor.selection.$editMarker?
+  # isWithinAtom: ->
+  #   @editor.selection.$editMarker?
 
   # Proc Bool
   isSelectingOrInAtom: ->
@@ -1548,6 +1578,9 @@ exports.Mode = class extends TextMode
       # for name in names
       #   module[name]
 
+selectionEdge = (direction, selections) ->
+  edgeOfList direction, selectionEdges selections
+
 selectionEdges = (selections) ->
   [from] = join selections.in, selections.out
   [to] = selections.out
@@ -1645,7 +1678,8 @@ ammendAst = (replaced, added) ->
   for node in added
     node.parent = parent
   index = childIndex (replaced.in[0] or replaced.out[0])
-  parent.splice index, replaced.length, added...
+  parent.splice index, replaced.in.length, added...
+  console.log "ammended", parent
 
 ammendToken = (token, at, added) ->
   [start, end] = sortTuple at
@@ -1923,8 +1957,8 @@ addToIndents = (added, ast, next) ->
   #     createdTokens.push token
   #     createdTokens
 
-FIRST = FORWARD = NEXT = 1
-LAST = BACKWARD = PREVIOUS = -1
+LAST = FORWARD = NEXT = 1
+FIRST = BACKWARD = PREVIOUS = -1
 
 opposite = (direction) ->
   direction * -1
