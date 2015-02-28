@@ -25,20 +25,20 @@ EventEmitter = require("ace/lib/event_emitter").EventEmitter
   _symbol
 } = compiler = require './compiler'
 
-# Extend selection to preserve $teaExpression when multiselecting
+# Extend selection to preserve state when multiselecting
 (->
   fromOrientedRange = @fromOrientedRange
   @fromOrientedRange = (range) ->
     fromOrientedRange.call this, range
-    @$teaExpression = range.$teaExpression
-    @$teaInside = range.$teaInside
+    @$nodes = range.$nodes
+    @$editing = range.$editing
     @$editMarker = range.$editMarker
 
   toOrientedRange = @toOrientedRange
   @toOrientedRange = (range) ->
     range = toOrientedRange.call this, range
-    range.$teaExpression = @$teaExpression
-    range.$teaInside = @$teaInside
+    range.$nodes = @$nodes
+    range.$editing = @$editing
     range.$editMarker = @$editMarker
     range
 ).call Selection.prototype
@@ -215,7 +215,7 @@ exports.Mode = class extends TextMode
     @initAst session.getDocument().getValue()
 
   setContent: (string) ->
-    added = astizeExpressions string, @parentOfSelected()
+    added = astize string, @parentOfSelected()
     ast = insideSelections @ast
     @mutate
       changeInTree:
@@ -384,7 +384,7 @@ exports.Mode = class extends TextMode
               if @isEditing()
                 @editedAtom()
               else
-                parentOf @selectedEdge FIRST
+                @parentOfSelected()
 
           # if @isWithinAtom()
           #   @moveTo @nodeAtCursor()
@@ -496,7 +496,7 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Shift-Space', mac: 'Shift-Space'
         multiSelectAction: 'forEach'
         exec: =>
-          @insertSpace BACKWARD ' '
+          @insertSpace BACKWARD, ' '
           # return
           # if (expression = @activeExpression())
           #   start = @startPos expression
@@ -561,7 +561,7 @@ exports.Mode = class extends TextMode
         bindKey: win: '(', mac: '('
         multiSelectAction: 'forEach'
         exec: =>
-          @wrap '(', ')'
+          @wrap '(', yes, ')'
           # if (expression = @activeExpression())
           #   @wrap '(', ')', expression
           # else
@@ -573,7 +573,7 @@ exports.Mode = class extends TextMode
         bindKey: win: '[', mac: '['
         multiSelectAction: 'forEach'
         exec: =>
-          @wrap '[', ']'
+          @wrap '[', yes, ']'
           return
           # if (expression = @activeExpression())
           #   @wrap '[', ']', expression
@@ -585,7 +585,7 @@ exports.Mode = class extends TextMode
         bindKey: win: '{', mac: '{'
         multiSelectAction: 'forEach'
         exec: =>
-          @wrap '{', '}'
+          @wrap '{', yes, '}'
           return
           # if (expression = @activeExpression())
           #   @wrap '{', '}', expression
@@ -602,7 +602,7 @@ exports.Mode = class extends TextMode
               @insertString FORWARD, '"'
             else
               selected = escape '"', @selectedText()
-              [atom] = astizeExpressions '"' + selected + '"', @parentOfSelected()
+              [atom] = astize '"' + selected + '"', @parentOfSelected()
               extend
                 changeInTree:
                   added: [atom]
@@ -616,7 +616,9 @@ exports.Mode = class extends TextMode
       'close parent, same as up':
         bindKey: win: ')', mac: ')'
         exec: =>
-          @editor.execCommand 'up the tree', @editor
+          @mutate
+            selection:
+              @parentOfSelected()
 
       # 'add new sibling to parent':
       #   bindKey: win: ')', mac: ')'
@@ -636,26 +638,30 @@ exports.Mode = class extends TextMode
         exec: =>
           if @isSingleLineInput and @editor.getValue() is ''
             return no
-          if atom = selectedAtom()
-            if isDelimitedAtom atom
-              yes
-            else
-              @editSelectedAtom()
-              @insertString ':'
-              @selectExpression @editedAtom()
-          else if @isSelecting()
-            yes
+
+          if @isEditingDelimited()
+            @insertString FORWARD, ':'
           else
-            @insertString ':'
-            @shiftCursor -1
-            # {row, column} = @cursorPosition()
-            # @editAt (row: row, column: column - 1), added
-            yes
+            atom = @onlySelectedExpression()
+            @mutate(
+              if @isEditing() or atom and isAtom atom
+                endOffset = atom.symbol.length
+                changeWithinAtom:
+                  string: ':'
+                  atom: atom
+                  range: [endOffset, endOffset]
+              else
+                [label] = astize ':', @parentOfSelected()
+                changeInTree:
+                  added: [label]
+                  at: @selectedNodes()
+                withinAtom: label
+                withinAtomPos: 0)
 
       'add comment':
         bindKey: win: '#', mac: '#'
         exec: =>
-          @wrapIn '(#', ')', 2
+          @wrap '(', '#', ' ', yes, ')'
           # @addAtInsertPositionAndSetCursorAtOffset '(# )', -1
 
       # Temporary
@@ -767,7 +773,7 @@ exports.Mode = class extends TextMode
           string: validString
           range: [offset, offset]
       else
-        added = astizeExpressions string, @parentOfSelected()
+        added = astize string, @parentOfSelected()
 
         extend
           changeInTree:
@@ -785,7 +791,7 @@ exports.Mode = class extends TextMode
     else
       insertPos = @selectedEdge direction
       parent = insertPos.parent
-      added = astizeExpressions space, parent
+      added = astize space, parent
       @mutate
         changeInTree:
           added: added
@@ -887,7 +893,7 @@ exports.Mode = class extends TextMode
   #   else
   #     @removeSelected()
   #     insertPos = @nodeAtCursor()
-  #     added = astizeExpressions string, insertPos.parent
+  #     added = astize string, insertPos.parent
   #     insertChildNodesAt added, insertPos.parent, childIndex insertPos
   #     @repositionAst()
   #     @moveTo added...
@@ -898,7 +904,7 @@ exports.Mode = class extends TextMode
   # insertSpace: (direction, space) ->
   #   insertPos = @limitNodeAtCursor direction
   #   offset = if direction is FORWARD then 1 else 0
-  #   added = astizeExpressions space, insertPos.parent
+  #   added = astize space, insertPos.parent
   #   insertChildNodesAt added, insertPos.parent, (childIndex insertPos) + offset
   #   @setCursor (@edgeOfToken direction, insertPos)
   #   @repositionAst()
@@ -1116,7 +1122,7 @@ exports.Mode = class extends TextMode
       throw "atom edit during tree edit not supported" if removedRange
       replaced = state.changeWithinAtom.range
       added = state.changeWithinAtom.string
-      atom = @editedAtom()
+      atom = state.changeWithinAtom.atom or @editedAtom()
       removedRange = @rangeWithingToken atom, replaced
       addedString = added
       ammendToken atom, replaced, added
@@ -1155,13 +1161,16 @@ exports.Mode = class extends TextMode
     console.log "setting range:", range
 
   updateEditingMarker: ->
+    @updateEditingMarkerFor @isEditing(), @editor.selection
+
+  updateEditingMarkerFor: (shouldEdit, editorSelection) ->
     if id = @editor.selection.$editMarker
       @editor.session.removeMarker id
-      @editor.selection.$editMarker = undefined
-    if @isEditing()
+      editorSelection.$editMarker = undefined
+    if shouldEdit
       range = @editableRange @editedAtom()
       id = @editor.session.addMarker range, 'ace_active-token'
-      @editor.selection.$editMarker = id
+      editorSelection.$editMarker = id
 
   selectedNodes: ->
     @editor.selection.$nodes
@@ -1239,12 +1248,15 @@ exports.Mode = class extends TextMode
             found = true
     {tokens, isFirst, nextToken}
 
-  wrap: (open, close) ->
-    @wrapIn open, close, 1, @selectedNodes()
+  wrap: (tokens...) ->
+    i = tokens.indexOf yes
+    throw new Error "missing yes in wrap" if i is -1
+    string = (join tokens[0...i], tokens[i + 1...]).join ''
+    @wrapIn string, i, @selectedNodes()
 
-  wrapIn: (before, after, index, selections) ->
+  wrapIn: (wrapperString, index, selections) ->
     parent = selections.out[0].parent
-    [wrapper] = astizeExpressions before + after, parent
+    [wrapper] = astize wrapperString, parent
 
     # First replace, then reinsert
     @mutate
@@ -1544,10 +1556,10 @@ exports.Mode = class extends TextMode
       if @ast
         @editor.execCommand 'select by click', @editor
 
+  # When the user cancels multiple selection we need to clean up
   handleRangeDeselect: ({ranges}) =>
-    console.log "deselect", ranges
     for range in ranges
-      @clearEditingMarker range
+      @updateEditingMarkerFor no, range
 
   # selectToken: (token) ->
   #   @unhighlightActive()
@@ -1985,25 +1997,30 @@ duplicateProperties = (newAst, oldAst) ->
   else
     oldAst.label = newAst.label
 
-astizeExpressions = (string, parent) ->
+# Astizes string and reindents it properly
+astize = (string, parent) ->
   wrapped = compiler.astizeExpression "(#{string})"
-  additionalIndent = repeat ((depthOf parent) + 1), '  '
-  addToIndents additionalIndent, wrapped
+  reindent (depthOf parent), wrapped
   [open, expressions..., close] = wrapped
   expressions
 
-addToIndents = (added, ast, next) ->
+reindent = (depth, ast, next) ->
   if isForm ast
-    addToIndents added, node, node[i + 1] for node, i in ast
-  else if isNewLine ast
+    reindent depth + 1, node, ast[i + 1] for node, i in ast
+  else if next and isNewLine ast
+    indent = repeat depth, '  '
     if isIndent next
-      next.symbol += added
-      next.end += added.length
+      next.symbol = indent
+      next.end += depth * 2
     else
       # Insert new indent token
-      [newLine, newIndent] = astizeExpression "\n#{added}", start: -1
-      insertChildNodeAt newIndent, next.parent, childIndex next
+      [newLine, indentToken] = astizeExpressions "\n#{indent}"
+      insertChildNodeAt indentToken, next.parent, childIndex next
   return
+
+astizeExpressions = (string) ->
+  [open, expressions..., close] = compiler.astizeExpression "(#{string})"
+  expressions
 
   # labelTokens: (ast) =>
   #   if Array.isArray ast
