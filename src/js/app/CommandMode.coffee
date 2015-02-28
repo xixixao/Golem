@@ -30,7 +30,7 @@ module.exports =
             superTokenizer.getLineTokens line, state, row, doc
           else
             @disableSuper() if line is ":" and not @commandMode
-            @clearEditingMarker()
+            # @clearEditingMarker()
             tokens: [value: line, type: 'text']
         oop.implement @$tokenizer, EventEmitter
 

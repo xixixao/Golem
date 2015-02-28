@@ -62,18 +62,16 @@ module.exports = hyper class CommandLine
 
     editor.commands.addCommand
       name: 'previous'
-      bindKey: win: 'Ctrl-Up', mac: 'Command-Up'
+      bindKey: win: 'Up', mac: 'Up'
       exec: ->
         timeline.temp editor.getValue() unless timeline.isInPast()
-        editor.session.getMode().initAst timeline.goBack()
-        editor.clearSelection()
+        editor.session.getMode().setContent timeline.goBack()
 
     editor.commands.addCommand
       name: 'following'
-      bindKey: win: 'Ctrl-Down', mac: 'Command-Down'
+      bindKey: win: 'Down', mac: 'Down'
       exec: ->
-        editor.session.getMode().initAst timeline.goForward() if timeline.isInPast()
-        editor.clearSelection()
+        editor.session.getMode().setContent timeline.goForward() if timeline.isInPast()
 
     editor.commands.addCommand
       name: 'leave'
@@ -104,8 +102,10 @@ module.exports = hyper class CommandLine
               timeline.push source
               @props.onCommandExecution source, result, type
               @props.memory.saveCommands timeline
-              editor.session.getMode().initAst ""
-              editor.session.getMode().clearEditingMarker()
+              if type is 'command'
+                editor.setValue ""
+              else
+                editor.session.getMode().setContent ""
               # editor.focus()
           else
             editor.session.getMode().updateAst result.ast
