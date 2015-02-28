@@ -687,18 +687,14 @@ exports.Mode = class extends TextMode
       'replace parent with current selection':
         bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
         exec: =>
-          if tokens = @selectedRange()
-            if parent = parentOf tokens[0]
-              @pasteOver parent, expression
-              @selectExpression expression
-          # range = @activeRange()
-          # # todo: select lowest common ancenstor when using multiple selections
-          # # TODO: actually, we should replace parent of two adjecent nodes or
-          # # if the nodes span more expressions replace each, like normal multi-cursor
-          # token = @leftActiveToken()
-          # if range and token and token.parent
-          #   @editor.session.doc.replace @tokenToVisibleRange(token.parent),
-          #     @editor.session.doc.getTextRange range
+          parent = @parentOfSelected()
+          if isReal parent
+            added = @selectedNodes().in
+            @mutate
+              changeInTree:
+                added: added
+                at: validSelections [parent]
+              selections: added
 
       'wrap current in a function':
         bindKey: win: 'Ctrl-F', mac: 'Ctrl-F'
@@ -795,7 +791,9 @@ exports.Mode = class extends TextMode
       @mutate
         changeInTree:
           added: added
-          at: validSelections [insertPos]
+          at:
+            in: []
+            out: [insertPos]
         selection: if direction is FORWARD then insertPos else added[0]
 
   selectFollowingAtomOrPosition: (direction) ->
@@ -1678,8 +1676,8 @@ selectionEdges = (selections) ->
   [to] = selections.out
   [from, to]
 
-# Takes in a list of nodes, possibly ending in an expression, and returs
-# a valid selections object for the state, see examples in @mutate
+# Takes in a list of nodes, possibly ending in an expression, to be the in
+# part of a selections object. Returs a valid selections object for the state.
 validSelections = (nodes) ->
   # padded to destructure
   [notLast..., last] = nodes
