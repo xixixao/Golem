@@ -33,17 +33,30 @@ module.exports = hyper class SourceEditor
       @save()
     serialized = @props.memory.loadSource fileName
     if serialized
-      {value, mode, selection, cursor, scroll} = serialized
+      {mode} = serialized
+      # {value, mode, selection, cursor, scroll} = serialized
 
-      {editor} = this
-      editor.setValue value
-      editor.session.selection.setSelectionRange selection
-      editor.moveCursorToPosition cursor
-      editor.session.setScrollTop scroll.top
-      editor.session.setScrollLeft scroll.left
-      @setMode mode
+      # {editor} = this
+      # editor.setValue value
+      # editor.session.selection.setSelectionRange selection
+      # editor.moveCursorToPosition cursor
+      # editor.session.setScrollTop scroll.top
+      # editor.session.setScrollLeft scroll.left
+      @setMode mode, serialized
     @save fileName if serialized or not mustExist
     serialized?
+
+  setLoaded: (serialized) ->
+    {value, mode, selection, cursor, scroll} = serialized
+    {editor: {session}} = this
+    # editor.setValue value
+    # editor.session.selection.setSelectionRange selection
+    # editor.moveCursorToPosition cursor
+    # This will only work using single mode for all files
+    sessionMode = session.getMode()
+    sessionMode.setContent value, selection
+    session.setScrollTop scroll.top
+    session.setScrollLeft scroll.left
 
   empty: ->
     {editor} = this
@@ -76,8 +89,9 @@ module.exports = hyper class SourceEditor
   _getEditorNode: ->
     @refs.ace.getDOMNode()
 
-  setMode: (modeId) ->
+  setMode: (modeId, serializedToLoad) ->
     if @mode and @mode is modeId
+      @setLoaded serializedToLoad
       return
     modeId ||= 'teascript'
     @mode ?= modeId # save immediately if no mode set yet
@@ -86,6 +100,7 @@ module.exports = hyper class SourceEditor
     _require ["compilers/#{modeId}/mode"], ({Mode}) =>
       @editor.session.setMode new Mode no, @props.memory
       @props.onCompilerLoad @editor.session.getMode(), modeId
+      @setLoaded serializedToLoad
 
       @editor.session.$worker.on 'ok', ({data: {result}}) =>
         @props.onSourceCompiled result, @editor.getValue()

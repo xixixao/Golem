@@ -213,23 +213,38 @@ exports.Mode = class extends TextMode
     @addCommands session
 
     # Initial parse
-    @initAst session.getDocument().getValue()
+    @initAst ""
 
-  setContent: (string) ->
-    added = astize string, @parentOfSelected()
+  setContent: (string, selectedRange) ->
+    added = astize string, @ast
     inside = insideTangible @ast
-    @mutate
-      changeInTree:
-        added: added
-        at: inside
-      tangibleSelection:
-        in: added
-        out: inside.out
+    @mutate(
+      extend
+        changeInTree:
+          added: added
+          at: inside
+      , if selectedRange
+        selectionRange: selectedRange
+      else
+        tangibleSelection:
+          in: added
+          out: inside.out)
     @handleCommandExecution()
+
+  tangibleSelectionFromRange: (range) ->
+    start = @tangibleAtPos range.start
+    end = @tangibleAtPos range.end
+    if _notEmpty start.in
+      from = childIndex start.in[0]
+      to = childIndex end.out[0]
+      in: (parentOfTangible start)[from...to]
+      out: end.out
+    else
+      end
 
   initAst: (value) ->
     # console.log "initing ast with", value
-    @editor.session.getDocument().setValue value
+    # @editor.session.getDocument().setValue value
     @ast =
       if @isSingleLineInput
         compiler.astizeExpressionWithWrapper value
@@ -237,8 +252,8 @@ exports.Mode = class extends TextMode
         compiler.astizeList value
 
     # Set up selection
-    if @ast
-      @handleClick {}
+    # if @ast
+    #   @handleClick {}
 
   # Called after worker compiles
   updateAst: (ast) ->
@@ -1096,8 +1111,9 @@ exports.Mode = class extends TextMode
       # 3. Perform editor actions to reconcile AST with contents
       @editor.session.replace removedRange, addedString
     # 4.1. selections
-    if state.inSelection or state.inSelections or state.tangibleSelection
+    if state.inSelection or state.inSelections or state.tangibleSelection or state.selectionRange
       selections = state.tangibleSelection or
+        state.selectionRange and (@tangibleSelectionFromRange state.selectionRange) or
         insToTangible state.inSelections or [state.inSelection]
       selectionRange = @rangeOfTangible selections
       editing = no
