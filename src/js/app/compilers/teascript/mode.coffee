@@ -203,6 +203,7 @@ exports.Mode = class extends TextMode
     # session.on 'change', @onDocumentChange
     @editor.on 'click', @handleClick
     @editor.selection.on 'removeRange', @handleRangeDeselect
+    @editor.commands.on 'afterExec', @handleCommandExecution
 
     # attaching as last listener, so that everything is updated already
     # session.getDocument().on 'change', @selectInserted, no
@@ -381,7 +382,11 @@ exports.Mode = class extends TextMode
                 tangibleSelection: tangibleInside FIRST, expression
               else
                 withinAtom: expression
-                withinAtomPos: expression.symbol.length
+                withinAtomPos:
+                  if isDelimitedAtom expression
+                    expression.symbol.length - 1
+                  else
+                    expression.symbol.length
             else
               {})
 
@@ -683,18 +688,25 @@ exports.Mode = class extends TextMode
       'replace expression by new function param':
         bindKey: win: 'Ctrl-A', mac: 'Ctrl-A'
         exec: =>
-          range = @activeRange()
-          token = @leftActiveToken()
-          fun = @findParentFunction token
+          parent = @realParentOfSelected()
+          fun = @findParentFunction parent if parent
           params = @findParamList fun if fun
-          if range and params
-            # insert new param and put cursors at both places
-            @editor.session.doc.replace range, ""
-            parenOrChild = @lastChild params
-            addedCursor = @rangeOfEnd parenOrChild
-            @editor.selection.addRange addedCursor
-            if !@isEmpty params
-              @editor.session.insert addedCursor.end, ' '
+          if params
+            # insert space for new param if necessary and put cursors at both places
+            @mutate @removeSelectable @selectedTangible()
+            hole = @selectedTangible()
+
+            inParams = tangibleInside LAST, params
+            if isExpression toNode inParams
+              @insertSpaceAt FORWARD, ' ', nodeEdgeOfTangible LAST, inParams
+            else
+              @mutate
+                tangibleSelection: inParams
+
+            @mutate
+              newSelection:
+                in: []
+                out: hole.out
 
       'define selected token':
         bindKey: win: 'Ctrl-D', mac: 'Ctrl-D'
@@ -757,18 +769,21 @@ exports.Mode = class extends TextMode
     if @isEditing() and isDelimitedAtom @editedAtom()
       @insertString direction, space
     else
-      insertPos = @selectedNodeEdge direction
-      parent = insertPos.parent
-      added = astize space, parent
-      @mutate
-        changeInTree:
-          added: added
-          at:
-            in: []
-            out: [insertPos]
-        tangibleSelection:
+      @insertSpaceAt direction, space, @selectedNodeEdge direction
+
+  insertSpaceAt: (direction, space, insertPos) ->
+    parent = insertPos.parent
+    added = astize space, parent
+    @mutate
+      changeInTree:
+        added: added
+        at:
           in: []
-          out: if direction is FORWARD then [insertPos] else added
+          out: [insertPos]
+      tangibleSelection:
+        in: []
+        out: if direction is FORWARD then [insertPos] else added
+
 
   selectFollowingAtomOrPosition: (direction) ->
     if @isSelectingMultiple()
@@ -827,14 +842,6 @@ exports.Mode = class extends TextMode
   # selectTextRange: (range) ->
   #   @editor.selection.setSelectionRange range
 
-  # tangibleRange: (node) ->
-  #   start = @startPos node
-  #   if isExpression node
-  #     end = @endPos node
-  #   else
-  #     end = start
-  #   positionsToRange start, end
-
   # nodeAtCursor: ->
   #   @selectedRange()[0]
 
@@ -848,11 +855,15 @@ exports.Mode = class extends TextMode
   tangibleAtPos: (pos) ->
     # TODO: return selections object
     [before, after] = @tokensSurroundingPos pos
-    tangibleSurroundedBy FORWARD, before, after
+    tangibleSurroundedBy FORWARD, before, after or before
 
   tokensSurroundingPos: (pos) ->
     idx = @posToIdx pos
     findTokensBetween @ast, idx - 1, idx + 1
+
+  tangibleRange: (tangible) ->
+    [start, end] = nodeEdgesOfTangible tangible
+    positionsToRange (@startPos start), (@startPos end)
 
   # insertString: (string) ->
   #   nodeLike = not /[\s\\]/.test string
@@ -1078,7 +1089,7 @@ exports.Mode = class extends TextMode
       replaced = state.changeWithinAtom.range
       added = state.changeWithinAtom.string
       atom = state.changeWithinAtom.atom or @editedAtom()
-      removedRange = @rangeWithingToken atom, replaced
+      removedRange = @rangeWithingAtom atom, replaced
       addedString = added
       ammendToken atom, replaced, added
     if addedString?
@@ -1096,43 +1107,69 @@ exports.Mode = class extends TextMode
     if state.withinAtom
       throw "shouldn't set both withinAtom and selection" if selections
       selections = insToTangible [state.withinAtom]
-      selectionRange = @rangeWithingToken state.withinAtom, [state.withinAtomPos, state.withinAtomPos]
+      selectionRange = @rangeWithingAtom state.withinAtom, [state.withinAtomPos, state.withinAtomPos]
       editing = yes
     if selections
       # 5. set selection state
       @select selections, editing
       # 6. Perform selection in editor
       @setSelectionRange selectionRange
-    # 7. Highlight edited in editor
-    @updateEditingMarker()
+    # 7. Add new multi-select range
+    if state.newSelection
+      newSelections = state.newSelection
+      range = @tangibleRange newSelections
+      @selectFor newSelections, no, range
+      @editor.selection.addRange range
     return yes # command handled response
+
+  handleCommandExecution: =>
+    # 8. Highlight edited in editor
+    @updateEditingMarkers()
 
   select: (selections, shouldEdit) ->
     @editor.selection.$nodes = selections
     @editor.selection.$editing = shouldEdit
-    console.log "selected:", selections
+
+  selectFor: (selections, shouldEdit, editorSelection) ->
+    editorSelection.$nodes = selections
+    editorSelection.$editing = shouldEdit
 
   setSelectionRange: (range) ->
     @editor.selection.setSelectionRange range
-    console.log "setting range:", range
 
-  updateEditingMarker: ->
-    @updateEditingMarkerFor @isEditing(), @editor.selection
+  updateEditingMarkers: ->
+    editorSelections =
+      if @editor.multiSelect.inMultiSelectMode
+        @editor.multiSelect.ranges
+      else
+        [@editor.selection]
+    for range, i in editorSelections
+      @updateEditingMarkerFor (@isEditingFor range), range
 
   updateEditingMarkerFor: (shouldEdit, editorSelection) ->
     if id = @editor.selection.$editMarker
       @editor.session.removeMarker id
       editorSelection.$editMarker = undefined
     if shouldEdit
-      range = @editableRange @editedAtom()
+      atom = onlyExpression editorSelection.$nodes
+      range = @editableRange atom
       id = @editor.session.addMarker range, 'ace_active-token'
       editorSelection.$editMarker = id
 
   selectedTangible: ->
     @editor.selection.$nodes
 
+  # selectedTangible: ->
+  #   (@selectedTangibleFor @editor.selection).$nodes
+
+  # selectedTangibleFor: (editorSelection) ->
+  #   editorSelection.$nodes
+
   isEditing: ->
     @editor.selection.$editing
+
+  isEditingFor: (editorSelection) ->
+    editorSelection.$editing
 
   isEditingDelimited: ->
     @isEditing() and isDelimitedAtom @editedAtom()
@@ -1143,21 +1180,16 @@ exports.Mode = class extends TextMode
   isSelectingMultiple: ->
     @isSelecting() and @selectedTangible().in.length > 1
 
-  findParentFunction: (token) ->
-    if token.parent
-      if token.parent.type is 'function'
-        token.parent
-      else
-        @findParentFunction token.parent
+  findParentFunction: (form) ->
+    operator = _operator form
+    if operator.symbol is 'fn'
+      form
+    else if form.parent
+      @findParentFunction form.parent
 
-  findParamList: (token) ->
-    if Array.isArray(token)
-      if isWhitespace token[0]
-        [_, paren, kw, params] = token
-      else
-        [paren, kw, params]
-      if Array.isArray params
-        params
+  findParamList: (form) ->
+    [params] = _arguments form
+    params
 
   activeRange: ->
     if @editor.selection.tokens
@@ -1212,6 +1244,7 @@ exports.Mode = class extends TextMode
 
   wrapIn: (wrapperString, index, tangible) ->
     [wrapper] = astize wrapperString, parentOfTangible tangible
+    empty = tangible.in.length is 0
 
     # First replace, then reinsert
     @mutate
@@ -1224,12 +1257,11 @@ exports.Mode = class extends TextMode
           in: []
           out: [wrapper[index]]
         added: tangible.in
-      inSelections:
-        if _notEmpty tangible.in
-          tangible.in
-        else
-          [wrapper[index]]
-
+      inSelections: tangible.in if not empty
+      tangibleSelection:
+        if empty
+          in: []
+          out: [wrapper[index]]
 
   toText: (node) ->
     @editor.session.doc.getTextRange @range node
@@ -1530,10 +1562,10 @@ exports.Mode = class extends TextMode
     {start, end} = @range atom
     Range.fromPoints (@shiftPosBy start, 1), (@shiftPosBy end, -1)
 
-  rangeWithingToken: (token, range) ->
+  rangeWithingAtom: (atom, range) ->
     [start, end] = sortTuple range
-    Range.fromPoints (@idxToPos token.start + start),
-      (@idxToPos token.start + end)
+    Range.fromPoints (@idxToPos atom.start + start),
+      (@idxToPos atom.start + end)
 
   rangeOfNodes: (nodes) ->
     [first, ..., last] = nodes
@@ -1683,7 +1715,9 @@ tangibleParent = (tangible) ->
 
 tangibleSurroundedBy = (direction, first, second) ->
   [before, after] = inOrder direction, first, second
-  if (isClosingDelim before)
+  if before is after
+    insToTangible [before]
+  else if (isClosingDelim before)
     insToTangible [before.parent]
   else if (isOpeningDelim after)
     insToTangible [after.parent]
@@ -1795,6 +1829,12 @@ nodesToString = (nodes) ->
       else
         node.symbol
   string
+
+editableLength = (atom) ->
+  if isDelimitedAtom atom
+    atom.symbol.length - 2
+  else
+    atom.symbol.length
 
 # Fn Node Bool
 isExpression = (node) ->
