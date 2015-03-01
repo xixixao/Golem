@@ -216,16 +216,14 @@ exports.Mode = class extends TextMode
 
   setContent: (string) ->
     added = astize string, @parentOfSelected()
-    ast = insideSelections @ast
+    inside = insideTangible @ast
     @mutate
       changeInTree:
         added: added
-        at: ast
-      selections:
-        if _notEmpty added
-          added
-        else
-          ast.out
+        at: inside
+      tangibleSelection:
+        in: added
+        out: inside.out
 
   initAst: (value) ->
     # console.log "initing ast with", value
@@ -342,49 +340,30 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach' #selects multiple
         exec: =>
           @mutate
-            selection: @tangibleAtPos @cursorPosition()
-
-          # @moveTo @tangibleAtPos @cursorPosition()
-          # return
-          # if isAtom node
-          #   @selectExpression atom
-          # else
-          #   delimiter = firstThat isDelim, surroundingTokens
-          #   if delimiter
-          #     @selectExpression parentOf delimiter
-          #   else
-          #     @setInsertAt lastOf surroundingTokens
-
-          # if (token = @tokenBeforeCursor())
-          #   if (isWhitespace token) and (isReal token.parent) or (isClosingDelim token)
-          #     @selectExpression token.parent
-          #   else if isAtom token
-          #     @selectExpression token
-          #   else
-          #     @setInsertPositionAtCursorTo token.parent
-          #   # console.log "after click", @selectionExpression()
+            tangibleSelection: @tangibleAtPos @cursorPosition()
 
       'edit by click':
         multiSelectAction: 'forEach' #edits multiple
         exec: =>
-          expression = @tangibleAtPos @cursorPosition()
-          if isAtom expression
-            @mutate
-              withinAtom: expression
-              withinAtomPos: @offsetToCursor expression
-          else
-            @editor.execCommand 'select by click'
+          tangible = @tangibleAtPos @cursorPosition()
+          node = onlyExpression tangible
+          @mutate(
+            if node and isAtom node
+              withinAtom: node
+              withinAtomPos: @offsetToCursor node
+            else
+              tangibleSelection: tangible)
 
       'up the tree':
         bindKey: win: 'Ctrl-Up', mac: 'Command-Up'
         multiSelectAction: 'forEach'
         exec: =>
           @mutate
-            selection:
+            inSelection:
               if @isEditing()
                 @editedAtom()
               else
-                @parentOfSelected()
+                @realParentOfSelected()
 
           # if @isWithinAtom()
           #   @moveTo @nodeAtCursor()
@@ -399,7 +378,7 @@ exports.Mode = class extends TextMode
           @mutate(
             if expression = @onlySelectedExpression()
               if isForm expression
-                selection: tangibleInside FORWARD, expression
+                tangibleSelection: tangibleInside FIRST, expression
               else
                 withinAtom: expression
                 withinAtomPos: expression.symbol.length
@@ -597,18 +576,18 @@ exports.Mode = class extends TextMode
         bindKey: win: '"', mac: '"'
         multiSelectAction: 'forEach'
         exec: =>
-          @mutate(
-            if @isEditingDelimited()
-              @insertString FORWARD, '"'
-            else
-              selected = escape '"', @selectedText()
-              [atom] = astize '"' + selected + '"', @parentOfSelected()
+          if @isEditingDelimited()
+            @insertString FORWARD, '"'
+          else
+            selected = escape '"', @selectedText()
+            [atom] = astize '"' + selected + '"', @parentOfSelected()
+            @mutate(
               extend
                 changeInTree:
                   added: [atom]
-                  at: @selectedNodes()
+                  at: @selectedTangible()
               , if @isSelecting()
-                selection: atom
+                inSelection: atom
               else
                 withinAtom: atom
                 withinAtomPos: selected.length + 1)
@@ -617,8 +596,8 @@ exports.Mode = class extends TextMode
         bindKey: win: ')', mac: ')'
         exec: =>
           @mutate
-            selection:
-              @parentOfSelected()
+            inSelection:
+              @realParentOfSelected()
 
       # 'add new sibling to parent':
       #   bindKey: win: ')', mac: ')'
@@ -654,7 +633,7 @@ exports.Mode = class extends TextMode
                 [label] = astize ':', @parentOfSelected()
                 changeInTree:
                   added: [label]
-                  at: @selectedNodes()
+                  at: @selectedTangible()
                 withinAtom: label
                 withinAtomPos: 0)
 
@@ -687,26 +666,19 @@ exports.Mode = class extends TextMode
       'replace parent with current selection':
         bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
         exec: =>
-          parent = @parentOfSelected()
-          if isReal parent
-            added = @selectedNodes().in
+          parent = @realParentOfSelected()
+          if parent
+            added = @selectedTangible().in
             @mutate
               changeInTree:
                 added: added
-                at: validSelections [parent]
-              selections: added
+                at: insToTangible [parent]
+              inSelections: added
 
       'wrap current in a function':
         bindKey: win: 'Ctrl-F', mac: 'Ctrl-F'
         exec: =>
-          if (expression = @activeExpression())
-            @wrapIn "(fn [] ", ")", 5, expression
-
-          # range = @activeRange()
-          # if range
-          #   expression = @editor.session.doc.getTextRange range
-          #   @editor.session.doc.replace range,
-          #     "(fn [] #{expression})"
+          @wrap '(', 'fn', ' ', '[]', ' ', yes, ')'
 
       'replace expression by new function param':
         bindKey: win: 'Ctrl-A', mac: 'Ctrl-A'
@@ -774,18 +746,18 @@ exports.Mode = class extends TextMode
         extend
           changeInTree:
             added: added
-            at: @selectedNodes()
+            at: @selectedTangible()
         , if added.length is 1 and isAtom (atom = added[0])
             withinAtom: atom
             withinAtomPos: atom.symbol.length
           else
-            selections: added)
+            inSelections: added)
 
   insertSpace: (direction, space) ->
     if @isEditing() and isDelimitedAtom @editedAtom()
       @insertString direction, space
     else
-      insertPos = @selectedEdge direction
+      insertPos = @selectedNodeEdge direction
       parent = insertPos.parent
       added = astize space, parent
       @mutate
@@ -794,37 +766,40 @@ exports.Mode = class extends TextMode
           at:
             in: []
             out: [insertPos]
-        selection: if direction is FORWARD then insertPos else added[0]
+        tangibleSelection:
+          in: []
+          out: if direction is FORWARD then [insertPos] else added
 
   selectFollowingAtomOrPosition: (direction) ->
     if @isSelectingMultiple()
       @selectSibling direction
     else
       @mutate
-        selection:
-          followingTangibleToken direction, (@selectableEdge direction)
+        tangibleSelection:
+          followingTangibleAtomOrPosition direction, @selectedTangible()
 
   selectSibling: (direction) ->
     @mutate
-      selection:
+      tangibleSelection:
         if @isSelectingMultiple()
           @selectableEdge direction
         else
-          siblingNode = @selectedSibling direction
-          if not siblingNode and isReal @parentOfSelected()
+          siblingSelection = @selectedSibling direction
+          if not siblingSelection and isReal @parentOfSelected()
             @parentOfSelected()
           else
-            siblingNode
+            siblingSelection
 
   expandSelection: (direction) ->
-    {between, siblingNode} = (@toSelectedSibling direction) or {}
-    selections = @selectedNodes()
+    {margin, siblingTangible} = (@toSelectionSibling direction) or {}
     @mutate(
-      if siblingNode
-        added = append direction, [siblingNode], between
-        selections: append direction, added, selections.in
+      if siblingTangible
+        toSibling = append direction, margin, siblingTangible
+        tangibleSelection: append direction, @selectedTangible(), toSibling
       else
-        selection: @parentOfSelected())
+        inSelection:
+          if isReal parent = @parentOfSelected()
+            parent)
 
   # Moves to a tangible position/expression
   # moveTo: (tangibleNodes...) ->
@@ -871,8 +846,9 @@ exports.Mode = class extends TextMode
 
   # Returns node at cursor (only atoms, not forms)
   tangibleAtPos: (pos) ->
+    # TODO: return selections object
     [before, after] = @tokensSurroundingPos pos
-    tangibleSurroundedBy FORWARD, before, after or before
+    tangibleSurroundedBy FORWARD, before, after
 
   tokensSurroundingPos: (pos) ->
     idx = @posToIdx pos
@@ -922,31 +898,35 @@ exports.Mode = class extends TextMode
     @mutate(
       if atom = @editedAtom()
         if @isAtLimit direction, atom
-          @removeSelectable @selectedNodes()
+          @removeSelectable @selectedTangible()
         else
           offset = @offsetToCursor atom
           changeWithinAtom:
             string: ''
             range: [offset, offset + direction]
       else if @isSelecting()
-        @removeSelectable @selectedNodes()
+        @removeSelectable @selectedTangible()
       else
-        defaultMargin = @selectedMargin direction
+        tn = @selectedTangible()
+        defaultMargin = @selectionMargin direction
         removeDirection =
           if defaultMargin
             direction
           else
             opposite direction
-        removeMargin = @selectedMargin removeDirection
+        removeMargin = @selectionMargin removeDirection
 
         if removeMargin
-          previous = (sibling PREVIOUS, (selectionEdge FIRST, removeMargin))
+          previous = (sibling PREVIOUS, (nodeEdgeOfTangible FIRST, removeMargin))
+          next = (nodeEdgeOfTangible LAST, removeMargin)
           changeInTree:
             at: removeMargin
-          selection: tangibleSurroundedBy FORWARD,
-            previous, (selectionEdge LAST, removeMargin)
+          tangibleSelection: tangibleSurroundedBy FORWARD, previous, next
         else
-          @removeSelectable validSelections [@parentOfSelected()])
+          if isReal parent = @parentOfSelected()
+            @removeSelectable insToTangible [parent]
+          else
+            {})
 
       # # TODO: tangible?
       # removeTo = siblingTangible direction, node
@@ -962,7 +942,9 @@ exports.Mode = class extends TextMode
   removeSelectable: (nodes) ->
     changeInTree:
       at: nodes
-    selection: @selectedEdge LAST, nodes
+    tangibleSelection:
+      in: []
+      out: nodes.out
 
   # removeSelected: ->
   #   nodes = @selectedRange()
@@ -997,15 +979,7 @@ exports.Mode = class extends TextMode
       @editor.getSelectedText()
 
   selectableEdge: (direction) ->
-    selections = @selectedNodes()
-    if @isSelecting() or @isEditing()
-      edgeOfList direction, selections.in
-    else
-      last = @selectedEdge LAST
-      if direction is FORWARD
-        (sibling PREVIOUS, last)
-      else
-        last
+    tangibleEdge direction, @selectedTangible()
 
   editableEdge: (direction, atom) ->
     if isDelimitedAtom atom
@@ -1013,64 +987,46 @@ exports.Mode = class extends TextMode
     else
       @edgeOfToken direction, atom
 
+  realParentOfSelected: ->
+    if isReal parent = @parentOfSelected()
+      parent
+
   parentOfSelected: ->
-    @selectedNodes().out[0].parent
+    parentOfTangible @selectedTangible()
 
   # Gives a sibling tangible of the current selections
   selectedSibling: (direction) ->
-    (@toSelectedSibling direction)?.siblingNode
+    (@toSelectionSibling direction)?.siblingTangible
 
-  toSelectedSibling: (direction) ->
-    margin = @selectedMargin direction
+  toSelectionSibling: (direction) ->
+    margin = @selectionMargin direction
     if margin
-      if direction is FORWARD
-        between: margin.in
-        siblingNode: selectionEdge LAST, margin
-      else
-        edge = selectionEdge FIRST, margin
-        beforeEdge = (sibling PREVIOUS, edge)
-        tangibleSibling = tangibleSurroundedBy FORWARD, beforeEdge, edge
-        between:
-          if tangibleSibling is edge
-            margin.in[1...]
-          else
-            margin.in
-        siblingNode: tangibleSibling
+      siblingTangible = padding direction, margin
+      margin: margin
+      siblingTangible: tangibleSurroundedBy direction,
+        (edgeOfList direction, margin.in),
+        (edgeOfList (opposite direction), siblingTangible)
 
-
-  # This returns the selections corresponding to the whitespace in given
+  # This returns tangible-like corresponding to the whitespace in given
   # direction surrounding current selections,
   # or nothing if there is no space in that direction.
-  selectedMargin: (direction) ->
-    selections = @selectedNodes()
-    [start, end] = selectionEdges selections
-    if direction is FORWARD
-      if isWhitespace end
-        in: selections.out
-        out: [(sibling NEXT, edgeOfList LAST, selections.out)]
-      else
-        null
+  selectionMargin: (direction) ->
+    paddingNodes = padding direction, @selectedTangible()
+    paddingEdge = edgeOfList direction, paddingNodes
+    if isWhitespace paddingEdge
+      insToTangible paddingNodes
     else
-      previous = sibling PREVIOUS, start
-      if isWhitespace previous
-        in: (precedingWhitespace previous)
-        out: [start]
-      else
-        null
+      null
 
-  selectedEdge: (direction) ->
-    selectionEdge direction, @selectedNodes()
+  selectedNodeEdge: (direction) ->
+    nodeEdgeOfTangible direction, @selectedTangible()
 
   editedAtom: ->
     if @isEditing()
       @onlySelectedExpression()
 
   onlySelectedExpression: ->
-    selections = @selectedNodes()
-    [node] = selections.in
-    if selections.in.length is 1 and isExpression node
-      node
-
+    onlyExpression @selectedTangible()
 
   # This render-like function, taking in a the desired output and
   # doing the imperative work to achieve it
@@ -1082,12 +1038,13 @@ exports.Mode = class extends TextMode
   #       range: [Int, Int]
   #     removedNodes: (List Node)
   #     inserted:
-  #       nodes: (List Node)
+  #       added: (List Node)
   #       at: Selections
   #     withinAtom: Atom
   #     withinAtomPos: Int
-  #     selection: Node
-  #     selections: Selections
+  #     selection: Selections
+  #     inSelection: Node
+  #     inSelections: (List Node)
   #
   # The state of the current selection is:
   # $nodes - these are selected nodes including following tokens until sibling
@@ -1111,7 +1068,7 @@ exports.Mode = class extends TextMode
       replaced = state.changeInTree.at
       added = state.changeInTree.added or []
       # console.log "change in tree", replaced, state.selection
-      removedRange = @rangeOfSelections replaced
+      removedRange = @rangeOfTangible replaced
       addedString = nodesToString added
       # console.log "removed", removedRange, addedString
       ammendAst replaced, added
@@ -1130,14 +1087,15 @@ exports.Mode = class extends TextMode
       # 3. Perform editor actions to reconcile AST with contents
       @editor.session.replace removedRange, addedString
     # 4.1. selections
-    if state.selection or state.selections
-      selections = validSelections if state.selection then [state.selection] else state.selections
-      selectionRange = @rangeOfSelections selections
+    if state.inSelection or state.inSelections or state.tangibleSelection
+      selections = state.tangibleSelection or
+        insToTangible state.inSelections or [state.inSelection]
+      selectionRange = @rangeOfTangible selections
       editing = no
     # 4.2. withinAtom
     if state.withinAtom
       throw "shouldn't set both withinAtom and selection" if selections
-      selections = validSelections [state.withinAtom]
+      selections = insToTangible [state.withinAtom]
       selectionRange = @rangeWithingToken state.withinAtom, [state.withinAtomPos, state.withinAtomPos]
       editing = yes
     if selections
@@ -1170,7 +1128,7 @@ exports.Mode = class extends TextMode
       id = @editor.session.addMarker range, 'ace_active-token'
       editorSelection.$editMarker = id
 
-  selectedNodes: ->
+  selectedTangible: ->
     @editor.selection.$nodes
 
   isEditing: ->
@@ -1180,10 +1138,10 @@ exports.Mode = class extends TextMode
     @isEditing() and isDelimitedAtom @editedAtom()
 
   isSelecting: ->
-    not @isEditing() and @selectedNodes().in.length > 0
+    not @isEditing() and @selectedTangible().in.length > 0
 
   isSelectingMultiple: ->
-    @isSelecting() and @selectedNodes().in.length > 1
+    @isSelecting() and @selectedTangible().in.length > 1
 
   findParentFunction: (token) ->
     if token.parent
@@ -1250,26 +1208,25 @@ exports.Mode = class extends TextMode
     i = tokens.indexOf yes
     throw new Error "missing yes in wrap" if i is -1
     string = (join tokens[0...i], tokens[i + 1...]).join ''
-    @wrapIn string, i, @selectedNodes()
+    @wrapIn string, i, @selectedTangible()
 
-  wrapIn: (wrapperString, index, selections) ->
-    parent = selections.out[0].parent
-    [wrapper] = astize wrapperString, parent
+  wrapIn: (wrapperString, index, tangible) ->
+    [wrapper] = astize wrapperString, parentOfTangible tangible
 
     # First replace, then reinsert
     @mutate
       changeInTree:
-        at: selections
+        at: tangible
         added: [wrapper]
     @mutate
       changeInTree:
         at:
           in: []
           out: [wrapper[index]]
-        added: selections.in
-      selections:
-        if _notEmpty selections.in
-          selections.in
+        added: tangible.in
+      inSelections:
+        if _notEmpty tangible.in
+          tangible.in
         else
           [wrapper[index]]
 
@@ -1582,8 +1539,8 @@ exports.Mode = class extends TextMode
     [first, ..., last] = nodes
     positionsToRange (@startPos first), (@endPos last)
 
-  rangeOfSelections: (selections) ->
-    [from, to] = selectionEdges selections
+  rangeOfTangible: (tangible) ->
+    [from, to] = nodeEdgesOfTangible tangible
     positionsToRange (@startPos from), (@startPos to)
 
   range: (node) ->
@@ -1668,77 +1625,117 @@ exports.Mode = class extends TextMode
       # for name in names
       #   module[name]
 
-selectionEdge = (direction, selections) ->
-  edgeOfList direction, selectionEdges selections
+onlyExpression = (tangible) ->
+  [node] = tangible.in
+  if tangible.in.length is 1 and isExpression node
+    node
 
-selectionEdges = (selections) ->
-  [from] = join selections.in, selections.out
-  [to] = selections.out
+tangibleEdge = (direction, tangible) ->
+  edge = edgeOfList direction, tangible.in
+  if direction is FORWARD or tangible.in.length is 0
+    in: if not edge or isWhitespace edge then [] else [edge]
+    out: tangible.out
+  else
+    if isWhitespace edge
+      in: []
+      out: [edge]
+    else
+      insToTangible [edge]
+
+parentOfTangible = (tangible) ->
+  tangible.out[0].parent
+
+nodeEdgeOfTangible = (direction, tangible) ->
+  edgeOfList direction, nodeEdgesOfTangible tangible
+
+nodeEdgesOfTangible = (tangible) ->
+  [from] = join tangible.in, tangible.out
+  [to] = tangible.out
   [from, to]
 
 # Takes in a list of nodes, possibly ending in an expression, to be the in
 # part of a selections object. Returs a valid selections object for the state.
-validSelections = (nodes) ->
-  # padded to destructure
-  [notLast..., last] = nodes
-  if nodes.length >= 2
-    [definitelyIn..., lastButOne, some] = nodes
-  if isExpression last
-    out = sibling NEXT, last
-    if isNewLine out
-      afterOut = sibling NEXT, out
-      if isIndent afterOut
-        outs = [out, afterOut]
-    ins = nodes
-    outs or= [out]
-  else
-    if isIndent last
-      ins = definitelyIn
-      outs = [lastButOne, last]
-    else
-      ins = notLast
-      outs = [last]
+insToTangible = (ins) ->
+  [..., last] = ins
+  next = sibling NEXT, last
   in: ins
-  out: outs
+  out: validOut next
 
-followingTangibleToken = (direction, node) ->
-  siblingNode = siblingTangible direction, node
-  if not siblingNode and parentOf node
-    followingTangibleToken direction, node.parent
-  else if isForm siblingNode
-    tangible direction, limitToken (opposite direction), siblingNode
+followingTangibleAtomOrPosition = (direction, tangible) ->
+  node = paddingEdge direction, tangible
+  if isDelim node
+    if parent = tangibleParent tangible
+      followingTangibleAtomOrPosition direction, parent
   else
-    siblingNode
+    siblingTangible = tangibleSurroundedBy direction, node, sibling direction, node
+    if isForm siblingNode = toNode siblingTangible
+      tangibleInAfter direction, limitToken (opposite direction), siblingNode
+    else
+      siblingTangible
 
-siblingTangible = (direction, node) ->
-  (other = sibling direction, node) and tangible direction, other
+# siblingTangible = (direction, node) ->
+#   (other = sibling direction, node) and tangibleInAfter direction, other
 
-# Takes in nodes
+tangibleParent = (tangible) ->
+  parent = parentOfTangible tangible
+  if isReal parent
+    insToTangible [parent]
+
 tangibleSurroundedBy = (direction, first, second) ->
   [before, after] = inOrder direction, first, second
   if (isClosingDelim before)
-    before.parent
+    insToTangible [before.parent]
   else if (isOpeningDelim after)
-    after.parent
+    insToTangible [after.parent]
   else if (isExpression before)
-    before
-  else if (isExpression after) or (isOpeningDelim before) or (not isIndent after)
-    after
+    in: [before]
+    out: validOut after
+  else if (isExpression after)
+    insToTangible [after]
+  else if (isOpeningDelim before) or (not isIndent after)
+    in: []
+    out: [after]
   else
-    tangible direction, if direction is FORWARD then after else before
+    tangibleInAfter direction, second
 
-tangible = (direction, node) ->
+tangibleInAfter = (direction, node) ->
   (other = sibling direction, node) and tangibleSurroundedBy direction, node, other
 
-tangibleInside = (direction, expression) ->
-  expression[1]
+tangibleInside = (direction, form) ->
+  tangibleEdge direction, insideTangible form
 
 inOrder = (direction, a, b) ->
   if direction is FORWARD then [a, b] else [b, a]
 
+insideTangible = (form) ->
+  in: form[1...-1]
+  out: form[-1...]
+
+# Returns the edge of the padding
+paddingEdge = (direction, tangible) ->
+  edgeOfList direction, padding direction, tangible
+
+# This returns the surrounding whitespace or delimiter in given direction
+padding = (direction, tangible) ->
+  if direction is FORWARD
+    tangible.out
+  else
+    precedingWhitespace sibling PREVIOUS, toNode tangible
+
+# Returns the first in or first out node, for convenience
+toNode = (tangible) ->
+  nodeEdgeOfTangible FIRST, tangible
+
 precedingWhitespace = (node) ->
   if isIndent node
     [(sibling PREVIOUS, node), node]
+  else
+    [node]
+
+validOut = (node) ->
+  siblingNode = sibling NEXT, node
+  if (isWhitespace node) and siblingNode and isIndent siblingNode
+    [node, siblingNode]
   else
     [node]
 
@@ -1776,7 +1773,7 @@ ammendAst = (replaced, added) ->
   parent = replaced.out[0].parent
   for node in added
     node.parent = parent
-  index = childIndex (selectionEdge FIRST, replaced)
+  index = childIndex (nodeEdgeOfTangible FIRST, replaced)
   parent.splice index, replaced.in.length, added...
   # console.log "ammended", replaced, added, parent
 
@@ -1798,10 +1795,6 @@ nodesToString = (nodes) ->
       else
         node.symbol
   string
-
-insideSelections = (node) ->
-  in: node[1...-1]
-  out: node[-1...]
 
 # Fn Node Bool
 isExpression = (node) ->
@@ -1925,11 +1918,10 @@ positionsToRange = (start, end) ->
 spliceString = (string, index, count, add) ->
   string[0...index] + add + string[index + count...]
 
-append = (direction, added, list) ->
-  if direction is LAST
-    join list, added
-  else
-    join added, list
+append = (direction, tangibleA, tangibleB) ->
+  [before, after] = inOrder direction, tangibleA, tangibleB
+  in: join before.in, after.in
+  out: after.out
 
 previousExpression = (expression) ->
   reached = no
