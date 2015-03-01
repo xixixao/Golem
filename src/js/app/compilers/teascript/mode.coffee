@@ -225,6 +225,7 @@ exports.Mode = class extends TextMode
       tangibleSelection:
         in: added
         out: inside.out
+    @handleCommandExecution()
 
   initAst: (value) ->
     # console.log "initing ast with", value
@@ -652,17 +653,12 @@ exports.Mode = class extends TextMode
           # @addAtInsertPositionAndSetCursorAtOffset '(# )', -1
 
       # Temporary
-      # 'show type of expression':
-      #   bindKey: win: 'Ctrl-T', mac: 'Ctrl-T'
-      #   exec: =>
-      #     expression = @leftActiveToken()
-      #     prettyPrintType = (type) ->
-      #       if Array.isArray type
-      #         "(Fn #{type.map(prettyPrintType).join ' '})"
-      #       else
-      #         type
-      #     if expression
-      #       window.log compiler.syntaxedExpHtml prettyPrintType expression.tea
+      'show type of expression':
+        bindKey: win: 'Ctrl-T', mac: 'Ctrl-T'
+        exec: =>
+          expression = @onlySelectedExpression()
+          if expression
+            window.log expression.tea
 
       # For debugging
       'remove all source':
@@ -2027,6 +2023,7 @@ duplicateProperties = (newAst, oldAst) ->
   #   WARNING the position of newAst might be off if it comes from a larger prefixed expression
   #     like compiling a command line together with source
   oldAst.malformed = newAst.malformed
+  oldAst.tea = newAst.tea
   if isForm newAst
     for node, i in newAst
       duplicateProperties node, oldAst[i]
