@@ -164,6 +164,10 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
     color: white
   }
 
+  .ace-tea .ace_token_malformed {
+    color: #730000
+  }
+
   """
 
   dom = require("../lib/dom")

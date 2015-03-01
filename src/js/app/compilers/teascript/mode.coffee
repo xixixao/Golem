@@ -242,6 +242,9 @@ exports.Mode = class extends TextMode
   # Called after worker compiles
   updateAst: (ast) ->
     # console.log ast, @ast
+    if ast.end isnt @ast.end
+      console.log "Ast out of sync"
+      return
     duplicateProperties ast, @ast
     @$tokenizer._signal 'update', data: rows: first: 1
 
@@ -794,16 +797,15 @@ exports.Mode = class extends TextMode
           followingTangibleAtomOrPosition direction, @selectedTangible()
 
   selectSibling: (direction) ->
-    @mutate
-      tangibleSelection:
-        if @isSelectingMultiple()
-          @selectableEdge direction
+    @mutate(
+      if @isSelectingMultiple()
+        tangibleSelection: @selectableEdge direction
+      else
+        siblingSelection = @selectedSibling direction
+        if not siblingSelection and isReal @parentOfSelected()
+          inSelection: @parentOfSelected()
         else
-          siblingSelection = @selectedSibling direction
-          if not siblingSelection and isReal @parentOfSelected()
-            @parentOfSelected()
-          else
-            siblingSelection
+          tangibleSelection: siblingSelection)
 
   expandSelection: (direction) ->
     {margin, siblingTangible} = (@toSelectionSibling direction) or {}
@@ -1147,7 +1149,7 @@ exports.Mode = class extends TextMode
       @updateEditingMarkerFor (@isEditingFor range), range
 
   updateEditingMarkerFor: (shouldEdit, editorSelection) ->
-    if id = @editor.selection.$editMarker
+    if id = editorSelection.$editMarker
       @editor.session.removeMarker id
       editorSelection.$editMarker = undefined
     if shouldEdit
@@ -1930,13 +1932,16 @@ convertToAceLineTokens = (tokens) ->
 convertToAceToken = (token) ->
   value: token.symbol
   type:
-    switch token.label
-      when 'whitespace' then 'text'
-      else
-        if token.label
-          'token_' + token.label
+    if (isDelim token) and token.parent.malformed or token.malformed
+      'token_malformed'
+    else
+      switch token.label
+        when 'whitespace' then 'text'
         else
-          'text'
+          if token.label
+            'token_' + token.label
+          else
+            'text'
 
 topList = (ast) ->
   inside = ast[1...-1]
@@ -2021,6 +2026,7 @@ duplicateProperties = (newAst, oldAst) ->
   # for now let's duplicate labels
   #   WARNING the position of newAst might be off if it comes from a larger prefixed expression
   #     like compiling a command line together with source
+  oldAst.malformed = newAst.malformed
   if isForm newAst
     for node, i in newAst
       duplicateProperties node, oldAst[i]
@@ -2037,16 +2043,20 @@ astize = (string, parent) ->
 reindent = (depth, ast, next) ->
   if isForm ast
     reindent depth + 1, node, ast[i + 1] for node, i in ast
-  else if next and isNewLine ast
+  else if next and depth > 0 and isNewLine ast
     indent = repeat depth, '  '
     if isIndent next
-      next.symbol = indent
-      next.end += depth * 2
+      setIndentTo next, indent
     else
       # Insert new indent token
-      [newLine, indentToken] = astizeExpressions "\n#{indent}"
+      [newLine, indentToken] = astizeExpressions "\n  "
+      setIndentTo indentToken, indent
       insertChildNodeAt indentToken, next.parent, childIndex next
   return
+
+setIndentTo = (token, indent) ->
+  token.symbol = indent
+  token.end = token.start + indent.length
 
 astizeExpressions = (string) ->
   [open, expressions..., close] = compiler.astizeExpression "(#{string})"
