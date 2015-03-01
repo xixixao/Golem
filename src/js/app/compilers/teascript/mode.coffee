@@ -1779,8 +1779,8 @@ validOut = (node) ->
 #   limitToken (opposite direction), (sibling direction, node)
 
 limitToken = (direction, node) ->
-  if isForm node
-    limitToken direction, (edgeOfList direction, node)
+  if (isForm node)
+    limitToken direction, (edgeOfList direction, node[1...-1])
   else
     node
 
