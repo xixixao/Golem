@@ -50,9 +50,6 @@ module.exports = hyper class UpdatingDisplay
     # mode = new Mode yes
     mode = new (CommandMode.inherit Mode) "compilers/teascript"
     @editor = editor = ace.edit @refs.ace.getDOMNode(), mode, "ace/theme/tea"
-    mode.editor = editor
-    mode.initAst @props.expression
-    mode.updateAst @props.ast
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2
     editor.setHighlightActiveLine false
@@ -60,16 +57,18 @@ module.exports = hyper class UpdatingDisplay
     editor.setShowPrintMargin false
     editor.renderer.setShowGutter false
     # editor.setReadOnly true
-    editor.setValue @props.expression, 1
-    editor.moveCursorTo 0, 0
+    # editor.setValue @props.expression, 1
+    # editor.moveCursorTo 0, 0
     editor.session.getMode().attachToSession editor.session
+    mode.setContent @props.expression
+    mode.updateAst @props.ast
+    mode.prefixWorker @props.source
 
     commandWorker = mode.worker
 
     # CommandWorker compiles either on change or on enter
     commandWorker.on 'ok', ({data: {result, type, commandSource}}) =>
-      # TODO use prelude trim
-      source = $.trim editor.getValue()
+      source = editor.getValue()
 
       # Extract the last but one node from the compound tree
       # The compound tree will have
@@ -84,7 +83,6 @@ module.exports = hyper class UpdatingDisplay
 
     commandWorker.on 'error', ({data: {text}}) =>
       console.log "updaitng display error", text
-
 
     for name, command of editor.session.getMode().commands when command.indirect
       command.exec = @handleCommand name
