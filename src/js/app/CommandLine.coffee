@@ -29,6 +29,7 @@ module.exports = hyper class CommandLine
       return
     _require ["compilers/#{sourceModeId}/mode"], ({Mode}) =>
       @editor.session.setMode new (CommandMode.inherit Mode) "compilers/#{sourceModeId}", @props.memory
+      @editor.session.getMode().setContent ""
       @sourceModeId = sourceModeId
 
   componentWillReceiveProps: ({focus, source}) ->
