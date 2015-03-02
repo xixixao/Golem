@@ -188,9 +188,6 @@ exports.Mode = class extends TextMode
   # Called after worker compiles
   updateAst: (ast) ->
     # console.log ast, @ast
-    if ast.end isnt @ast.end
-      console.log "Ast out of sync"
-      return
     duplicateProperties ast, @ast
     @$tokenizer._signal 'update', data: rows: first: 1
 
@@ -492,12 +489,13 @@ exports.Mode = class extends TextMode
         exec: =>
           parent = @realParentOfSelected()
           if parent
-            added = @selectedTangible().in
+            added = @selectedTangible()
+            reindentTangible added, parentOf parent
             @mutate
               changeInTree:
-                added: added
+                added: added.in
                 at: insToTangible [parent]
-              inSelections: added
+              inSelections: added.in
 
       'wrap current in a function':
         bindKey: win: 'Ctrl-F', mac: 'Ctrl-F'
@@ -915,6 +913,7 @@ exports.Mode = class extends TextMode
       changeInTree:
         at: tangible
         added: [wrapper]
+    reindentTangible tangible, wrapper
     @mutate
       changeInTree:
         at:
@@ -1166,7 +1165,11 @@ validOut = (node) ->
 
 limitToken = (direction, node) ->
   if (isForm node)
-    limitToken direction, (edgeOfList direction, node[1...-1])
+    inside = node[1...-1]
+    if _notEmpty inside
+      limitToken direction, (edgeOfList direction, inside)
+    else
+      edgeOfList direction, node
   else
     node
 
@@ -1383,6 +1386,9 @@ indexWithin = (what, array) ->
   throw new Error "what is not inside of array in indexWithin"
 
 duplicateProperties = (newAst, oldAst) ->
+  if not newAst or not oldAst
+    console.log "Asts out of sync"
+    return
   # for now let's duplicate labels
   #   WARNING the position of newAst might be off if it comes from a larger prefixed expression
   #     like compiling a command line together with source
@@ -1400,6 +1406,9 @@ astize = (string, parent) ->
   reindent (depthOf parent), wrapped
   [open, expressions..., close] = wrapped
   expressions
+
+reindentTangible = (tangible, parent) ->
+  reindent (depthOf parent), tangible.in
 
 reindent = (depth, ast, next) ->
   if isForm ast
