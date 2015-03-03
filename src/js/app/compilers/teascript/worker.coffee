@@ -6,13 +6,16 @@ window.addEventListener = ->
 exports.Worker = class extends Mirror
   constructor: (sender) ->
     super sender
-    @setTimeout 0
-
+    @setTimeout 0 # Take over the scheduling from Mirror
     @compiler = compiler
-
+    @trigger = delay 700
     # @sender.on 'prefix', ({data: {data: @prefix}}) =>
 
   onUpdate: ->
+    @trigger @compile
+
+  compile: =>
+    @sourceCompiled = true
     value = @doc.getValue()
     try
       @sender.emit "ok",
@@ -32,3 +35,21 @@ exports.Worker = class extends Mirror
         text: e.message
         type: 'error'
       return
+
+
+# Returns a function which runs given function maximally once during given
+# duration.
+delay = (duration) ->
+  timeout = undefined
+  ready = true
+  reset = (executed, fn) -> ->
+    ready = true
+    if not executed
+      fn()
+  (fn, force = no) ->
+    clearTimeout timeout if timeout?
+    run = ready or force
+    if run
+      fn()
+    timeout = setTimeout (reset run, fn), duration
+    ready = false

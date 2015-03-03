@@ -124,6 +124,7 @@ exports.Mode = class extends TextMode
   detachFromSession: (session) ->
     # session.removeListener 'change', @onDocumentChange
     @editor.removeListener 'click', @handleClick
+    @editor.onPaste = @__editorOnPaste
     # session.getDocument().removeListener 'change', @selectInserted
 
   attachToSession: (session) ->
@@ -132,6 +133,8 @@ exports.Mode = class extends TextMode
     @editor = session.getEditor()
     # session.on 'change', @onDocumentChange
     @editor.on 'click', @handleClick
+    @__editorOnPaste = @editor.onPaste
+    @editor.onPaste = @handlePaste
     @editor.selection.on 'removeRange', @handleRangeDeselect
     @editor.commands.on 'afterExec', @handleCommandExecution
 
@@ -222,6 +225,28 @@ exports.Mode = class extends TextMode
       # select clicked word or its parent if whitespace selected
       if @ast
         @editor.execCommand 'select by click', @editor
+
+  handlePaste: (string) =>
+    @editor.commands.exec "insertstring", @editor, string
+
+    # TODO: Figure out how to do multi-copy-paste, Ace does it based on lines
+    #       would be nice if we could do it based on actual selections
+    #       - might require memorizing the copy.
+    #
+    #   if @isMultiSelecting():
+    #
+    # var lines = text.split(/\r\n|\r|\n/);
+    # var ranges = this.selection.rangeList.ranges;
+
+    # if (lines.length > ranges.length || lines.length < 2 || !lines[1])
+    #     return this.commands.exec("insertstring", this, text);
+
+    # for (var i = ranges.length; i--;) {
+    #     var range = ranges[i];
+    #     if (!range.isEmpty())
+    #         this.session.remove(range);
+
+    #     this.session.insert(range.start, lines[i]);
 
   addVerticalCommands: (session) ->
     @editor.commands.addCommands
@@ -556,6 +581,7 @@ exports.Mode = class extends TextMode
 
   # direction ignored for now
   insertString: (direction, string) ->
+    throw "Missing string in insertString" unless string?
     @mutate(
       if @isEditing()
         atom = @editedAtom()
@@ -852,7 +878,7 @@ exports.Mode = class extends TextMode
 
   updateEditingMarkers: ->
     editorSelections =
-      if @editor.multiSelect.inMultiSelectMode
+      if @isMultiSelecting()
         @editor.multiSelect.ranges
       else
         [@editor.selection]
@@ -868,6 +894,9 @@ exports.Mode = class extends TextMode
       range = @editableRange atom
       id = @editor.session.addMarker range, 'ace_active-token'
       editorSelection.$editMarker = id
+
+  isMultiSelecting: ->
+    @editor.multiSelect.inMultiSelectMode
 
   selectedTangible: ->
     @editor.selection.$nodes
