@@ -132,6 +132,10 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
     color: #FEDF6B
   }
 
+  .ace-tea .ace_token_char {
+    color: #FEDF6B
+  }
+
   .ace-tea .ace_token_regex {
     color: #FEDF6B
   }
@@ -165,7 +169,7 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
   }
 
   .ace-tea .ace_token_malformed {
-    color: #730000
+    color: #880000
   }
 
   """

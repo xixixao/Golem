@@ -112,7 +112,7 @@ module.exports = hyper class CommandLine
             editor.session.getMode().updateAst result.ast
 
       commandWorker.on 'error', ({data: {text}}) =>
-        console.log "command line error"
+        console.log "command line error", text
         @props.onCommandFailed text
 
     @props.memory.loadCommands timeline

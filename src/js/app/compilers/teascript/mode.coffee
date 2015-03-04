@@ -149,6 +149,7 @@ exports.Mode = class extends TextMode
     @initAst ""
 
   setContent: (string, selectedRange) ->
+    console.log "setting content"
     added = astize string, @ast
     inside = insideTangible @ast
     @mutate(
@@ -515,7 +516,7 @@ exports.Mode = class extends TextMode
           parent = @realParentOfSelected()
           if parent
             added = @selectedTangible()
-            reindentTangible added, parentOf parent
+            reindentTangible added, parent.parent
             @mutate
               changeInTree:
                 added: added.in
@@ -597,6 +598,7 @@ exports.Mode = class extends TextMode
           range: [offset, offset]
       else
         added = astize string, @parentOfSelected()
+        console.log "adding", added
 
         extend
           changeInTree:
@@ -661,8 +663,11 @@ exports.Mode = class extends TextMode
   # Returns node at cursor (only atoms, not forms)
   tangibleAtPos: (pos) ->
     # TODO: return selections object
+    console.log @posToIdx pos
     [before, after] = @tokensSurroundingPos pos
-    tangibleSurroundedBy FORWARD, before, after or before
+    res = tangibleSurroundedBy FORWARD, before, after or before
+    console.log "at pos", res
+    res
 
   tokensSurroundingPos: (pos) ->
     idx = @posToIdx pos
@@ -1131,7 +1136,7 @@ tangibleParent = (tangible) ->
 
 tangibleSurroundedBy = (direction, first, second) ->
   [before, after] = inOrder direction, first, second
-  if before is after
+  if before is after and isExpression before
     insToTangible [before]
   else if (isClosingDelim before)
     insToTangible [before.parent]
@@ -1439,14 +1444,21 @@ astize = (string, parent) ->
 reindentTangible = (tangible, parent) ->
   reindent (depthOf parent), tangible.in
 
-reindent = (depth, ast, next) ->
+reindent = (depth, ast, next, nextIndex) ->
   if isForm ast
-    reindent depth + 1, node, ast[i + 1] for node, i in ast
-  else if next and depth > 0 and isNewLine ast
+    i = 0
+    while i < ast.length # explicit for loop because we change the array while iterating
+      reindent depth + 1, ast[i], ast[i + 1], i + 1
+      ++i
+  else if next and isNewLine ast
     indent = repeat depth, '  '
+    shouldIndent = depth > 0
     if isIndent next
-      setIndentTo next, indent
-    else
+      if shouldIndent
+        setIndentTo next, indent
+      else
+        next.parent.splice nextIndex, 1
+    else if shouldIndent
       # Insert new indent token
       [newLine, indentToken] = astizeExpressions "\n  "
       setIndentTo indentToken, indent
