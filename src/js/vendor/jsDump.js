@@ -203,7 +203,9 @@ var jsDump;
       date:quote,
       regexp:literal, //regex
       number:literal,
-      'boolean':literal
+      'boolean':function(value) {
+        return value ? 'True' : 'False';
+      }
     },
     DOMAttrs:{//attributes to dump from nodes, name=>realName
       id:'id',
