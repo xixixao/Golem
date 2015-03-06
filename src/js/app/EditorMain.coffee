@@ -319,6 +319,9 @@ module.exports = hyper class EditorMain
       #     null
       # outputScrollTop()
 
+  handleCommandCompiled: ->
+    @_hideMessage 'command', 'runtime'
+
   handleCommandFailed: (text) ->
     @displayMessage 'command', "Command Line: #{text}"
 
@@ -385,6 +388,7 @@ module.exports = hyper class EditorMain
         _CommandLine
           ref: 'commandLine'
           onCommandExecution: @handleCommandExecution
+          onCommandCompiled: @handleCommandCompiled
           onCommandFailed: @handleCommandFailed
           onLeave: @handleFocus @focus.sourceEditor
           onFocus: @handleFocus @focus.commandLine

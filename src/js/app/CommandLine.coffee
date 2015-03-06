@@ -12,6 +12,7 @@ module.exports = hyper class CommandLine
   propTypes:
     timeline: React.PropTypes.object.isRequired
     onCommandExecution: React.PropTypes.func.isRequired
+    onCommandCompiled: React.PropTypes.func.isRequired
     onCommandFailed: React.PropTypes.func.isRequired
 
   getInitialState: ->
@@ -110,6 +111,7 @@ module.exports = hyper class CommandLine
               # editor.focus()
           else
             editor.session.getMode().updateAst result.ast
+            @props.onCommandCompiled()
 
       commandWorker.on 'error', ({data: {text}}) =>
         console.log "command line error", text
