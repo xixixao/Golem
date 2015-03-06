@@ -286,11 +286,12 @@ module.exports = hyper class EditorMain
   load: (fileName, mustExist) ->
     if fileName isnt @fileName
       @save()
-    console.log "loading", fileName
+    loaded = @loadSource fileName
     @setState
-      module: @loadSource fileName
+      module: loaded
+    @save fileName if loaded or not mustExist
+    !!loaded
 
-    # @save fileName if serialized or not mustExist
   loadSource: (fileName) ->
     serialized = @memory.loadSource fileName
     serialized.moduleName = fileName
@@ -462,7 +463,6 @@ module.exports = hyper class EditorMain
     windowWidth = Math.floor window.innerWidth
     dividerWidth = 20
     leftColumnWidth = (windowWidth - dividerWidth) / 2
-    console.log  "render", @state.module
 
     _AdjustableColumns
       leftColumnWidth: leftColumnWidth

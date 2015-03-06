@@ -7,7 +7,7 @@ class SaveCommand
 
   @execute = ([name], state, editor) ->
     editor.displayMessage 'file', "#{name} saved."
-    editor.refs.sourceEditor.save name
+    editor.save name
 
 class LoadCommand
   @defaultSymbols = ['load']
@@ -15,7 +15,7 @@ class LoadCommand
   @symbols = @defaultSymbols
 
   @execute = ([name], state, editor) ->
-    loaded = editor.refs.sourceEditor.load name, true
+    loaded = editor.load name, true
     if loaded
       editor.displayMessage 'file', "#{name} loaded."
     else
@@ -38,8 +38,8 @@ class CloseCommand
 
   @execute = ([name], state, editor) ->
     editor.displayMessage 'file', "File closed."
-    editor.refs.sourceEditor.save "@unnamed"
-    editor.refs.sourceEditor.empty()
+    editor.save "@unnamed"
+    editor.empty()
     {}
 
 _FileBrowser = hyper class FileBrowser

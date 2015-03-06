@@ -48,7 +48,7 @@ module.exports = hyper class SourceEditor
   componentWillReceiveProps: ({focus, module}) ->
     if focus and not @props.focus
       @editor.focus()
-    if module and module.fileName isnt @props.module.fileName
+    if module and module.moduleName isnt @props.module.moduleName
       @load module
 
   componentDidMount: ->
