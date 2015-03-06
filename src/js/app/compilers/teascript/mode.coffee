@@ -148,8 +148,9 @@ exports.Mode = class extends TextMode
     # Initial parse
     @initAst ""
 
-  setContent: (string, selectedRange) ->
-    console.log "setting content"
+  setContent: (string, selectedRange, moduleName) ->
+    # console.log "setting content"
+    @reportModuleName moduleName
     added = astize string, @ast
     inside = insideTangible @ast
     @mutate(
@@ -680,6 +681,8 @@ exports.Mode = class extends TextMode
   remove: (direction) ->
     @mutate(
       if atom = @editedAtom()
+        # TODO: check if we are removing an escaped character and in that case
+        #       remove the backslash
         if @isAtLimit direction, atom
           @removeSelectable @selectedTangible()
         else
@@ -1053,6 +1056,11 @@ exports.Mode = class extends TextMode
         session.clearAnnotations()
 
     worker
+
+  reportModuleName: (moduleName) ->
+    @moduleName = moduleName
+    @worker.call 'setModuleName', [moduleName]
+
 
   # prefixWorker: (input) ->
   #   @worker.emit 'prefix', data: data: input

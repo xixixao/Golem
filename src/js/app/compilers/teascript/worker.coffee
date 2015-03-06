@@ -11,16 +11,20 @@ exports.Worker = class extends Mirror
     @trigger = delay 700
     # @sender.on 'prefix', ({data: {data: @prefix}}) =>
 
+  setModuleName: (@moduleName) ->
+
   onUpdate: ->
     @trigger @compile
 
   compile: =>
+    console.log  "compiling", @moduleName
+
     @sourceCompiled = true
     value = @doc.getValue()
     try
       @sender.emit "ok",
         result:
-          compiler.compileTopLevel value
+          compiler.compileTopLevel value, @moduleName
     catch e
       # loc = e.location
       # if loc
