@@ -1,10 +1,11 @@
 Outdent      = require("ace/mode/matching_brace_outdent").MatchingBraceOutdent
-FoldMode     = require("ace/mode/folding/coffee").FoldMode
+# FoldMode     = require("ace/mode/folding/coffee").FoldMode
 Range        = require("ace/range").Range
 TextMode     = require("ace/mode/text").Mode
 Behaviour    = require("ace/mode/behaviour").Behaviour
 Selection    = require("ace/selection").Selection
-WorkerClient = require("ace/worker/worker_client").WorkerClient
+
+DistributingWorkerClient = require("app/DistributingWorkerClient")
 
 oop = require("ace/lib/oop")
 EventEmitter = require("ace/lib/event_emitter").EventEmitter
@@ -54,7 +55,7 @@ exports.Mode = class extends TextMode
     oop.implement @$tokenizer, EventEmitter
 
     @$outdent = new Outdent
-    @foldingRules = new FoldMode
+    # @foldingRules = new FoldMode
     @$behaviour = undefined
 
   tokensOnLine: (row, doc) =>
@@ -1034,57 +1035,30 @@ exports.Mode = class extends TextMode
   shiftPosBy: (pos, offset) ->
     @idxToPos (@posToIdx pos) + offset
 
-  createWorker: (session) ->
-    worker = new WorkerClient ["ace", "compilers"],
+  prepareWorker: ->
+    worker = new DistributingWorkerClient ["ace", "compilers"],
       "compilers/teascript/worker",
       "Worker",
       null
     @worker = worker
 
-    if session
-      worker.attachToDocument session.getDocument()
+  createWorker: (session) ->
+    throw new Error "Missing worker in mode" unless @worker
 
-      # HUGE HACK to load prelude by default
-      # window.requireModule 'Tea.Prelude'
-      # if @memory
-      #   @prefixWorker @loadPreludeNames()
+    @worker.attachToDocument session.getDocument()
 
-      worker.on "error", (e) ->
-        session.setAnnotations [e.data]
+    @worker.on "error", (e) ->
+      session.setAnnotations [e.data]
 
-      worker.on "ok", (e) =>
-        session.clearAnnotations()
+    @worker.on "ok", (e) =>
+      session.clearAnnotations()
 
-    worker
+    @worker
 
   reportModuleName: (moduleName) ->
-    @moduleName = moduleName
-    @worker.call 'setModuleName', [moduleName]
-
-
-  # prefixWorker: (input) ->
-  #   @worker.emit 'prefix', data: data: input
-
-  # HUGE HACK to load prelude by default
-  # window.requireModule 'Tea.Prelude'
-  loadPreludeNames: ->
-    # TODO: reenable
-    # try
-    #   names = compiler.exportList (@memory.loadSource 'Tea.Prelude').value
-    # catch e
-    #   throw new Error e.message + " in module Tea.Prelude"
-    # joinedNames = "[#{names.join ' '}]"
-    # "#{joinedNames} (require Tea.Prelude #{joinedNames}) "
-    ""
-
-  preExecute: (memory) ->
-    window.requireModule = (fileName, names) ->
-      # try
-      #   module = eval compiler.compileModule (memory.loadSource fileName).value
-      # catch e
-      #   throw new Error e.message + " in module #{fileName}"
-      # for name in names
-      #   module[name]
+    if moduleName isnt @moduleName
+      @moduleName = moduleName
+      @worker.call 'setModuleName', [moduleName]
 
 onlyExpression = (tangible) ->
   [node] = tangible.in

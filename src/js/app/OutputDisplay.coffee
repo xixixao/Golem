@@ -115,10 +115,7 @@ module.exports = hyper class OutputDisplay
             {source, ast, compiled} = value
             _UpdatingDisplay
               key: key
-              expression: source
-              source: @props.source
-              ast: ast
-              compiledExpression: compiled
-              compiledSource: @props.compiledSource
+              value: value
+              worker: @props.worker
               maxWidth: @props.width - 45
               onCommand: @props.onCommand

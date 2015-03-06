@@ -10,76 +10,32 @@ _require = require
 
 module.exports = hyper class SourceEditor
 
-  # save current file or save as fileName
-  save: (fileName) ->
-    if fileName
-      @fileName = fileName
-      @saved = no
-    if not @saved
-      @saved = yes
-      {editor} = this
-      @props.memory.saveSource @fileName,
-        value: editor.getValue()
-        mode: @mode
-        selection: editor.getSelectionRange()
-        cursor: editor.getCursorPosition()
-        scroll:
-          top: editor.session.getScrollTop()
-          left: editor.session.getScrollLeft()
+  load: ({value, selection, moduleName, scroll}) ->
+    @editor.session.getMode().setContent value, selection, moduleName
+    @editor.session.setScrollTop scroll.top
+    @editor.session.setScrollLeft scroll.left
 
-  # load existing or unnamed
-  load: (fileName, mustExist) ->
-    if fileName isnt @fileName
-      @save()
-    serialized = @props.memory.loadSource fileName
-    if serialized
-      {mode} = serialized
-      # {value, mode, selection, cursor, scroll} = serialized
+  serializedModule: ->
+    value: @editor.getValue()
+    mode: 'teascript'
+    selection: @editor.getSelectionRange()
+    cursor: @editor.getCursorPosition()
+    scroll:
+      top: @editor.session.getScrollTop()
+      left: @editor.session.getScrollLeft()
 
-      # {editor} = this
-      # editor.setValue value
-      # editor.session.selection.setSelectionRange selection
-      # editor.moveCursorToPosition cursor
-      # editor.session.setScrollTop scroll.top
-      # editor.session.setScrollLeft scroll.left
-      @setMode mode, serialized, fileName
-    @save fileName if serialized or not mustExist
-    serialized?
+  mode: ->
+    @editor.session.getMode()
 
-  setLoaded: (serialized, fileName) ->
-    {value, mode, selection, cursor, scroll} = serialized
-    {editor: {session}} = this
-    # editor.setValue value
-    # editor.session.selection.setSelectionRange selection
-    # editor.moveCursorToPosition cursor
-    # This will only work using single mode for all files
-    sessionMode = session.getMode()
-    sessionMode.setContent value, selection, fileName
-    session.setScrollTop scroll.top
-    session.setScrollLeft scroll.left
-
-  empty: ->
-    {editor} = this
-    @editor.session.getMode().setContent ''
-
-  propTypes:
-    onCompilerLoad: React.PropTypes.func.isRequired
-    onSourceCompiled: React.PropTypes.func.isRequired
-    onSourceFailed: React.PropTypes.func.isRequired
+  # propTypes:
+  #   onCompilerLoad: React.PropTypes.func.isRequired
+  #   onSourceCompiled: React.PropTypes.func.isRequired
+  #   onSourceFailed: React.PropTypes.func.isRequired
 
   forceResize: ->
     @editor.resize()
 
-  mixins: [
-    SetIntervalMixin
-  ]
-
-  getDefaultProps: ->
-    autosaveDelay: 6000
-
   getInitialState: ->
-    @saved = no
-
     backgroundColor: '#222'
 
   handleMouseEnter: ->
@@ -89,36 +45,14 @@ module.exports = hyper class SourceEditor
   _getEditorNode: ->
     @refs.ace.getDOMNode()
 
-  setMode: (modeId, serializedToLoad, fileName) ->
-    if @mode and @mode is modeId
-      @setLoaded serializedToLoad, fileName
-      return
-    modeId ||= 'teascript'
-    @mode ?= modeId # save immediately if no mode set yet
-    @props.onModeChange modeId
-
-    _require ["compilers/#{modeId}/mode"], ({Mode}) =>
-      @editor.session.setMode new Mode no, @props.memory
-      @props.onCompilerLoad @editor.session.getMode(), modeId
-      @setLoaded serializedToLoad, fileName
-
-      @editor.session.$worker.on 'ok', ({data: {result}}) =>
-        @props.onSourceCompiled result, @editor.getValue()
-        console.log "source worker finished ok"#, result, result.ast, result.types
-        @editor.session.getMode().updateAst result.ast
-
-      @editor.session.$worker.on 'error', ({data: {text}}) =>
-        console.log "from source worker", text
-        console.log "current (maybe not the same) editor content", @editor.getValue()
-        @props.onSourceFailed text
-      @mode = modeId # save mode
-
-  componentWillReceiveProps: ({focus, fileName, compiled}) ->
+  componentWillReceiveProps: ({focus, module}) ->
     if focus and not @props.focus
       @editor.focus()
+    if module and module.fileName isnt @props.module.fileName
+      @load module
 
   componentDidMount: ->
-    @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/tea"
+    @editor = editor = ace.edit @_getEditorNode(), @props.mode, "ace/theme/tea"
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2
     editor.setHighlightActiveLine true
@@ -126,7 +60,8 @@ module.exports = hyper class SourceEditor
     editor.setShowPrintMargin false
 
     editor.session.on 'change', =>
-      @saved = no
+      # @saved = no
+      @props.onChange()
 
     editor.renderer.on 'themeLoaded', =>
       @setState backgroundColor: $(@_getEditorNode()).css 'background-color'
@@ -136,12 +71,8 @@ module.exports = hyper class SourceEditor
       bindKey: win: 'Esc', mac: 'Esc'
       exec: @props.onLeave
 
-    @fileName = @props.memory.getLastOpenFileName()
-    @load @fileName
-    @setInterval @save, @props.autosaveDelay
-
-    window.addEventListener 'unload', =>
-      @save()
+    @props.mode.attachToSession @editor.session
+    @load @props.module
 
   render: ->
     _div

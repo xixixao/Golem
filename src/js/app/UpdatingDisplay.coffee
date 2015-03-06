@@ -29,7 +29,7 @@ module.exports = hyper class UpdatingDisplay
     else
       value
 
-  runSource: (compiled = @props.compiledExpression) ->
+  runSource: (compiled = @props.value.compiled) ->
     if compiled instanceof Error
       @displayError compiled
     try
@@ -48,7 +48,8 @@ module.exports = hyper class UpdatingDisplay
 
   componentDidMount: ->
     # mode = new Mode yes
-    mode = new (CommandMode.inherit Mode) "compilers/teascript"
+    console.log "setting id in UpdatingDisplay to", @props.key
+    mode = new CommandMode @props.key
     @editor = editor = ace.edit @refs.ace.getDOMNode(), mode, "ace/theme/tea"
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2
@@ -59,10 +60,11 @@ module.exports = hyper class UpdatingDisplay
     # editor.setReadOnly true
     # editor.setValue @props.expression, 1
     # editor.moveCursorTo 0, 0
-    editor.session.getMode().attachToSession editor.session
-    mode.setContent @props.expression
-    mode.updateAst @props.ast
-    mode.prefixWorker @props.source
+    mode.attachToSession editor.session
+    mode.registerWithWorker @props.worker
+    mode.setContent @props.value.source, null, @props.value.moduleName
+    mode.updateAst @props.value.ast
+    # mode.prefixWorker @props.source
 
     commandWorker = mode.worker
 
@@ -79,22 +81,16 @@ module.exports = hyper class UpdatingDisplay
         mode.updateAst result.ast
 
         @setState
-          compiled: result.compiled
+          compiled: result.js
 
     commandWorker.on 'error', ({data: {text}}) =>
       console.log "updaitng display error", text
 
-    for name, command of editor.session.getMode().commands when command.indirect
+    for name, command of mode.commands when command.indirect
       command.exec = @handleCommand name
-
-  componentWillReceiveProps: ({source}) ->
-    # if focus
-      # @editor.focus()
-    if @editor.session.getMode().prefixWorker source
-      @editor.session.getMode().updateWorker()
 
   render: ->
     _div {},
       _div ref: 'ace', style: width: '100%', height: 22
-      _div style: height: 0, margin: '0 4px', overflow: 'hidden', @props.expression
+      _div style: height: 0, margin: '0 4px', overflow: 'hidden', @props.value.source
       _div style: padding: '0 4px', @runSource @state.compiled

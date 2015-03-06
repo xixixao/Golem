@@ -5,7 +5,7 @@ $ = require 'ejquery'
 ace = require 'ace/ace'
 
 CommandMode = require './CommandMode'
-_require = require
+# _require = require # Otherwise the require packager would fail
 
 module.exports = hyper class CommandLine
 
@@ -25,29 +25,25 @@ module.exports = hyper class CommandLine
   _getEditorNode: ->
     @refs.ace.getDOMNode()
 
-  setMode: (sourceModeId = 'teascript') ->
-    if @sourceModeId and @sourceModeId is sourceModeId
-      return
-    _require ["compilers/#{sourceModeId}/mode"], ({Mode}) =>
-      @editor.session.setMode new (CommandMode.inherit Mode) "compilers/#{sourceModeId}", @props.memory
-      @editor.session.getMode().setContent ""
-      @sourceModeId = sourceModeId
-
-  componentWillReceiveProps: ({focus, source}) ->
+  componentWillReceiveProps: ({focus, moduleName}) ->
     if focus
       @editor.focus()
     else
       $('input').blur()
-    @editor.session.getMode().prefixWorker? source
+
+    @editor.session.getMode().reportModuleName moduleName
 
   componentDidMount: ->
-    @editor = editor = ace.edit @_getEditorNode(), null, "ace/theme/tea"
+    mode = new CommandMode "COMMAND_LINE"
+    @editor = editor = ace.edit @_getEditorNode(), mode, "ace/theme/tea"
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2
     editor.setHighlightActiveLine false
     editor.setShowPrintMargin false
     editor.renderer.setShowGutter false
-    editor.session.$mode.commandLine = true
+    mode.attachToSession editor.session
+    mode.registerWithWorker @props.worker
+    mode.setContent "", null, @props.moduleName
 
     editor.renderer.on 'themeLoaded', =>
       @setState backgroundColor: $(@_getEditorNode()).css 'background-color'
@@ -85,39 +81,37 @@ module.exports = hyper class CommandLine
       bindKey: win: 'Tab', mac: 'Tab'
       exec: @props.onFocusOutput
 
-    editor.session.on 'changeMode', =>
-      commandWorker = editor.session.getMode().worker
 
-      # CommandWorker compiles either on change or on enter
-      commandWorker.on 'ok', ({data: {result, type, commandSource}}) =>
-        # TODO use prelude trim
-        source = $.trim editor.getValue()
-
-        # Extract the last but one node from the compound tree
-        # The compound tree will have
-        #          (source nodes..., commandExpression)
-        if source is commandSource #TODO: investigate why these get out of sync
-          if result.ast
-            result.ast.splice 1, result.ast.length - 3
-          if type in ['execute', 'command']
-            if source.length > 0
-              timeline.push source
-              @props.onCommandExecution source, result, type
-              @props.memory.saveCommands timeline
-              if type is 'command'
-                editor.setValue ""
-              else
-                editor.session.getMode().setContent ""
-              # editor.focus()
-          else
-            editor.session.getMode().updateAst result.ast
-            @props.onCommandCompiled()
-
-      commandWorker.on 'error', ({data: {text}}) =>
-        console.log "command line error", text
-        @props.onCommandFailed text
-
+    commandWorker = mode.worker
     @props.memory.loadCommands timeline
+
+    # CommandWorker compiles either on change or on enter
+    commandWorker.on 'ok', ({data: {result, type, commandSource}}) =>
+      source = editor.getValue()
+      console.log "received ok from command worker"
+
+      # Extract the last but one node from the compound tree
+      # The compound tree will have
+      #          (source nodes..., commandExpression)
+      if source is commandSource #TODO: investigate why these get out of sync
+        if type in ['execute', 'command']
+          if source.length > 0
+            timeline.push source
+            @props.onCommandExecution source, @props.moduleName, result, type
+            @props.memory.saveCommands timeline
+            if type is 'command'
+              editor.setValue ""
+            else
+              editor.session.getMode().setContent ""
+            # editor.focus()
+        else
+          mode.updateAst result.ast
+          @props.onCommandCompiled()
+
+    commandWorker.on 'error', ({data: {text}}) =>
+      console.log "command line error", text
+      @props.onCommandFailed text
+
 
   render: ->
     # This wrapper is required for mouseEnter triggering

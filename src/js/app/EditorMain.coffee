@@ -3,6 +3,7 @@
 jsDump = require 'vendor/jsDump'
 
 _AdjustableColumns = require './AdjustableColumns'
+SetIntervalMixin = require './SetIntervalMixin'
 _SourceEditor = require './SourceEditor'
 _CommandLine = require './CommandLine'
 _FillHeight = require './FillHeight'
@@ -11,9 +12,11 @@ _OutputDisplay = require './OutputDisplay'
 
 TimeLine = require './UniqueTimeLine'
 CommandParser = require './CommandParser'
-Modes = require './Modes'
+# Modes = require './Modes'
 History = require './History'
 Memory = require './Memory'
+
+{Mode} = require 'compilers/teascript/mode'
 
 # Prelude.installPrelude window
 # sourceFragment = "try:"
@@ -226,20 +229,89 @@ module.exports = hyper class EditorMain
       sourceEditor: 'sourceEditor'
       commandLine: 'commandLine'
       output: 'output'
+    @saved = no
+    mode = new Mode no
+    @registerMode mode
+    @fileName = @memory.getLastOpenFileName()
 
+    mode: mode
+    module: @loadSource @fileName
     focused: @focus.sourceEditor
     timeline: new TimeLine
     logs: []
     message: {}
     sourceEditorHeight: 300
-    modes: Modes
+    # modes: Modes
+    autosaveDelay: 6000
     commands: [
       require './commands/builtin/Help'
       require './commands/builtin/Output'
       require './commands/builtin/Runtime'
-      require './commands/builtin/Modes'
+      # require './commands/builtin/Modes'
       require './commands/builtin/Files'
     ].flatten()
+
+  mixins: [
+    SetIntervalMixin
+  ]
+
+  registerMode: (mode) ->
+    worker = mode.prepareWorker()
+    worker.on 'ok', ({data: {result}}) =>
+      @handleSourceCompiled result, @refs.sourceEditor.editor.getValue()
+      console.log "source worker finished ok"#, result, result.ast, result.types
+      mode.updateAst result.ast
+
+    worker.on 'error', ({data: {text}}) =>
+      console.log "error in source worker", text
+      handleSourceFailed text
+
+    worker.on 'request', ({data: {moduleName}}) =>
+      console.log "source worker requesting", moduleName
+      {value} = @memory.loadSource moduleName
+      worker.call 'compileModule', [value, moduleName]
+
+  # save current file or save as fileName
+  save: (fileName) ->
+    if fileName
+      @fileName = fileName
+      @saved = no
+    if not @saved
+      console.log "saving", @fileName
+      @saved = yes
+      @memory.saveSource @fileName,
+        @refs.sourceEditor.serializedModule()
+
+  # load existing or unnamed
+  load: (fileName, mustExist) ->
+    if fileName isnt @fileName
+      @save()
+    console.log "loading", fileName
+    @setState
+      module: @loadSource fileName
+
+    # @save fileName if serialized or not mustExist
+  loadSource: (fileName) ->
+    serialized = @memory.loadSource fileName
+    serialized.moduleName = fileName
+    serialized
+
+  empty: ->
+    @state.mode.setContent ''
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   displayMessage: (type, message) ->
     @setState
@@ -252,16 +324,16 @@ module.exports = hyper class EditorMain
       @setState
         message: {}
 
-  handleModeChange: (mode) ->
-    @refs.commandLine.setMode mode
+  # handleModeChange: (mode) ->
+  #   @refs.commandLine.setMode mode
 
-  handleCompilerLoad: (compiler, modeId) ->
-    # if isCurrentMessage "modesList"
-    #   @_logCurrent modesList(), "modesList" # update current message
-    # else
-    @displayMessage 'info', "#{@state.modes.getName modeId} compiler loaded"
-    @setState
-      compiler: compiler
+  # handleCompilerLoad: (compiler, modeId) ->
+  #   # if isCurrentMessage "modesList"
+  #   #   @_logCurrent modesList(), "modesList" # update current message
+  #   # else
+  #   @displayMessage 'info', "#{@state.modes.getName modeId} compiler loaded"
+  #   @setState
+  #     compiler: compiler
 
   handleSourceCompiled: (js, source) ->
     @_hideMessage 'compiler', 'runtime'
@@ -273,6 +345,8 @@ module.exports = hyper class EditorMain
 
   handleSourceFailed: (text) ->
     @displayMessage 'compiler', "Compiler: #{text}"
+
+  handleSourceChange: ->
 
   execute: (code) ->
     try
@@ -295,7 +369,7 @@ module.exports = hyper class EditorMain
     @setState
       commandMap: commandMap
 
-  handleCommandExecution: (source, result, type) ->
+  handleCommandExecution: (source, moduleName, result, type) ->
     @_hideMessage 'command', 'runtime'
     if type is 'command'
       [symbol, args] = CommandParser result
@@ -307,10 +381,15 @@ module.exports = hyper class EditorMain
         @_executeCommand command, args
     else
       # result = @execute @state.compiledJs + result
-      @state.compiler.preExecute? @memory
+      # @state.compiler.preExecute? @memory
       # [code, warnings] = result
       # @log source: source, compiled: code, warnings: warnings
-      @log source: source, ast: result.ast, compiled: result.compiled#, warnings: warnings
+      @log
+        source: source
+        moduleName: moduleName
+        ast: result.ast
+        compiled: result.js#, warnings: warnings
+
       # @log _div {},
       #   _div source
       #   if result not instanceof Error
@@ -333,6 +412,10 @@ module.exports = hyper class EditorMain
       @setState focused: to
 
   componentWillMount: ->
+    window.addEventListener 'unload', =>
+      @save()
+
+    @setInterval @save, @state.autosaveDelay
 
     # hash = decodeURIComponent window.location.hash.replace /^#/, ""
     # if hash.indexOf(sourceFragment) is 0
@@ -379,6 +462,7 @@ module.exports = hyper class EditorMain
     windowWidth = Math.floor window.innerWidth
     dividerWidth = 20
     leftColumnWidth = (windowWidth - dividerWidth) / 2
+    console.log  "render", @state.module
 
     _AdjustableColumns
       leftColumnWidth: leftColumnWidth
@@ -387,6 +471,8 @@ module.exports = hyper class EditorMain
       _FillHeight onResize: @handleHeightResize,
         _CommandLine
           ref: 'commandLine'
+          worker: @state.mode.worker
+          moduleName: @state.module.moduleName
           onCommandExecution: @handleCommandExecution
           onCommandCompiled: @handleCommandCompiled
           onCommandFailed: @handleCommandFailed
@@ -404,19 +490,18 @@ module.exports = hyper class EditorMain
           message: @state.message
         _SourceEditor
           ref: 'sourceEditor'
-          onModeChange: @handleModeChange
-          onCompilerLoad: @handleCompilerLoad
-          onSourceCompiled: @handleSourceCompiled
-          onSourceFailed: @handleSourceFailed
+          mode: @state.mode
+          module: @state.module
+          onChange: @handleSourceChange
           onLeave: @handleFocus @focus.commandLine
           onFocus: @handleFocus @focus.sourceEditor
-          memory: @memory
           focus: @state.focused is @focus.sourceEditor
           height: @state.sourceEditorHeight
       ''
       _OutputDisplay
         logs: @state.logs
         # compiledSource: @state.compiledJs
+        worker: @state.mode.worker
         source: @state.source
         onCommand: @handleExpressionCommand
         focus: @state.focused is @focus.output

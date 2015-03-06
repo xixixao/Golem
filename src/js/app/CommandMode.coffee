@@ -1,70 +1,58 @@
-WorkerClient = require("ace/worker/worker_client").WorkerClient
+AdaptingWorkerClient = require './AdaptingWorkerClient'
 
 oop = require("ace/lib/oop")
 EventEmitter = require("ace/lib/event_emitter").EventEmitter
 
+{Mode} = require 'compilers/teascript/mode'
+
 module.exports =
-  inherit: (Mode) ->
+  class CommandMode extends Mode
+    constructor: (@id) ->
+      super yes
 
-    class CommandMode extends Mode
+      @commandMode = no
 
-      constructor: (@sourceModePath, memory) ->
-        super yes, memory
+      superTokenizer = @$tokenizer
 
-        @commandMode = no
+      @disablingCommands =
+        'disable up':
+          bindKey: win: 'Up', mac: 'Up'
+          exec: =>
 
-        superTokenizer = @$tokenizer
+        'disable down':
+          bindKey: win: 'Down', mac: 'Down'
+          exec: =>
 
-        @disablingCommands =
-          'disable up':
-            bindKey: win: 'Up', mac: 'Up'
-            exec: =>
+      @$tokenizer = getLineTokens: (line, state, row, doc) =>
+        if line[0] isnt ':'
+          @enableSuper() if @commandMode
+          superTokenizer.getLineTokens line, state, row, doc
+        else
+          @disableSuper() if line is ":" and not @commandMode
+          # @clearEditingMarker()
+          tokens: [value: line, type: 'text']
+      oop.implement @$tokenizer, EventEmitter
 
-          'disable down':
-            bindKey: win: 'Down', mac: 'Down'
-            exec: =>
+    disableSuper: ->
+      @editor.moveCursorToPosition row: 0, column: 1
+      @editor.commands.removeCommands @commands
+      @editor.commands.addCommands @disablingCommands
+      @commandMode = yes
 
-        @$tokenizer = getLineTokens: (line, state, row, doc) =>
-          if line[0] isnt ':'
-            @enableSuper() if @commandMode
-            superTokenizer.getLineTokens line, state, row, doc
-          else
-            @disableSuper() if line is ":" and not @commandMode
-            # @clearEditingMarker()
-            tokens: [value: line, type: 'text']
-        oop.implement @$tokenizer, EventEmitter
+    enableSuper: ->
+      @editor.commands.addCommands @commands
+      @editor.commands.removeCommands @disablingCommands
+      @commandMode = no
 
-      disableSuper: ->
-        @editor.moveCursorToPosition row: 0, column: 1
-        @editor.commands.removeCommands @commands
-        @editor.commands.addCommands @disablingCommands
-        @commandMode = yes
+    # Overrides source mode to not create another worker
+    createWorker: (session) ->
 
-      enableSuper: ->
-        @editor.commands.addCommands @commands
-        @editor.commands.removeCommands @disablingCommands
-        @commandMode = no
+    registerWithWorker: (workerClient) ->
+      @worker = new AdaptingWorkerClient workerClient, @id
+      # Attach to document for recompilation on change
+      @worker.attachToDocument @editor.session.getDocument()
+      @worker
 
-      createWorker: (session) ->
-        @worker = new WorkerClient ["ace", "compilers", "app", "vendor"],
-          "app/CommandWorker",
-          "Worker",
-          null,
-          "#{@sourceModePath}/worker"
-
-        @doc = session.getDocument()
-
-        # Attach to document for recompilation on change
-        @worker.attachToDocument @doc
-
-        @worker
-
-      prefixWorker: (source) ->
-        oldPrefix = @workerPrefix
-        @workerPrefix = source
-        @worker.call 'prefix', [source]
-        oldPrefix isnt source
-
-      updateWorker: ->
-        @worker.call 'setValue', [@doc.getValue()]
-        @worker.call 'onUpdate', [true]
+    updateWorker: ->
+      @worker.call 'setValue', [@editor.session.getDocument().getValue()]
+      @worker.call 'onUpdate', [true]
