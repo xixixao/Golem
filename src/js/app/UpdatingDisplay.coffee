@@ -13,6 +13,7 @@ module.exports = hyper class UpdatingDisplay
 
   getInitialState: ->
     compiled: undefined
+    source: @props.value.source
 
   parseValue: (value) ->
     _pre dangerouslySetInnerHTML: __html:
@@ -68,6 +69,10 @@ module.exports = hyper class UpdatingDisplay
 
     commandWorker = mode.worker
 
+    editor.session.on 'change', =>
+        @setState
+          source: editor.getValue()
+
     # CommandWorker compiles either on change or on enter
     commandWorker.on 'ok', ({data: {result, type, commandSource}}) =>
       source = editor.getValue()
@@ -89,8 +94,12 @@ module.exports = hyper class UpdatingDisplay
     for name, command of mode.commands when command.indirect
       command.exec = @handleCommand name
 
+  componentDidUpdate: ->
+    @editor.resize()
+
   render: ->
     _div {},
       _div ref: 'ace', style: width: '100%', height: 22
-      _div style: height: 0, margin: '0 4px', overflow: 'hidden', @props.value.source
+      # Hidden div for stretching width
+      _div style: height: 0, margin: '0 4px', overflow: 'hidden', @state.source
       _div style: padding: '0 4px', @runSource @state.compiled

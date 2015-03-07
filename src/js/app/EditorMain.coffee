@@ -277,7 +277,6 @@ module.exports = hyper class EditorMain
       @fileName = fileName
       @saved = no
     if not @saved
-      console.log "saving", @fileName
       @saved = yes
       @memory.saveSource @fileName,
         @refs.sourceEditor.serializedModule()
@@ -348,6 +347,7 @@ module.exports = hyper class EditorMain
     @displayMessage 'compiler', "Compiler: #{text}"
 
   handleSourceChange: ->
+    @saved = no
 
   execute: (code) ->
     try
