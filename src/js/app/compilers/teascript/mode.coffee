@@ -151,21 +151,26 @@ exports.Mode = class extends TextMode
 
   setContent: (string, selectedRange, moduleName) ->
     # console.log "setting content"
-    @reportModuleName moduleName
-    added = astize string, @ast
-    inside = insideTangible @ast
-    @mutate(
-      extend
-        changeInTree:
-          added: added
-          at: inside
-      , if selectedRange
-        selectionRange: selectedRange
-      else
-        tangibleSelection:
-          in: added
-          out: inside.out)
-    @handleCommandExecution()
+    try
+      @reportModuleName moduleName
+      added = astize string, @ast
+      inside = insideTangible @ast
+      @mutate(
+        extend
+          changeInTree:
+            added: added
+            at: inside
+        , if selectedRange
+          selectionRange: selectedRange
+        else
+          tangibleSelection:
+            in: added
+            out: inside.out)
+      @handleCommandExecution()
+    catch e
+      # Make sure we don't error so data is never lost when loading files
+      console.error e, e.stack
+      @editor.insert string
 
   tangibleSelectionFromRange: (range) ->
     start = @tangibleAtPos range.start

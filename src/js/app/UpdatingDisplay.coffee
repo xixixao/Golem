@@ -94,6 +94,10 @@ module.exports = hyper class UpdatingDisplay
     for name, command of mode.commands when command.indirect
       command.exec = @handleCommand name
 
+  componentWillReceiveProps: ({updatedSource}) ->
+    if updatedSource isnt @props.updatedSource
+      @editor.session.getMode().updateWorker()
+
   componentDidUpdate: ->
     @editor.resize()
 

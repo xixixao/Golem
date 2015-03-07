@@ -258,13 +258,13 @@ module.exports = hyper class EditorMain
   registerMode: (mode) ->
     worker = mode.prepareWorker()
     worker.on 'ok', ({data: {result}}) =>
-      @handleSourceCompiled result, @refs.sourceEditor.editor.getValue()
+      @handleSourceCompiled result#, @refs.sourceEditor.editor.getValue()
       console.log "source worker finished ok"#, result, result.ast, result.types
       mode.updateAst result.ast
 
     worker.on 'error', ({data: {text}}) =>
       console.log "error in source worker", text
-      handleSourceFailed text
+      @handleSourceFailed text
 
     worker.on 'request', ({data: {moduleName}}) =>
       console.log "source worker requesting", moduleName
@@ -335,13 +335,11 @@ module.exports = hyper class EditorMain
   #   @setState
   #     compiler: compiler
 
-  handleSourceCompiled: (js, source) ->
+  handleSourceCompiled: ({js}) ->
     @_hideMessage 'compiler', 'runtime'
 
     @setState
       compiledJs: js
-      sourceCompiled: yes
-      source: source
 
   handleSourceFailed: (text) ->
     @displayMessage 'compiler', "Compiler: #{text}"
@@ -500,7 +498,7 @@ module.exports = hyper class EditorMain
       ''
       _OutputDisplay
         logs: @state.logs
-        # compiledSource: @state.compiledJs
+        compiledSource: @state.compiledJs
         worker: @state.mode.worker
         source: @state.source
         onCommand: @handleExpressionCommand
