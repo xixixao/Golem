@@ -84,25 +84,23 @@ class ExpressionWorker extends exports.Worker
           commandSource : value
           type: 'command'
     else
-      if value.length > 0
-        # console.log "from command worker", (@source or '') + value
-        # sourceAndCommand = (@source or '') + '\n' + value
-        try
-          # [res, warnings] = compiler.compileExp value
-          # [";" + res, warnings])
-          console.log "worker compiling", @moduleName
-          @sender.emit "ok",
-            type: (if execute then 'execute' else 'normal')
-            commandSource: value
-            result:
+      try
+        console.log "expression worker compiling", @moduleName
+        @sender.emit "ok",
+          type: (if execute then 'execute' else 'normal')
+          commandSource: value
+          result:
+            if value.length > 0
               @compiler.compileExpression value, @moduleName
+            else
+              {}
 
-        catch e
-          console.log e.stack
-          @sender.emit "error",
-            text: e.message
-            type: 'error'
-          return
+      catch e
+        console.log e.stack
+        @sender.emit "error",
+          text: e.message
+          type: 'error'
+        return
 
 # Sender with specific id for duplicate workers
 class Sender
