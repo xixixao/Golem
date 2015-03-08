@@ -50,6 +50,7 @@ module.exports = hyper class SourceEditor
       @editor.focus()
     if module and module.moduleName isnt @props.module.moduleName
       @load module
+    @editor.resize()
 
   componentDidMount: ->
     @editor = editor = ace.edit @_getEditorNode(), @props.mode, "ace/theme/tea"
