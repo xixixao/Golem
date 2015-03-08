@@ -14,6 +14,7 @@ EventEmitter = require("ace/lib/event_emitter").EventEmitter
   isForm
   concat
   map
+  concatMap
   filter
   join
   _notEmpty
@@ -454,6 +455,7 @@ exports.Mode = class extends TextMode
 
       'close parent, same as up':
         bindKey: win: ')', mac: ')'
+        multiSelectAction: 'forEach'
         exec: =>
           @mutate
             inSelection:
@@ -474,6 +476,7 @@ exports.Mode = class extends TextMode
 
       'add label':
         bindKey: win: ':', mac: ':'
+        multiSelectAction: 'forEach'
         exec: =>
           if @isSingleLineInput and @editor.getValue() is ''
             return no
@@ -499,12 +502,14 @@ exports.Mode = class extends TextMode
 
       'add comment':
         bindKey: win: '#', mac: '#'
+        multiSelectAction: 'forEach'
         exec: =>
           @wrap '(', '#', ' ', yes, ')'
 
       # Temporary
       'show type of expression':
         bindKey: win: 'Ctrl-T', mac: 'Ctrl-T'
+        multiSelectAction: 'forEach'
         exec: =>
           expression = @onlySelectedExpression()
           if expression
@@ -519,6 +524,7 @@ exports.Mode = class extends TextMode
 
       'replace parent with current selection':
         bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
+        multiSelectAction: 'forEach'
         exec: =>
           parent = @realParentOfSelected()
           if parent
@@ -532,11 +538,13 @@ exports.Mode = class extends TextMode
 
       'wrap current in a function':
         bindKey: win: 'Ctrl-F', mac: 'Ctrl-F'
+        multiSelectAction: 'forEach'
         exec: =>
           @wrap '(', 'fn', ' ', '[]', ' ', yes, ')'
 
       'replace expression by new function param':
         bindKey: win: 'Ctrl-A', mac: 'Ctrl-A'
+        multiSelectAction: 'forEach'
         exec: =>
           parent = @realParentOfSelected()
           fun = @findParentFunction parent if parent
@@ -554,9 +562,26 @@ exports.Mode = class extends TextMode
                 tangibleSelection: inParams
 
             @mutate
-              newSelection:
+              newSelections: [
                 in: []
                 out: hole.out
+              ]
+
+      'select all occurences':
+        bindKey: win: 'Ctrl-R', mac: 'Ctrl-R'
+        multiSelectAction: 'forEach'
+        exec: =>
+          if isAtom atom = @onlySelectedExpression()
+            findOther = (node) ->
+              if isForm node
+                concatMap findOther, node
+              else
+                if node.id is atom.id and node isnt atom then [node] else []
+            others = findOther @ast
+            tangibles = (insToTangible [other] for other in others)
+
+            @mutate
+              newSelections: tangibles
 
       'define selected token':
         bindKey: win: 'Ctrl-D', mac: 'Ctrl-D'
@@ -867,12 +892,12 @@ exports.Mode = class extends TextMode
       @select selections, editing
       # 6. Perform selection in editor
       @setSelectionRange selectionRange
-    # 7. Add new multi-select range
-    if state.newSelection
-      newSelections = state.newSelection
-      range = @tangibleRange newSelections
-      @selectFor newSelections, no, range
-      @editor.selection.addRange range
+    # 7. Add new multi-select ranges
+    if state.newSelections
+      for tangible in state.newSelections
+        range = @tangibleRange tangible
+        @selectFor tangible, no, range
+        @editor.selection.addRange range
     return yes # command handled response
 
   handleCommandExecution: =>
@@ -1415,6 +1440,7 @@ duplicateProperties = (newAst, oldAst) ->
   #     like compiling a command line together with source
   oldAst.malformed = newAst.malformed
   oldAst.tea = newAst.tea
+  oldAst.id = newAst.id
   if isForm newAst
     for node, i in newAst
       duplicateProperties node, oldAst[i]
