@@ -9,6 +9,7 @@ DistributingWorkerClient = require("app/DistributingWorkerClient")
 
 oop = require("ace/lib/oop")
 EventEmitter = require("ace/lib/event_emitter").EventEmitter
+HashHandler = require("ace/keyboard/hash_handler").HashHandler
 
 {
   isForm
@@ -44,6 +45,8 @@ EventEmitter = require("ace/lib/event_emitter").EventEmitter
     range.$editMarker = @$editMarker
     range
 ).call Selection.prototype
+
+
 
 exports.Mode = class extends TextMode
   constructor: (@isSingleLineInput, @memory) ->
@@ -133,12 +136,17 @@ exports.Mode = class extends TextMode
     return unless session.getEditor()
 
     @editor = session.getEditor()
+
     # session.on 'change', @onDocumentChange
     @editor.on 'click', @handleClick
     @__editorOnPaste = @editor.onPaste
     @editor.onPaste = @handlePaste
     @editor.selection.on 'removeRange', @handleRangeDeselect
     @editor.commands.on 'afterExec', @handleCommandExecution
+
+    @createMultiSelectKeyboardHandler()
+    session.multiSelect.on 'multiSelect', @addMultiSelectKeyboardHandler
+    session.multiSelect.on 'singleSelect', @removeMultiSelectKeyboardHandler
 
     # attaching as last listener, so that everything is updated already
     # session.getDocument().on 'change', @selectInserted, no
@@ -225,7 +233,7 @@ exports.Mode = class extends TextMode
 
   handleClick: (event) =>
     if event.getShiftKey?()
-      @editor.execCommand 'edit by click', @editor
+      @editor.execCommand 'edit by click'
     else
       # TODO: show what will be selected on mousemove
       # Select preceding expression
@@ -233,7 +241,7 @@ exports.Mode = class extends TextMode
       #   or set insert position
       # select clicked word or its parent if whitespace selected
       if @ast
-        @editor.execCommand 'select by click', @editor
+        @editor.execCommand 'select by click'
 
   handlePaste: (string) =>
     @editor.commands.exec "insertstring", @editor, string
@@ -257,7 +265,7 @@ exports.Mode = class extends TextMode
 
     #     this.session.insert(range.start, lines[i]);
 
-  addVerticalCommands: (session) ->
+  addVerticalCommands: ->
     @editor.commands.addCommands
       'add new sibling expression on new line':
         bindKey: win: 'Enter', mac: 'Enter'
@@ -294,7 +302,27 @@ exports.Mode = class extends TextMode
         exec: =>
           @insertSpace BACKWARD, '\n'
 
-  addCommands: (session) ->
+  createMultiSelectKeyboardHandler: =>
+    @multiSelectKeyboardHandler = new HashHandler [
+      name: 'escape multi select'
+      bindKey: 'esc'
+      scrollIntoView: 'cursor'
+      readonly: true
+      exec: =>
+        selection = @editor.selection
+        [..., firstSelected] = selection.ranges
+        selection.toSingleRange firstSelected
+      isAvailable: =>
+        @isMultiSelecting()
+    ]
+
+  addMultiSelectKeyboardHandler: =>
+    @editor.keyBinding.addKeyboardHandler @multiSelectKeyboardHandler
+
+  removeMultiSelectKeyboardHandler: =>
+    @editor.keyBinding.removeKeyboardHandler @multiSelectKeyboardHandler
+
+  addCommands: ->
     # Never remove this command, it handles text insertion
     @editor.commands.addCommands
       'insertstring': # This is the default unhandled command name
