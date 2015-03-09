@@ -206,7 +206,9 @@ var jsDump;
       string:quote,
       date:quote,
       regexp:literal, //regex
-      number:literal,
+      number:function(value) {
+        return value < 0 ? '~' + (- value) : value + '';
+      },
       'boolean':function(value) {
         return value ? 'True' : 'False';
       },
