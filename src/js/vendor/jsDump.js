@@ -80,6 +80,10 @@ var jsDump;
         if ( obj === null )
           return 'null';
 
+        if (Immutable.Iterable.isIterable(obj)) {
+          return 'Immutable';
+        }
+
         // Extract Stuff from [Object Stuff]
         kind = Object.prototype.toString.call(obj).slice(8, -1);
         switch ( kind ) {
@@ -205,6 +209,9 @@ var jsDump;
       number:literal,
       'boolean':function(value) {
         return value ? 'True' : 'False';
+      },
+      'Immutable': function(value) {
+        return this.parse(value.toJS());
       }
     },
     DOMAttrs:{//attributes to dump from nodes, name=>realName

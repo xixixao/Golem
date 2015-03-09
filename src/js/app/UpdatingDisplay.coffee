@@ -22,23 +22,18 @@ module.exports = hyper class UpdatingDisplay
       else if typeof value is 'function'
         value.toString()
       else
-        compiler.syntaxedExpHtml jsDump.parse @converFromImmutable value
-
-  converFromImmutable: (value) ->
-    if Immutable?.Iterable.isIterable value
-      value.toJS()
-    else
-      value
+        compiler.syntaxedExpHtml jsDump.parse value
 
   runSource: (compiled = @props.value.compiled) ->
     if compiled instanceof Error
       @displayError compiled
-    try
-      # result = eval @props.compiledSource + @props.compiledExpression
-      result = eval compiled
-      @parseValue result
-    catch error
-      @displayError error
+    else
+      try
+        # result = eval @props.compiledSource + @props.compiledExpression
+        result = eval compiled
+        @parseValue result
+      catch error
+        @displayError error
 
   displayError: (error) ->
       _span style: color: '#cc0000',
@@ -90,6 +85,8 @@ module.exports = hyper class UpdatingDisplay
 
     commandWorker.on 'error', ({data: {text}}) =>
       console.log "updaitng display error", text
+      @setState
+        compiled: new Error text
 
     for name, command of mode.commands when command.indirect
       command.exec = @handleCommand name
