@@ -103,7 +103,6 @@ module.exports = hyper class CommandLine
               editor.setValue ""
             else
               editor.session.getMode().setContent ""
-            # editor.focus()
           else
             @props.onCommandCompiled()
         else

@@ -14,15 +14,6 @@ module.exports =
 
       superTokenizer = @$tokenizer
 
-      @disablingCommands =
-        'disable up':
-          bindKey: win: 'Up', mac: 'Up'
-          exec: =>
-
-        'disable down':
-          bindKey: win: 'Down', mac: 'Down'
-          exec: =>
-
       @$tokenizer = getLineTokens: (line, state, row, doc) =>
         if line[0] isnt ':'
           @enableSuper() if @commandMode
@@ -36,12 +27,10 @@ module.exports =
     disableSuper: ->
       @editor.moveCursorToPosition row: 0, column: 1
       @editor.commands.removeCommands @commands
-      @editor.commands.addCommands @disablingCommands
       @commandMode = yes
 
     enableSuper: ->
       @editor.commands.addCommands @commands
-      @editor.commands.removeCommands @disablingCommands
       @commandMode = no
 
     # Overrides source mode to not create another worker
