@@ -15,7 +15,10 @@ var jsDump;
 
 (function(){
   function quote( str ){
-    return '"' + str.toString().replace(/"/g, '\\"') + '"';
+    if (str.length > 2 && str[0] == '<') {
+      return {html: str.toString()};
+    }
+    return '"' + str.toString().replace(/"/g, '\\"').replace(/</g, '&lt;') + '"';
   }
   function emptyQuote( str ){
     str = str.toString()

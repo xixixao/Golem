@@ -161,7 +161,7 @@ exports.Mode = class extends TextMode
   setContent: (string, selectedRange, moduleName) ->
     # console.log "setting content"
     try
-      @reportModuleName moduleName
+      @reportModuleName moduleName if moduleName?
       added = astize string, @ast
       inside = insideTangible @ast
       @mutate(

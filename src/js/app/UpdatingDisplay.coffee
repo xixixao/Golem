@@ -22,7 +22,11 @@ module.exports = hyper class UpdatingDisplay
       else if typeof value is 'function'
         value.toString()
       else
-        compiler.syntaxedExpHtml jsDump.parse value
+        dumped = jsDump.parse value
+        if dumped.html
+          dumped.html
+        else
+          compiler.syntaxedExpHtml dumped
 
   runSource: (compiled = @props.value.compiled) ->
     if compiled instanceof Error
