@@ -19,7 +19,7 @@ exports.Worker = class extends Mirror
 
   compileModule: (value, moduleName) ->
     console.log  "compiling module", moduleName
-    compiler.compileTopLevel value, moduleName
+    cacheModule compiler.compileTopLevel, value, moduleName
 
   onUpdate: ->
     @trigger @compile
@@ -30,7 +30,7 @@ exports.Worker = class extends Mirror
     @sourceCompiled = true
     value = @doc.getValue()
     try
-      result = compiler.compileTopLevel value, @moduleName
+      result = cacheModule compiler.compileTopLevel, value, @moduleName
       if result.request
         @sender.emit "request", moduleName: result.request
       else
@@ -91,7 +91,7 @@ class ExpressionWorker extends exports.Worker
           commandSource: value
           result:
             if value.length > 0
-              @compiler.compileExpression value, @moduleName
+              cacheModule @compiler.compileExpression, value, @moduleName
             else
               {}
 
@@ -101,6 +101,20 @@ class ExpressionWorker extends exports.Worker
           text: e.message
           type: 'error'
         return
+
+cache = {}
+
+cacheModule = (fn, source, moduleName) ->
+  if (old = cache[moduleName])?.source is source
+    console.log "#{moduleName} was cached."
+    old.result
+  else
+    result = fn source, moduleName
+    if not result.request
+      cache[moduleName] =
+        source: source
+        result: result
+    result
 
 # Sender with specific id for duplicate workers
 class Sender
