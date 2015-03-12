@@ -29,15 +29,20 @@ module.exports = hyper class UpdatingDisplay
           compiler.syntaxedExpHtml dumped
 
   runSource: (compiled = @props.value.compiled) ->
-    if compiled instanceof Error
-      @displayError compiled
+    if @shouldRun
+      @cached =
+        if compiled instanceof Error
+          @displayError compiled
+        else
+          try
+            # result = eval @props.compiledSource + @props.compiledExpression
+            console.log compiled
+            result = eval compiled
+            @parseValue result
+          catch error
+            @displayError error
     else
-      try
-        # result = eval @props.compiledSource + @props.compiledExpression
-        result = eval compiled
-        @parseValue result
-      catch error
-        @displayError error
+      @cached
 
   displayError: (error) ->
       _span style: color: '#cc0000',
@@ -102,9 +107,17 @@ module.exports = hyper class UpdatingDisplay
   componentDidUpdate: ->
     @editor.resize()
 
+  shouldComponentUpdate: (nextProps, {source, compiled}) ->
+    compiled isnt @state.compiled or source isnt @state.source
+
+  componentWillUpdate: (nextProps, {compiled}) ->
+    @shouldRun = compiled isnt @state.compiled
+
   render: ->
+    # @i ?= 0
     _div {},
       _div ref: 'ace', style: width: '100%', height: 22
       # Hidden div for stretching width
       _div style: height: 0, margin: '0 4px', overflow: 'hidden', @state.source
       _div style: padding: '0 4px', @runSource @state.compiled
+      # _div {}, @i++

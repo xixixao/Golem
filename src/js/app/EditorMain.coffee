@@ -258,7 +258,10 @@ module.exports = hyper class EditorMain
   registerMode: (mode) ->
     worker = mode.prepareWorker()
     worker.on 'ok', ({data: {result}}) =>
-      @handleSourceCompiled result#, @refs.sourceEditor.editor.getValue()
+      if result.errors
+        @handleSourceFailed result.errors[0]
+      else
+        @handleSourceCompiled result#, @refs.sourceEditor.editor.getValue()
       console.log "source worker finished ok"#, result, result.ast, result.types
       mode.updateAst result.ast
 

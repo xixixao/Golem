@@ -447,25 +447,25 @@ exports.Mode = class extends TextMode
         bindKey: win: '(', mac: '('
         multiSelectAction: 'forEach'
         exec: =>
-          @wrap '(', yes, ')'
+          @insertOpeningDelim '('
 
       'wrap in brackets':
         bindKey: win: '[', mac: '['
         multiSelectAction: 'forEach'
         exec: =>
-          @wrap '[', yes, ']'
+          @insertOpeningDelim '['
 
       'wrap in braces':
         bindKey: win: '{', mac: '{'
         multiSelectAction: 'forEach'
         exec: =>
-          @wrap '{', yes, '}'
+          @insertOpeningDelim '{'
 
       'add quotes':
         bindKey: win: '"', mac: '"'
         multiSelectAction: 'forEach'
         exec: =>
-          if @isEditingDelimited()
+          if @isEditingHalfDelimited()
             @insertString FORWARD, '"'
           else
             selected = escape '"', @selectedText()
@@ -485,9 +485,12 @@ exports.Mode = class extends TextMode
         bindKey: win: ')', mac: ')'
         multiSelectAction: 'forEach'
         exec: =>
-          @mutate
-            inSelection:
-              @realParentOfSelected()
+          if @isEditingHalfDelimited()
+            @insertString FORWARD, ')'
+          else
+            @mutate
+              inSelection:
+                @realParentOfSelected()
 
       # 'add new sibling to parent':
       #   bindKey: win: ')', mac: ')'
@@ -509,7 +512,7 @@ exports.Mode = class extends TextMode
           if @isSingleLineInput and @editor.getValue() is ''
             return no
 
-          if @isEditingDelimited()
+          if @isEditingHalfDelimited()
             @insertString FORWARD, ':'
           else
             atom = @onlySelectedExpression()
@@ -541,7 +544,10 @@ exports.Mode = class extends TextMode
         exec: =>
           expression = @onlySelectedExpression()
           if expression
-            window.log expression.tea
+            if expression.malformed
+              window.log expression.malformed
+            else if expression.tea
+              window.log expression.tea
 
       # For debugging
       'remove all source':
@@ -639,6 +645,13 @@ exports.Mode = class extends TextMode
           else
             """
             #{token.value} _"""
+
+  insertOpeningDelim: (delim) ->
+    closer = '(': ')', '{': '}', '[': ']'
+    if @isEditingHalfDelimited()
+      @insertString FORWARD, delim
+    else
+      @wrap delim, yes, closer[delim]
 
   # direction ignored for now
   insertString: (direction, string) ->
@@ -977,6 +990,9 @@ exports.Mode = class extends TextMode
   isEditingDelimited: ->
     @isEditing() and isDelimitedAtom @editedAtom()
 
+  isEditingHalfDelimited: ->
+    @isEditing() and isHalfDelimitedAtom @editedAtom()
+
   isSelecting: ->
     not @isEditing() and @selectedTangible().in.length > 0
 
@@ -1308,21 +1324,25 @@ isAtom = (node) ->
 isDelimitedAtom = (atom) ->
   atom.label in ['string', 'regex']
 
+# Delimited or character, affects insertion behaviour
+isHalfDelimitedAtom = (atom) ->
+  atom.label is 'char' or isDelimitedAtom atom
+
 # Fn Atom String
 atomDelimiter = (atom) ->
   atom.symbol[0]
 
 # Fn Atom Bool
 isDelim = (atom) ->
-  /[\(\)\[\]\{\}]/.test atom.symbol
+  /^[\(\)\[\]\{\}]$/.test atom.symbol
 
 # Fn Atom Bool
 isClosingDelim = (atom) ->
-  /[\)\]\}]/.test atom.symbol
+  /^[\)\]\}]$/.test atom.symbol
 
 # Fn Atom Bool
 isOpeningDelim = (atom) ->
-  /[\(\[\{]/.test atom.symbol
+  /^[\(\[\{]$/.test atom.symbol
 
 # Fn Node Bool
 isWhitespace = (node) ->
