@@ -271,8 +271,11 @@ module.exports = hyper class EditorMain
 
     worker.on 'request', ({data: {moduleName}}) =>
       console.log "source worker requesting", moduleName
-      {value} = @memory.loadSource moduleName
-      worker.call 'compileModule', [value, moduleName]
+      loaded = @memory.loadSource moduleName
+      if loaded
+        worker.call 'compileModule', [loaded.value, moduleName]
+      else
+        @handleSourceFailed "Could not find module #{moduleName}"
 
   # save current file or save as fileName
   save: (fileName) ->
@@ -296,6 +299,8 @@ module.exports = hyper class EditorMain
 
   loadSource: (fileName) ->
     serialized = @memory.loadSource fileName
+    if not serialized # First time use of the editor
+      serialized = value: ''
     serialized.moduleName = fileName
     serialized
 
