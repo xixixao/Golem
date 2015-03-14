@@ -12,8 +12,9 @@ module.exports = hyper class SourceEditor
 
   load: ({value, selection, moduleName, scroll}) ->
     @editor.session.getMode().setContent value, selection, moduleName
-    @editor.session.setScrollTop scroll.top
-    @editor.session.setScrollLeft scroll.left
+    if scroll
+      @editor.session.setScrollTop scroll.top
+      @editor.session.setScrollLeft scroll.left
 
   serializedModule: ->
     value: @editor.getValue()
