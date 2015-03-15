@@ -444,8 +444,14 @@ exports.Mode = class extends TextMode
         exec: =>
           @remove BACKWARD
 
-      'remove backwards':
+      'remove ala delete':
         bindKey: win: 'Delete', mac: 'Delete'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @remove FORWARD
+
+      'remove forwards':
+        bindKey: win: 'Ctrl-Backspace', mac: 'Ctrl-Backspace'
         multiSelectAction: 'forEach'
         exec: =>
           @remove FORWARD
