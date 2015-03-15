@@ -700,7 +700,7 @@ exports.Mode = class extends TextMode
     if @isEditing() and isDelimitedAtom @editedAtom()
       @insertString direction, space
     else
-      @insertSpaceAt direction, space, log @selectedNodeEdge direction
+      @insertSpaceAt direction, space, @selectedNodeEdge direction
 
   insertSpaceAt: (direction, space, insertPos) ->
     parent = insertPos.parent
@@ -793,8 +793,6 @@ exports.Mode = class extends TextMode
 
         if removeMargin
           previous = (sibling PREVIOUS, (nodeEdgeOfTangible FIRST, removeMargin))
-          console.log "margin", removeMargin
-          console.log previous
           next = (nodeEdgeOfTangible LAST, removeMargin)
           changeInTree:
             at: removeMargin
@@ -1501,9 +1499,9 @@ indexWithin = (what, array) ->
   throw new Error "what is not inside of array in indexWithin"
 
 duplicateProperties = (newAst, oldAst) ->
-  if not newAst or not oldAst
-    console.log "Asts out of sync"
-    return
+  # if not newAst or not oldAst
+  #   console.log "Asts out of sync"
+  #   return
   # for now let's duplicate labels
   #   WARNING the position of newAst might be off if it comes from a larger prefixed expression
   #     like compiling a command line together with source

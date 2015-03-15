@@ -91,7 +91,7 @@ module.exports = hyper class CommandLine
     # CommandWorker compiles either on change or on enter
     commandWorker.on 'ok', ({data: {result, type, commandSource}}) =>
       source = editor.getValue()
-      console.log "received ok from command worker"
+      # console.log "received ok from command worker"
 
       # Extract the last but one node from the compound tree
       # The compound tree will have

@@ -10,7 +10,7 @@ class AdaptingWorkerClient extends WorkerClient
     # Funnels messages with our id to the standard WorkerClient handler
     @workerClient.on "message", (e) =>
       if e.data.identifier is @id
-        console.log "propagating message", e
+        # console.log "propagating message", e
         @onMessage e
 
     this.callbackId = 1;
@@ -18,7 +18,7 @@ class AdaptingWorkerClient extends WorkerClient
 
   # Adds the identifier of the source to the message to the wrapped worker
   send: (cmd, args) ->
-    console.log "sending tagged message", cmd, @id
+    # console.log "sending tagged message", cmd, @id
     @workerClient.$worker.postMessage({command: cmd, identifier: @id,  args: args})
 
   emit: (event, data) ->

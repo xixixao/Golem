@@ -36,6 +36,7 @@ exports.Worker = class extends Mirror
       else
         @sender.emit "ok",
           result: result
+          source: value
     catch e
       # loc = e.location
       # if loc
@@ -90,10 +91,7 @@ class ExpressionWorker extends exports.Worker
           type: (if execute then 'execute' else 'normal')
           commandSource: value
           result:
-            if value.length > 0
-              cacheModule @compiler.compileExpression, value, @moduleName
-            else
-              {}
+            cacheModule @compiler.compileExpression, value, @moduleName
 
       catch e
         console.log e.stack
