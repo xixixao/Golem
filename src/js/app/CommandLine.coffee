@@ -25,11 +25,14 @@ module.exports = hyper class CommandLine
   _getEditorNode: ->
     @refs.ace.getDOMNode()
 
-  componentWillReceiveProps: ({focus, moduleName}) ->
+  componentWillReceiveProps: ({focus, moduleName, updatedSource}) ->
     if focus
       @editor.focus()
     else
       $('input').blur()
+
+    if updatedSource isnt @props.updatedSource
+      @editor.session.getMode().updateWorker no
 
     @editor.session.getMode().reportModuleName moduleName
 
@@ -54,7 +57,7 @@ module.exports = hyper class CommandLine
       exec: =>
         # WARNING Another massive hack to get the prelude and source compiled with the expression
         # editor.session.getMode().prefixWorker editor.session.getMode().loadPreludeNames() + @props.source
-        editor.session.getMode().updateWorker()
+        editor.session.getMode().updateWorker yes
 
     timeline = @props.timeline
 

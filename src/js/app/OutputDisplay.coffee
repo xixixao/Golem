@@ -60,12 +60,13 @@ module.exports = hyper class OutputDisplay
     if focus and not @state.focusedOutput?
       @setState focusedOutput: 0
 
-  componentDidUpdate: (prevProps, prevState) ->
-    $this = $ @getDOMNode()
-    duration = $this.scrollTop() / 10
-    $this.animate
-      scrollTop: 0
-    , duration
+  componentDidUpdate: ({logs}, prevState) ->
+    if logs.length isnt @props.logs.length or logs[0] and logs[0][0] isnt @props.logs[0][0]
+      $this = $ @getDOMNode()
+      duration = $this.scrollTop() / 10
+      $this.animate
+        scrollTop: 0
+      , duration
 
   handleDelete: (id, position) ->
     @setState
@@ -117,6 +118,6 @@ module.exports = hyper class OutputDisplay
               key: key
               value: value
               worker: @props.worker
-              updatedSource: @props.compiledSource
+              updatedSource: @props.updatedSource
               maxWidth: @props.width - 45
               onCommand: @props.onCommand

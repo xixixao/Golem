@@ -102,7 +102,7 @@ module.exports = hyper class UpdatingDisplay
 
   componentWillReceiveProps: ({updatedSource}) ->
     if updatedSource isnt @props.updatedSource
-      @editor.session.getMode().updateWorker()
+      @editor.session.getMode().updateWorker yes
 
   componentDidUpdate: ->
     @editor.resize()

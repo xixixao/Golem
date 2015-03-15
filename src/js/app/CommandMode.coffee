@@ -42,6 +42,6 @@ module.exports =
       @worker.attachToDocument @editor.session.getDocument()
       @worker
 
-    updateWorker: ->
+    updateWorker: (shouldExecute) ->
       @worker.call 'setValue', [@editor.session.getDocument().getValue()]
-      @worker.call 'onUpdate', [true]
+      @worker.call 'onUpdate', [shouldExecute]

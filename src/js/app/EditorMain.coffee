@@ -240,6 +240,7 @@ module.exports = hyper class EditorMain
     timeline: new TimeLine
     logs: []
     message: {}
+    sourceUpdateId: 0
     sourceEditorHeight: 300
     # modes: Modes
     autosaveDelay: 6000
@@ -280,21 +281,22 @@ module.exports = hyper class EditorMain
   # save current file or save as fileName
   save: (fileName) ->
     if fileName
-      @fileName = fileName
       @saved = no
+    nameToSave = fileName or @state.module.moduleName
     if not @saved
       @saved = yes
-      @memory.saveSource @fileName,
+      @memory.saveSource nameToSave,
         @refs.sourceEditor.serializedModule()
+      @setState
+        module: @loadSource nameToSave
 
   # load existing or unnamed
   load: (fileName, mustExist) ->
-    if fileName isnt @fileName
+    if fileName isnt @state.module.name
       @save()
-    loaded = @loadSource fileName
     @setState
-      module: loaded
-    @save fileName if loaded or not mustExist
+      module: loaded = @loadSource fileName
+    # @save fileName if loaded or not mustExist
     !!loaded
 
   loadSource: (fileName) ->
@@ -348,6 +350,7 @@ module.exports = hyper class EditorMain
 
     @setState
       compiledJs: js
+      sourceUpdateId: @state.sourceUpdateId + 1
 
   handleSourceFailed: (text) ->
     @displayMessage 'compiler', "Compiler: #{text}"
@@ -488,7 +491,7 @@ module.exports = hyper class EditorMain
           focus: @state.focused is @focus.commandLine
           timeline: @state.timeline
           memory: @memory
-          source: @state.source
+          updatedSource: @state.sourceUpdateId
         # _compilationIndicator to: 0,
         #   '&middot;'
         _MessageDisplay
@@ -506,9 +509,8 @@ module.exports = hyper class EditorMain
       ''
       _OutputDisplay
         logs: @state.logs
-        compiledSource: @state.compiledJs
+        updatedSource: @state.sourceUpdateId
         worker: @state.mode.worker
-        source: @state.source
         onCommand: @handleExpressionCommand
         focus: @state.focused is @focus.output
         onDelete: @handleOutputDelete

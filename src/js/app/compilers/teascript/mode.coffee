@@ -11,6 +11,10 @@ oop = require("ace/lib/oop")
 EventEmitter = require("ace/lib/event_emitter").EventEmitter
 HashHandler = require("ace/keyboard/hash_handler").HashHandler
 
+log = (arg) ->
+  console.log arg
+  arg
+
 {
   isForm
   concat
@@ -64,6 +68,7 @@ exports.Mode = class extends TextMode
 
   tokensOnLine: (row, doc) =>
 
+    # Gets called before @editor is set
     start = doc.positionToIndex row: row, column: 0
     end = doc.positionToIndex row: row + 1, column: 0
 
@@ -286,15 +291,17 @@ exports.Mode = class extends TextMode
         exec: =>
           # noop
 
-    # @editor.commands.addCommand
-    #   name: 'add new sibling to parent expression on new line'
-    #   bindKey: win: 'Ctrl-Enter', mac: 'Ctrl-Enter'
-    #   exec: =>
-        # if (token = @rightActiveToken()) and parent = token.parent
-        #   @deselect()
-        #   @unhighlightActive()
-        #   @editor.moveCursorToPosition @tokenVisibleEnd parent
-        #   @editor.insert '\n'
+      'add node on the next line':
+        bindKey: win: 'Ctrl-Enter', mac: 'Ctrl-Enter'
+        exec: =>
+          @insertSpaceAt FORWARD, '\n',
+            @tokenFollowingPos @endOfLine @cursorPosition()
+
+          # if (token = @rightActiveToken()) and parent = token.parent
+          #   @deselect()
+          #   @unhighlightActive()
+          #   @editor.moveCursorToPosition @tokenVisibleEnd parent
+          #   @editor.insert '\n'
 
       'add new sibling expression on previous line':
         bindKey: win: 'Shift-Enter', mac: 'Shift-Enter'
@@ -687,7 +694,7 @@ exports.Mode = class extends TextMode
     if @isEditing() and isDelimitedAtom @editedAtom()
       @insertString direction, space
     else
-      @insertSpaceAt direction, space, @selectedNodeEdge direction
+      @insertSpaceAt direction, space, log @selectedNodeEdge direction
 
   insertSpaceAt: (direction, space, insertPos) ->
     parent = insertPos.parent
@@ -742,6 +749,10 @@ exports.Mode = class extends TextMode
     console.log "at pos", res
     res
 
+  tokenFollowingPos: (pos) ->
+    [before, after] = @tokensSurroundingPos pos
+    after or before
+
   tokensSurroundingPos: (pos) ->
     idx = @posToIdx pos
     findTokensBetween @ast, idx - 1, idx + 1
@@ -776,6 +787,8 @@ exports.Mode = class extends TextMode
 
         if removeMargin
           previous = (sibling PREVIOUS, (nodeEdgeOfTangible FIRST, removeMargin))
+          console.log "margin", removeMargin
+          console.log previous
           next = (nodeEdgeOfTangible LAST, removeMargin)
           changeInTree:
             at: removeMargin
@@ -1079,6 +1092,9 @@ exports.Mode = class extends TextMode
     end = @endPos node
     Range.fromPoints start, end
 
+  endOfLine: (pos) ->
+    @idxToPos (@posToIdx row: pos.row + 1, column: 0) - 1
+
   edgeOfToken: (direction, node) ->
     @idxToPos edgeIdxOfNode direction, node
 
@@ -1379,7 +1395,6 @@ extend = (a, b) ->
   c
 
 findTokensBetween = (expression, start, end) ->
-  # console.log "looking between #{start} and #{end} in", expression
   if start < expression.end and expression.start < end
     if isForm expression
       concat (for expr in expression
