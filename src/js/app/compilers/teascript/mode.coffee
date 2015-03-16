@@ -142,6 +142,8 @@ exports.Mode = class extends TextMode
 
     @editor = session.getEditor()
 
+    session.setUndoManager @undoManager()
+
     # session.on 'change', @onDocumentChange
     @editor.on 'click', @handleClick
     @__editorOnPaste = @editor.onPaste
@@ -269,6 +271,14 @@ exports.Mode = class extends TextMode
     #         this.session.remove(range);
 
     #     this.session.insert(range.start, lines[i]);
+
+  undoManager: =>
+    execute: =>
+      # ignore
+    undo: =>
+      console.log "should undo"
+    redo: =>
+      console.log "should redo"
 
   addVerticalCommands: ->
     @editor.commands.addCommands
