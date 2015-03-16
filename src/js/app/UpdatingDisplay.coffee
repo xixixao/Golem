@@ -36,7 +36,7 @@ module.exports = hyper class UpdatingDisplay
         else
           try
             # result = eval @props.compiledSource + @props.compiledExpression
-            console.log compiled
+            # console.log compiled
             result = eval compiled
             @parseValue result
           catch error

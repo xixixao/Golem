@@ -59,6 +59,7 @@ module.exports = hyper class SourceEditor
     editor.setHighlightActiveLine true
     editor.session.setTabSize 2
     editor.setShowPrintMargin false
+    editor.setOption 'scrollPastEnd', true
 
     editor.session.on 'change', =>
       # @saved = no
