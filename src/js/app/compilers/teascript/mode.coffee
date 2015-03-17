@@ -239,7 +239,7 @@ exports.Mode = class extends TextMode
         currentPosition = node.end
 
   handleClick: (event) =>
-    if event.getShiftKey?()
+    if event.domEvent.altKey
       @editor.execCommand 'edit by click'
     else
       # TODO: show what will be selected on mousemove
