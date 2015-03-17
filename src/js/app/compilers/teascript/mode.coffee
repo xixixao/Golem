@@ -275,6 +275,7 @@ exports.Mode = class extends TextMode
   undoManager: =>
     @undoStack or= []
     @redoStack or= []
+    @groupMutationRegister or= states: []
     execute: =>
       # ignore
     # Our custom execute which saves the reversal of the performed mutation
@@ -307,16 +308,24 @@ exports.Mode = class extends TextMode
         else
           tangibleSelection: @selectedTangible())
 
-      stack.push merge reversals
+      @groupMutationRegister.stack = stack
+      @groupMutationRegister.states.push merge reversals
+    packGroupMutation: =>
+      {stack, states} = @groupMutationRegister
+      states.reverse()
+      stack.push states
+      @groupMutationRegister = states: []
     undo: =>
-      state = @undoStack.pop()
-      if state
-        @mutate state, redo: yes
+      states = @undoStack.pop()
+      if states
+        for state in states
+          @mutate state, redo: yes
       # console.log "should have undone"
     redo: =>
-      state = @redoStack.pop()
-      if state
-        @mutate state, undo: yes
+      states = @redoStack.pop()
+      if states
+        for state in states
+          @mutate state, undo: yes
       # console.log "should have redone"
 
 
@@ -647,6 +656,7 @@ exports.Mode = class extends TextMode
           fun = @findParentFunction parent if parent
           params = @findParamList fun if fun
           if params
+            @startGroupMutation()
             # insert space for new param if necessary and put cursors at both places
             @mutate @removeSelectable @selectedTangible()
             hole = @selectedTangible()
@@ -663,6 +673,7 @@ exports.Mode = class extends TextMode
                 in: []
                 out: hole.out
               ]
+            @finishGroupMutation()
 
       'select all occurences':
         bindKey: win: 'Ctrl-R', mac: 'Ctrl-R'
@@ -727,6 +738,7 @@ exports.Mode = class extends TextMode
     empty = tangible.in.length is 0
 
     # First replace, then reinsert
+    @startGroupMutation()
     @mutate
       changeInTree:
         at: tangible
@@ -743,6 +755,7 @@ exports.Mode = class extends TextMode
         if empty
           in: []
           out: [wrapper[index]]
+    @finishGroupMutation()
 
   # direction ignored for now
   insertString: (direction, string) ->
@@ -953,6 +966,13 @@ exports.Mode = class extends TextMode
   onlySelectedExpression: ->
     onlyExpression @selectedTangible()
 
+  startGroupMutation: ->
+    @groupMutating = yes
+
+  finishGroupMutation: ->
+    @groupMutating = no
+    @undoManager().packGroupMutation()
+
   # This render-like function, taking in a the desired output and
   # doing the imperative work to achieve it
   #
@@ -991,6 +1011,7 @@ exports.Mode = class extends TextMode
   mutate: (state, way = undo: yes) ->
     # 0. Notify UndoManager
     @undoManager().registerMutation state, way
+    @undoManager().packGroupMutation() unless @groupMutating
     # 1.1. changeInTree
     if state.changeInTree
       replaced = state.changeInTree.at
