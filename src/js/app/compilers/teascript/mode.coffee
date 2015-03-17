@@ -716,6 +716,34 @@ exports.Mode = class extends TextMode
     else
       @wrap delim, yes, closer[delim]
 
+  wrap: (tokens...) ->
+    i = tokens.indexOf yes
+    throw new Error "missing yes in wrap" if i is -1
+    string = (join tokens[0...i], tokens[i + 1...]).join ''
+    @wrapIn string, i, @selectedTangible()
+
+  wrapIn: (wrapperString, index, tangible) ->
+    [wrapper] = astize wrapperString, parentOfTangible tangible
+    empty = tangible.in.length is 0
+
+    # First replace, then reinsert
+    @mutate
+      changeInTree:
+        at: tangible
+        added: [wrapper]
+    reindentTangible tangible, wrapper
+    @mutate
+      changeInTree:
+        at:
+          in: []
+          out: [wrapper[index]]
+        added: tangible.in
+      inSelections: tangible.in if not empty
+      tangibleSelection:
+        if empty
+          in: []
+          out: [wrapper[index]]
+
   # direction ignored for now
   insertString: (direction, string) ->
     throw "Missing string in insertString" unless string?
@@ -1080,34 +1108,6 @@ exports.Mode = class extends TextMode
   findParamList: (form) ->
     [params] = _arguments form
     params
-
-  wrap: (tokens...) ->
-    i = tokens.indexOf yes
-    throw new Error "missing yes in wrap" if i is -1
-    string = (join tokens[0...i], tokens[i + 1...]).join ''
-    @wrapIn string, i, @selectedTangible()
-
-  wrapIn: (wrapperString, index, tangible) ->
-    [wrapper] = astize wrapperString, parentOfTangible tangible
-    empty = tangible.in.length is 0
-
-    # First replace, then reinsert
-    @mutate
-      changeInTree:
-        at: tangible
-        added: [wrapper]
-    reindentTangible tangible, wrapper
-    @mutate
-      changeInTree:
-        at:
-          in: []
-          out: [wrapper[index]]
-        added: tangible.in
-      inSelections: tangible.in if not empty
-      tangibleSelection:
-        if empty
-          in: []
-          out: [wrapper[index]]
 
   toText: (node) ->
     @editor.session.doc.getTextRange @range node
