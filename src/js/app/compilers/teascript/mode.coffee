@@ -273,12 +273,52 @@ exports.Mode = class extends TextMode
     #     this.session.insert(range.start, lines[i]);
 
   undoManager: =>
+    @undoStack or= []
+    @redoStack or= []
     execute: =>
       # ignore
+    # Our custom execute which saves the reversal of the performed mutation
+    registerMutation: (state, way) =>
+      stack = if way.undo then @undoStack else @redoStack
+      reversals = []
+      if state.changeInTree
+        replaced = state.changeInTree.at
+        added = state.changeInTree.added or []
+        reversals.push
+          changeInTree:
+            at:
+              in: added
+              out: replaced.out
+            added: replaced.in
+      if state.changeWithinAtom
+        [from, to] = sortTuple state.changeWithinAtom.range
+        added = state.changeWithinAtom.string
+        atom = state.changeWithinAtom.atom or @editedAtom()
+        reversals.push
+          changeWithinAtom:
+            range: [from, from + added.length]
+            string: atom.symbol[from...to]
+            atom: atom
+      reversals.push(
+        if @isEditing()
+          atom = @editedAtom()
+          withinAtom: atom
+          withinAtomPos: @distance (@startPos atom), @editor.selection.getRange().end
+        else
+          tangibleSelection: @selectedTangible())
+
+      stack.push merge reversals
     undo: =>
-      console.log "should undo"
+      state = @undoStack.pop()
+      if state
+        @mutate state, redo: yes
+      # console.log "should have undone"
     redo: =>
-      console.log "should redo"
+      state = @redoStack.pop()
+      if state
+        @mutate state, undo: yes
+      # console.log "should have redone"
+
 
   addVerticalCommands: ->
     @editor.commands.addCommands
@@ -893,15 +933,17 @@ exports.Mode = class extends TextMode
   #     changeWithinAtom:
   #       string: String
   #       range: [Int, Int]
-  #     removedNodes: (List Node)
-  #     inserted:
-  #       added: (List Node)
-  #       at: Selections
+  #     changeInTree:
+  #       added: (Maybe (List Node))
+  #       at: Tangibles
   #     withinAtom: Atom
   #     withinAtomPos: Int
-  #     selection: Selections
+  #     tangibleSelection: Selections
   #     inSelection: Node
   #     inSelections: (List Node)
+  #     selectionRange: Range
+  #     newSelections:
+  #       (List Tangible)
   #
   # The state of the current selection is:
   # $nodes - these are selected nodes including following tokens until sibling
@@ -918,7 +960,9 @@ exports.Mode = class extends TextMode
   #          2. (|
   #               )            => in: [], out: [\n, __]
   # $editing - Boolean
-  mutate: (state) ->
+  mutate: (state, way = undo: yes) ->
+    # 0. Notify UndoManager
+    @undoManager().registerMutation state, way
     # 1.1. changeInTree
     if state.changeInTree
       replaced = state.changeInTree.at
@@ -1400,13 +1444,15 @@ escape = (what, string) ->
 repeat = (n, string) ->
   (new Array n + 1).join string
 
-extend = (a, b) ->
+merge = (objects) ->
   c = {}
-  for key, value of a
-    c[key] = value
-  for key, value of b
-    c[key] = value
+  for a in objects
+    for key, value of a
+      c[key] = value
   c
+
+extend = (a, b) ->
+  merge [a, b]
 
 findTokensBetween = (expression, start, end) ->
   if start < expression.end and expression.start < end
