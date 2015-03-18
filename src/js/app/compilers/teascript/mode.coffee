@@ -635,12 +635,13 @@ exports.Mode = class extends TextMode
           parent = @realParentOfSelected()
           if parent
             added = @selectedTangible()
-            reindentTangible added, parent.parent
+            lifted = reindentNodes (cloneNodes added.in), parent.parent
+            # reindentTangible added, parent.parent
             @mutate
               changeInTree:
-                added: added.in
+                added: lifted
                 at: insToTangible [parent]
-              inSelections: added.in
+              inSelections: lifted
 
       'wrap current in a function':
         bindKey: win: 'Ctrl-F', mac: 'Ctrl-F'
@@ -743,14 +744,15 @@ exports.Mode = class extends TextMode
       changeInTree:
         at: tangible
         added: [wrapper]
-    reindentTangible tangible, wrapper
+    # reindentTangible tangible, wrapper
+    wrapped = reindentNodes (cloneNodes tangible.in), wrapper
     @mutate
       changeInTree:
         at:
           in: []
           out: [wrapper[index]]
-        added: tangible.in
-      inSelections: tangible.in if not empty
+        added: wrapped
+      inSelections: wrapped if not empty
       tangibleSelection:
         if empty
           in: []
@@ -1598,8 +1600,24 @@ astize = (string, parent) ->
   [open, expressions..., close] = wrapped
   expressions
 
-reindentTangible = (tangible, parent) ->
-  reindent (depthOf parent), tangible.in
+cloneNodes = (nodes) ->
+  map cloneNode, nodes
+
+cloneNode = (node) ->
+  if isForm node
+    clone = cloneNodes node
+  else
+    clone = symbol: node.symbol, label: node.label
+  clone.start = node.start
+  clone.end = node.end
+  clone.malformed = node.malformed
+  clone.tea = node.tea
+  clone.id = node.id
+  clone
+
+reindentNodes = (nodes, parent) ->
+  reindent (depthOf parent), nodes
+  nodes
 
 reindent = (depth, ast, next, nextIndex) ->
   if isForm ast
