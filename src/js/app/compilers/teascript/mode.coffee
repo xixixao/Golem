@@ -510,6 +510,12 @@ exports.Mode = class extends TextMode
         exec: =>
           @remove FORWARD
 
+      'add char':
+        bindKey: win: '\\', mac: '\\'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @insertString FORWARD, '\\_'
+
       'wrap in parens':
         bindKey: win: '(', mac: '('
         multiSelectAction: 'forEach'
@@ -780,7 +786,11 @@ exports.Mode = class extends TextMode
         offset = @offsetToCursor atom
         changeWithinAtom:
           string: validString
-          range: [offset, offset]
+          range:
+            if atom.label is 'char' and atom.symbol is '\\_'
+              [1, 2]
+            else
+              [offset, offset]
       else
         added = astize string, @parentOfSelected()
         console.log "adding", added
@@ -871,13 +881,19 @@ exports.Mode = class extends TextMode
       if atom = @editedAtom()
         # TODO: check if we are removing an escaped character and in that case
         #       remove the backslash
-        if @isAtLimit direction, atom
+        atLimit =
+        if (editableLength atom) is (if isDelimitedAtom atom then 0 else 1)
           @removeSelectable @selectedTangible()
         else
           offset = @offsetToCursor atom
+          removeDirection =
+            if (@isAtLimit direction, atom)
+              opposite direction
+            else
+              direction
           changeWithinAtom:
             string: ''
-            range: [offset, offset + direction]
+            range: [offset, offset + removeDirection]
       else if @isSelecting()
         @removeSelectable @selectedTangible()
       else
@@ -909,11 +925,9 @@ exports.Mode = class extends TextMode
       in: []
       out: nodes.out
 
-  # Whether we are at the last character of the atom
   isAtLimit: (direction, atom) ->
-    idx = @posToIdx @cursorPosition()
-    limit = edgeIdxOfNode direction, atom
-    direction is BACKWARD and idx is limit + 1
+    toLimit = @distance @cursorPosition(), @editableEdge direction, atom
+    toLimit is 0
 
   offsetToCursor: (atom) ->
     @distance @cursorPosition(), @startPos atom
@@ -1410,10 +1424,13 @@ nodesToString = (nodes) ->
   string
 
 editableLength = (atom) ->
-  if isDelimitedAtom atom
-    atom.symbol.length - 2
-  else
-    atom.symbol.length
+  atom.symbol.length -
+    if isDelimitedAtom atom
+      2
+    else if isHalfDelimitedAtom atom
+      1
+    else
+      0
 
 # Fn Node Bool
 isExpression = (node) ->
