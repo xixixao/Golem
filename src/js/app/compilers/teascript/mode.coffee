@@ -17,6 +17,7 @@ log = (arg) ->
 
 {
   isForm
+  isCall
   concat
   map
   concatMap
@@ -435,19 +436,13 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Ctrl-Down', mac: 'Command-Down'
         multiSelectAction: 'forEach'
         exec: =>
-          @mutate(
-            if expression = @onlySelectedExpression()
-              if isForm expression
-                tangibleSelection: tangibleInside FIRST, expression
-              else
-                withinAtom: expression
-                withinAtomPos:
-                  if isDelimitedAtom expression
-                    expression.symbol.length - 1
-                  else
-                    expression.symbol.length
-            else
-              {})
+          @moveDown FIRST, LAST
+
+      'down the tree to the last child':
+        bindKey: win: 'Ctrl-Shift-Down', mac: 'Command-Shift-Down'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @moveDown LAST, FIRST
 
       'next atom or position':
         bindKey: win: 'Right', mac: 'Right'
@@ -680,7 +675,8 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Ctrl-R', mac: 'Ctrl-R'
         multiSelectAction: 'forEach'
         exec: =>
-          if isAtom atom = @onlySelectedExpression()
+          selected = @onlySelectedExpression()
+          if selected and isAtom atom = selected
             findOther = (node) ->
               if isForm node
                 concatMap findOther, node
@@ -697,29 +693,39 @@ exports.Mode = class extends TextMode
         indirect: yes
         exec: (editor, {targetEditor} = {}) =>
           targetEditor ?= @editor
-          token = @tokenNextToCursor targetEditor
-          @editor.insert if token.tokenType is 'operator'
-            labeled = false
-            i = 0
-            args = []
-            for t in token.parent
-              if t is token or (isWhitespace t) or @isDelim t
-                continue
-              if labeled
-                labeled = false
-                continue
-              args.push if t.label is 'label'
-                labeled = true
-                t.value[...-1]
-              else
-                console.log "adding for", t
-                String.fromCharCode 97 + i++
-            """
-            #{token.value} (fn [#{args.join ' '}]
-              _)"""
-          else
-            """
-            #{token.value} _"""
+          targetMode = targetEditor.session.getMode()
+          selected = targetMode.onlySelectedExpression()
+          if selected and isAtom atom = selected
+            @insertString FORWARD, if isOperator atom
+              labeled = false
+              i = 0
+              args = []
+              for term in _terms atom.parent when term isnt atom
+                if labeled
+                  labeled = false
+                  continue
+                args.push if isLabel term
+                  labeled = true
+                  _labelName term
+                else if (isAtom term) and (not isHalfDelimitedAtom term)
+                  String.fromCharCode 97 + i++
+              """
+              #{atom.symbol} (fn [#{args.join ' '}]
+                )"""
+            else
+              """
+              #{atom.symbol} """
+
+  moveDown: (inTree, inAtom) ->
+    @mutate(
+      if expression = @onlySelectedExpression()
+        if isForm expression
+          tangibleSelection: tangibleInside inTree, expression
+        else
+          withinAtom: expression
+          withinAtomPos: editableEdgeWithin inAtom, expression
+      else
+        {})
 
   insertOpeningDelim: (delim) ->
     closer = '(': ')', '{': '}', '[': ']'
@@ -1441,6 +1447,13 @@ isClosingDelim = (atom) ->
 isOpeningDelim = (atom) ->
   /^[\(\[\{]$/.test atom.symbol
 
+isOperator = (atom) ->
+  parent = parentOf atom
+  parent and (isCall parent) and (_fst _terms parent) is atom
+
+isLabel = (expression) ->
+  expression.label is 'label'
+
 # Fn Node Bool
 isWhitespace = (node) ->
   node.label in ['whitespace', 'indent']
@@ -1519,6 +1532,16 @@ topList = (ast) ->
 
 edgeIdxOfNode = (direction, node) ->
   if direction is FORWARD then node.end else node.start
+
+editableEdgeWithin = (direction, atom) ->
+  (edgeWithinAtom direction, atom) +
+    if isDelimitedAtom atom
+      (opposite direction)
+    else
+      0
+
+edgeWithinAtom = (direction, atom) ->
+  if direction is FORWARD then atom.symbol.length else 0
 
 edgeOfList = (direction, list) ->
   [first, ..., last] = list

@@ -460,7 +460,7 @@ module.exports = hyper class EditorMain
       logs: @state.logs.filter ([someId]) -> someId isnt id
 
   handleExpressionCommand: (name, editor) ->
-    @refs.sourceEditor.editor.execCommand name, targetEditor: editor
+    @state.mode.editor.execCommand name, targetEditor: editor
 
   handleColumnsResize: ->
     @refs.sourceEditor.forceResize()
