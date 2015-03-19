@@ -1648,6 +1648,8 @@ cloneNodes = (nodes) ->
 cloneNode = (node) ->
   if isForm node
     clone = cloneNodes node
+    for child in clone
+      child.parent = clone
   else
     clone = symbol: node.symbol, label: node.label
   clone.start = node.start
