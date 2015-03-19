@@ -184,6 +184,7 @@ exports.Mode = class extends TextMode
             in: added
             out: inside.out)
       @handleCommandExecution()
+      @undoManager().clear()
     catch e
       # Make sure we don't error so data is never lost when loading files
       console.error e, e.stack
@@ -328,7 +329,9 @@ exports.Mode = class extends TextMode
         for state in states
           @mutate state, undo: yes
       # console.log "should have redone"
-
+    clear: =>
+      @undoStack = []
+      @redoStack = []
 
   addVerticalCommands: ->
     @editor.commands.addCommands
@@ -649,6 +652,12 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach'
         exec: =>
           @wrap '(', 'fn', ' ', '[]', ' ', yes, ')'
+
+      'wrap current in a match':
+        bindKey: win: 'Ctrl-M', mac: 'Ctrl-M'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @wrap '(', 'match', ' ', '\n', '    ', ' ', yes, ')'
 
       'replace expression by new function param':
         bindKey: win: 'Ctrl-A', mac: 'Ctrl-A'

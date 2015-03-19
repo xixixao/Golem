@@ -74,7 +74,7 @@ module.exports = hyper class OutputDisplay
         if @numBoxes() is 1
           undefined
         else
-          Math.min(@numBoxes() - 2, position + 1)
+          Math.min(@numBoxes() - 2, position)
     @props.onDelete id
 
   handleFocusSibling: (position, offset) ->
