@@ -35,7 +35,7 @@ module.exports = class Memory
 
   _fileTableStorage: (table) ->
     @emitter.emit 'fileTable' if table isnt undefined
-    $.totalStorage "fileTableCOOKIEv3", table
+    $.totalStorage "fileTableCOOKIEv4", table
 
   getFileTable: ->
     Object.findAll @_fileTableStorage(), (name) =>
@@ -43,7 +43,7 @@ module.exports = class Memory
 
   _fileStorage: (name, value) ->
     @emitter.emit 'file' if value isnt undefined
-    $.totalStorage "TeaTableFile_" + name, value
+    $.totalStorage "GolemFile_" + name, value
 
   getLastOpenFileName: ->
     @_lastOpenFileStorage() || @unnamed
