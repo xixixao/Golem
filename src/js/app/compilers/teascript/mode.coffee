@@ -724,7 +724,9 @@ exports.Mode = class extends TextMode
 
   moveDown: (inTree, inAtom) ->
     @mutate(
-      if expression = @onlySelectedExpression()
+      if @isSelectingMultiple()
+        tangibleSelection: @selectableEdge inTree
+      else if expression = @onlySelectedExpression()
         if isForm expression
           tangibleSelection: tangibleInside inTree, expression
         else
