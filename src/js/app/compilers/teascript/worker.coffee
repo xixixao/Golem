@@ -10,19 +10,20 @@ window.addEventListener = ->
 exports.Worker = class extends Mirror
   constructor: (sender) ->
     super sender
-    @setTimeout 0 # Take over the scheduling from Mirror
+    @setTimeout 200 # Take over the scheduling from Mirror
     @compiler = compiler
-    @trigger = delay 700
-    # @sender.on 'prefix', ({data: {data: @prefix}}) =>
+    # @trigger = delay 700
 
   setModuleName: (@moduleName) ->
 
   compileModule: (value, moduleName) ->
     console.log  "compiling module", moduleName
     cacheModule compiler.compileTopLevel, value, moduleName
+    @compile()
 
   onUpdate: ->
-    @trigger @compile
+    # @trigger @compile
+    @compile()
 
   compile: =>
     console.log "compiling", @moduleName
