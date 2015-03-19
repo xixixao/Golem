@@ -72,7 +72,7 @@ _FileBrowser = hyper class FileBrowser
         for {name, numLines} in data
           _tr key: name,
             _td if name is @state.fileName then '>'
-            _td name
+            _td "#{name} "
             _td numLines
 
 class BrowseCommand
