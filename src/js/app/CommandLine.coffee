@@ -104,6 +104,7 @@ module.exports = hyper class CommandLine
             @props.memory.saveCommands timeline
             if type is 'command'
               editor.setValue ""
+              # editor.session.getMode().initAst ""
             else
               editor.session.getMode().setContent ""
           else
