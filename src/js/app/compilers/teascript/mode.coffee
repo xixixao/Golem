@@ -339,7 +339,7 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Enter', mac: 'Enter'
         multiSelectAction: 'forEach'
         exec: =>
-          @insertSpace FORWARD, '\n'
+          @replaceSpace FORWARD, '\n'
 
 
       'up to atom or position':
@@ -370,7 +370,7 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Shift-Enter', mac: 'Shift-Enter'
         multiSelectAction: 'forEach'
         exec: =>
-          @insertSpace BACKWARD, '\n'
+          @replaceSpace BACKWARD, '\n'
 
   createMultiSelectKeyboardHandler: =>
     @multiSelectKeyboardHandler = new HashHandler [
@@ -822,6 +822,17 @@ exports.Mode = class extends TextMode
     else
       @insertSpaceAt direction, space, @selectedNodeEdge direction
 
+  replaceSpace: (direction, newLine) ->
+    {margin, siblingTangible} = @toSelectionSibling direction
+    if margin and isSpace (edgeOfList (opposite direction), margin.in)
+      @mutate
+        changeInTree:
+          added: astize newLine, parentOfTangible margin
+          at: margin
+        tangibleSelection: siblingTangible
+    else
+      @insertSpace direction, newLine
+
   insertSpaceAt: (direction, space, insertPos) ->
     parent = insertPos.parent
     added = astize space, parent
@@ -856,7 +867,7 @@ exports.Mode = class extends TextMode
           tangibleSelection: siblingSelection)
 
   expandSelection: (direction) ->
-    {margin, siblingTangible} = (@toSelectionSibling direction) or {}
+    {margin, siblingTangible} = @toSelectionSibling direction
     @mutate(
       if siblingTangible
         toSibling = append direction, margin, siblingTangible
@@ -967,7 +978,7 @@ exports.Mode = class extends TextMode
 
   # Gives a sibling tangible of the current selections
   selectedSibling: (direction) ->
-    (@toSelectionSibling direction)?.siblingTangible
+    (@toSelectionSibling direction).siblingTangible
 
   toSelectionSibling: (direction) ->
     margin = @selectionMargin direction
@@ -977,6 +988,8 @@ exports.Mode = class extends TextMode
       siblingTangible: tangibleSurroundedBy direction,
         (edgeOfList direction, margin.in),
         (edgeOfList (opposite direction), siblingTangible)
+    else
+      {}
 
   # This returns tangible-like corresponding to the whitespace in given
   # direction surrounding current selections,
