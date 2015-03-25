@@ -118,6 +118,7 @@ module.exports = hyper class OutputDisplay
               key: key
               value: value
               worker: @props.worker
+              completer: @props.completer
               updatedSource: @props.updatedSource
               maxWidth: @props.width - 45
               onCommand: @props.onCommand

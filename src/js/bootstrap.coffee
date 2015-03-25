@@ -7,6 +7,7 @@ require
     compilers: 'app/compilers'
     ace: 'vendor/ace'
     'ace/autocomplete': 'vendor/ace/ext-language_tools'
+    'ace/ext/searchbox': 'vendor/ace/ext-searchbox.js'
     jqueryLibs: 'vendor/jquery'
     jquery: 'vendor/jquery/jquery'
     ejquery: 'app/jquery.extended'

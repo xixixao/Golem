@@ -482,6 +482,7 @@ module.exports = hyper class EditorMain
         _CommandLine
           ref: 'commandLine'
           worker: @state.mode.worker
+          completer: @state.mode.completer
           moduleName: @state.module.moduleName
           onCommandExecution: @handleCommandExecution
           onCommandCompiled: @handleCommandCompiled
@@ -512,6 +513,7 @@ module.exports = hyper class EditorMain
         logs: @state.logs
         updatedSource: @state.sourceUpdateId
         worker: @state.mode.worker
+        completer: @state.mode.completer
         onCommand: @handleExpressionCommand
         focus: @state.focused is @focus.output
         onDelete: @handleOutputDelete

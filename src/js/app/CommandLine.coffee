@@ -37,7 +37,7 @@ module.exports = hyper class CommandLine
     @editor.session.getMode().reportModuleName moduleName
 
   componentDidMount: ->
-    mode = new CommandMode "COMMAND_LINE"
+    mode = new CommandMode "COMMAND_LINE", @props.completer
     @editor = editor = ace.edit @_getEditorNode(), mode, "ace/theme/tea"
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2

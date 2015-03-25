@@ -8,8 +8,9 @@ AdaptingWorkerClient = require './AdaptingWorkerClient'
 
 module.exports =
   class CommandMode extends Mode
-    constructor: (@id) ->
+    constructor: (@id, completer) ->
       super yes
+      @completer = completer
 
       @commandMode = no
 

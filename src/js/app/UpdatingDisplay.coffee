@@ -52,7 +52,7 @@ module.exports = hyper class UpdatingDisplay
     => @props.onCommand name, @editor
 
   componentDidMount: ->
-    mode = new CommandMode @props.key
+    mode = new CommandMode @props.key, @props.completer
     @editor = editor = ace.edit @refs.ace.getDOMNode(), mode, "ace/theme/tea"
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2

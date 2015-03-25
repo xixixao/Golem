@@ -70,6 +70,7 @@ exports.Mode = class extends TextMode
     # @$outdent = new Outdent
     # @foldingRules = new FoldMode
     @$behaviour = undefined
+    @completer = @createCompleter()
 
   tokensOnLine: (row, doc) =>
 
@@ -146,7 +147,7 @@ exports.Mode = class extends TextMode
     session = editor.session
     @editor = editor
 
-    @editor.completers = [@completer()]
+    @editor.completers = [@completer]
 
     session.setUndoManager @undoManager()
 
@@ -256,6 +257,7 @@ exports.Mode = class extends TextMode
       'PageUp', 'PageDown']
     if e?.command.name in capturedCommands and
         (atom = @editedAtom()) and (not isHalfDelimitedAtom atom) and
+        (atom.label isnt 'numerical') and
         @editedAtom().symbol.length > 0
       prefix = @editedAtom().symbol
       if prefix && !hasCompleter
@@ -268,22 +270,25 @@ exports.Mode = class extends TextMode
     else if editor.completer and not e?.command.name in ignoredCommands
       editor.completer.detach()
 
-  completer: =>
+  createCompleter: =>
     completer =
       getCompletions: (editor, session, pos, prefix, callback) =>
         # TODO: type directed and other
+        editedSymbol = session.getMode().editedAtom().symbol
         completions = findSymbols @ast
-        callback null, (for symbol of completions when symbol isnt @editedAtom().symbol
+        callback null, (for symbol of completions when symbol isnt editedSymbol
           name: symbol
           value: symbol
           completer: completer
           score: 0
           meta: 'keyword')
       insertMatch: (editor, data) =>
-        atom = @editedAtom()
-        @mutate
+        mode = editor.session.getMode()
+        atom = mode.editedAtom()
+        mode.mutate
           changeWithinAtom:
             string: data.value
+            atom: atom
             range:
               [0, atom.symbol.length]
 
@@ -1591,7 +1596,7 @@ findSymbols = (ast) ->
     if isForm node
       for child in node
         crawl child
-    else if (not isHalfDelimitedAtom node) and (node.label isnt 'numerical') and
+    else if (not isHalfDelimitedAtom node) and
         node.symbol.length > 1
       symbols[node.symbol] = yes
   crawl ast
