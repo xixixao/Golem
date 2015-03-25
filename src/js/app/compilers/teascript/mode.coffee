@@ -5,10 +5,11 @@ Range        = require("ace/range").Range
 TextMode     = require("ace/mode/text").Mode
 Behaviour    = require("ace/mode/behaviour").Behaviour
 Selection    = require("ace/selection").Selection
-Autocomplete = require("ace/autocomplete").Autocomplete
 oop          = require("ace/lib/oop")
 EventEmitter = require("ace/lib/event_emitter").EventEmitter
 HashHandler  = require("ace/keyboard/hash_handler").HashHandler
+
+CustomAutocomplete = require "./CustomAutocomplete"
 
 DistributingWorkerClient = require("app/DistributingWorkerClient")
 
@@ -258,7 +259,7 @@ exports.Mode = class extends TextMode
       if prefix && !hasCompleter
           if !editor.completer
               # Create new autocompleter
-              editor.completer = new Autocomplete()
+              editor.completer = new CustomAutocomplete()
           # Disable autoInsert
           #editor.completer.autoInsert = false;
           editor.completer.showPopup editor
