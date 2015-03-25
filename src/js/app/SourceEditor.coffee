@@ -56,7 +56,7 @@ module.exports = hyper class SourceEditor
     @editor = editor = ace.edit @_getEditorNode(), @props.mode, "ace/theme/tea"
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2
-    editor.setHighlightActiveLine true
+    editor.setHighlightActiveLine false
     editor.session.setTabSize 2
     editor.setShowPrintMargin false
     editor.setOption 'scrollPastEnd', true

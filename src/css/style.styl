@@ -87,3 +87,48 @@ infoBar()
 
     .ace_marker-layer
       opacity: 0
+
+
+
+/* popup for autocompletion */
+.golem 
+  .ace_editor.ace_autocomplete .ace_marker-layer .ace_active-line {
+    background-color: #333;
+    z-index: 1;
+  }
+  .ace_editor.ace_autocomplete .ace_line-hover {
+    border-style: none;
+    margin-top: -1px;
+    background: rgba(72,72,72,0.4);
+  }
+  .ace_editor.ace_autocomplete .ace_line-hover {
+    position: absolute;
+    z-index: 2;
+  }
+  .ace_editor.ace_autocomplete .ace_scroller {
+     background: none;
+     border: none;
+     box-shadow: none;
+  }
+  .ace_rightAlignedText {
+    color: gray;
+    display: inline-block;
+    position: absolute;
+    right: 4px;
+    text-align: right;
+    z-index: -1;
+  }
+  .ace_editor.ace_autocomplete .ace_completion-highlight{
+    color: #ccc;
+    text-shadow: 0 0 0.01em;
+  }
+  .ace_editor.ace_autocomplete {
+    width: 280px;
+    z-index: 200000;
+    background: #222;
+    color: #666;
+    border-style: none;
+    position: fixed;
+    box-shadow: 0px 0px 10px rgba(0,0,0,.8);
+    line-height: 1.4;
+  }

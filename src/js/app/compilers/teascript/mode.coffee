@@ -252,6 +252,8 @@ exports.Mode = class extends TextMode
     # Make sure this is an actual command and not an action on the updater
     # TODO: I would prefer to capture all our insertion events
     capturedCommands = ['insertstring', 'removeback', 'removeforward', 'addlabel']
+    ignoredCommands = ['Up', 'Down', 'Ctrl-Up|Ctrl-Home', 'Ctrl-Down|Ctrl-End',
+      'PageUp', 'PageDown']
     if e?.command.name in capturedCommands and
         (atom = @editedAtom()) and (not isHalfDelimitedAtom atom) and
         @editedAtom().symbol.length > 0
@@ -263,9 +265,8 @@ exports.Mode = class extends TextMode
           # Disable autoInsert
           #editor.completer.autoInsert = false;
           editor.completer.showPopup editor
-    else
-      if editor.completer
-        editor.completer.detach()
+    else if editor.completer and not e?.command.name in ignoredCommands
+      editor.completer.detach()
 
   completer: =>
     completer =
@@ -275,12 +276,16 @@ exports.Mode = class extends TextMode
         callback null, (for symbol of completions when symbol isnt @editedAtom().symbol
           name: symbol
           value: symbol
-          prefix: prefix.length
           completer: completer
           score: 0
           meta: 'keyword')
       insertMatch: (editor, data) =>
-        @insertString FORWARD, data.value[data.prefix...]
+        atom = @editedAtom()
+        @mutate
+          changeWithinAtom:
+            string: data.value
+            range:
+              [0, atom.symbol.length]
 
   handleClick: (event) =>
     if event.domEvent.altKey
@@ -536,6 +541,11 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach'
         exec: =>
           @insertSpace BACKWARD, ' '
+
+      'disable tab':
+        bindKey: win: 'Tab', mac: 'Tab'
+        exec: =>
+          yes
 
       'removeback':
         bindKey: win: 'Backspace', mac: 'Backspace'
@@ -1581,7 +1591,8 @@ findSymbols = (ast) ->
     if isForm node
       for child in node
         crawl child
-    else if (not isHalfDelimitedAtom node) and node.symbol.length > 1
+    else if (not isHalfDelimitedAtom node) and (node.label isnt 'numerical') and
+        node.symbol.length > 1
       symbols[node.symbol] = yes
   crawl ast
   symbols

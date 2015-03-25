@@ -52,8 +52,6 @@ module.exports = hyper class UpdatingDisplay
     => @props.onCommand name, @editor
 
   componentDidMount: ->
-    # mode = new Mode yes
-    console.log "setting id in UpdatingDisplay to", @props.key
     mode = new CommandMode @props.key
     @editor = editor = ace.edit @refs.ace.getDOMNode(), mode, "ace/theme/tea"
     editor.setFontSize 13
