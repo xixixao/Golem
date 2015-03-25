@@ -16090,7 +16090,7 @@ var WorkerClient = function(topLevelNamespaces, mod, classname, workerUrl) {
     if (require.nameToUrl && !require.toUrl)
         require.toUrl = require.nameToUrl;
 
-    if (config.get("packaged") || !require.toUrl) {
+    if (!require.toUrl) {
         workerUrl = workerUrl || config.moduleUrl(mod, "worker");
     } else {
         var normalizePath = this.$normalizePath;
