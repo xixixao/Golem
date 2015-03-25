@@ -10,6 +10,7 @@ EventEmitter = require("ace/lib/event_emitter").EventEmitter
 HashHandler  = require("ace/keyboard/hash_handler").HashHandler
 
 CustomAutocomplete = require "./CustomAutocomplete"
+CustomSearchBox = require "./CustomSearchBox"
 
 DistributingWorkerClient = require("app/DistributingWorkerClient")
 
@@ -475,6 +476,14 @@ exports.Mode = class extends TextMode
               withinAtomPos: @offsetToCursor node
             else
               tangibleSelection: tangible)
+
+
+      'find':
+        bindKey: win: "Ctrl-F", mac: "Command-F"
+        readOnly: true
+        exec: =>
+          if not @isSingleLineInput
+            CustomSearchBox.Search @editor
 
       'up the tree':
         bindKey: win: 'Ctrl-Up', mac: 'Command-Up'
