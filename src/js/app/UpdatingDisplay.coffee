@@ -2,7 +2,7 @@
 
 React = require 'React'
 cx = React.addons.classSet
-ace = require 'ace/ace'
+ace = require './AceEditor'
 jsDump = require 'vendor/jsDump'
 
 CommandMode = require './CommandMode'
@@ -65,7 +65,6 @@ module.exports = hyper class UpdatingDisplay
     # editor.setReadOnly true
     # editor.setValue @props.expression, 1
     # editor.moveCursorTo 0, 0
-    mode.attachToSession editor.session
     mode.registerWithWorker @props.worker
     mode.setContent @props.value.source, null, @props.value.moduleName
     mode.updateAst @props.value.ast

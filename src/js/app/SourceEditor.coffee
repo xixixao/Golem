@@ -2,7 +2,7 @@ React = require 'React'
 {_div} = hyper = require 'hyper'
 
 $ = require 'ejquery'
-ace = require 'ace/ace'
+ace = require './AceEditor'
 
 Memory = require './Memory'
 SetIntervalMixin = require './SetIntervalMixin'
@@ -73,7 +73,6 @@ module.exports = hyper class SourceEditor
       bindKey: win: 'Esc', mac: 'Esc'
       exec: @props.onLeave
 
-    @props.mode.attachToSession @editor.session
     @load @props.module
     window.addEventListener 'resize', =>
       @editor.resize()

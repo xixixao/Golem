@@ -1,9 +1,10 @@
-AdaptingWorkerClient = require './AdaptingWorkerClient'
-
-oop = require("ace/lib/oop")
+ace          = require("ace/ace")
+oop          = require("ace/lib/oop")
 EventEmitter = require("ace/lib/event_emitter").EventEmitter
 
 {Mode} = require 'compilers/teascript/mode'
+
+AdaptingWorkerClient = require './AdaptingWorkerClient'
 
 module.exports =
   class CommandMode extends Mode

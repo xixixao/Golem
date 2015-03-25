@@ -2,7 +2,7 @@ React = require 'React'
 {_div} = hyper = require 'hyper'
 
 $ = require 'ejquery'
-ace = require 'ace/ace'
+ace = require './AceEditor'
 
 CommandMode = require './CommandMode'
 # _require = require # Otherwise the require packager would fail
@@ -44,7 +44,6 @@ module.exports = hyper class CommandLine
     editor.setHighlightActiveLine false
     editor.setShowPrintMargin false
     editor.renderer.setShowGutter false
-    mode.attachToSession editor.session
     mode.registerWithWorker @props.worker
     mode.setContent "", null, @props.moduleName
 

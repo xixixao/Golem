@@ -1,15 +1,17 @@
-Outdent      = require("ace/mode/matching_brace_outdent").MatchingBraceOutdent
+ace          = require("ace/ace")
+# Outdent      = require("ace/mode/matching_brace_outdent").MatchingBraceOutdent
 # FoldMode     = require("ace/mode/folding/coffee").FoldMode
 Range        = require("ace/range").Range
 TextMode     = require("ace/mode/text").Mode
 Behaviour    = require("ace/mode/behaviour").Behaviour
 Selection    = require("ace/selection").Selection
+Autocomplete = require("ace/autocomplete").Autocomplete
+oop          = require("ace/lib/oop")
+EventEmitter = require("ace/lib/event_emitter").EventEmitter
+HashHandler  = require("ace/keyboard/hash_handler").HashHandler
 
 DistributingWorkerClient = require("app/DistributingWorkerClient")
 
-oop = require("ace/lib/oop")
-EventEmitter = require("ace/lib/event_emitter").EventEmitter
-HashHandler = require("ace/keyboard/hash_handler").HashHandler
 
 log = (arg) ->
   console.log arg
@@ -56,14 +58,15 @@ log = (arg) ->
 exports.Mode = class extends TextMode
   constructor: (@isSingleLineInput, @memory) ->
     @$tokenizer =
-      getLineTokens: (line, state, row, doc) =>
+      # TODO: passing of doc would require change in ACE, this MIGHT BREAK SOMETHING, check and remove todo
+      getLineTokens: (line, state, row, doc = @editor.session.getDocument()) =>
         if tokens = @tokensOnLine row, doc
           tokens: convertToAceLineTokens tokens
         else
           tokens: [value: line, type: 'text']
     oop.implement @$tokenizer, EventEmitter
 
-    @$outdent = new Outdent
+    # @$outdent = new Outdent
     # @foldingRules = new FoldMode
     @$behaviour = undefined
 
@@ -126,11 +129,11 @@ exports.Mode = class extends TextMode
       doc.replace range, line
     return
 
-  checkOutdent: (state, line, input) ->
-    @$outdent.checkOutdent line, input
+  # checkOutdent: (state, line, input) ->
+  #   @$outdent.checkOutdent line, input
 
-  autoOutdent: (state, doc, row) ->
-    @$outdent.autoOutdent doc, row
+  # autoOutdent: (state, doc, row) ->
+  #   @$outdent.autoOutdent doc, row
 
   detachFromSession: (session) ->
     # session.removeListener 'change', @onDocumentChange
@@ -138,10 +141,11 @@ exports.Mode = class extends TextMode
     @editor.onPaste = @__editorOnPaste
     # session.getDocument().removeListener 'change', @selectInserted
 
-  attachToSession: (session) ->
-    return unless session.getEditor()
+  attachToEditor: (editor) ->
+    session = editor.session
+    @editor = editor
 
-    @editor = session.getEditor()
+    @editor.completers = [@completer()]
 
     session.setUndoManager @undoManager()
 
@@ -239,6 +243,40 @@ exports.Mode = class extends TextMode
         node.start = currentPosition
         node.end += offset
         currentPosition = node.end
+
+  doAutocomplete: (e) ->
+    editor = @editor
+    hasCompleter = editor.completer && editor.completer.activated;
+
+    # Make sure this is an actual command and not an action on the updater
+    # TODO: I would prefer to capture all our insertion events
+    capturedCommands = ['insertstring', 'removeback', 'removeforward', 'addlabel']
+    if e?.command.name in capturedCommands and
+        (atom = @editedAtom()) and (not isHalfDelimitedAtom atom) and
+        @editedAtom().symbol.length > 0
+      prefix = @editedAtom().symbol
+      if prefix && !hasCompleter
+          if !editor.completer
+              # Create new autocompleter
+              editor.completer = new Autocomplete()
+          # Disable autoInsert
+          #editor.completer.autoInsert = false;
+          editor.completer.showPopup editor
+
+  completer: =>
+    completer =
+      getCompletions: (editor, session, pos, prefix, callback) =>
+        # TODO: type directed and other
+        completions = findSymbols @ast
+        callback null, (for symbol of completions when symbol isnt @editedAtom().symbol
+          name: symbol
+          value: symbol
+          prefix: prefix.length
+          completer: completer
+          score: 0
+          meta: 'keyword')
+      insertMatch: (editor, data) =>
+        @insertString FORWARD, data.value[data.prefix...]
 
   handleClick: (event) =>
     if event.domEvent.altKey
@@ -495,7 +533,7 @@ exports.Mode = class extends TextMode
         exec: =>
           @insertSpace BACKWARD, ' '
 
-      'remove token and preceding whitespace or delete a character':
+      'removeback':
         bindKey: win: 'Backspace', mac: 'Backspace'
         multiSelectAction: 'forEach'
         exec: =>
@@ -507,7 +545,7 @@ exports.Mode = class extends TextMode
         exec: =>
           @remove FORWARD
 
-      'remove forwards':
+      'removeforward':
         bindKey: win: 'Ctrl-Backspace', mac: 'Ctrl-Backspace'
         multiSelectAction: 'forEach'
         exec: =>
@@ -581,7 +619,7 @@ exports.Mode = class extends TextMode
       #     @editor.moveCursorToPosition @tokenVisibleEnd parent
       #     @editor.insert ' '
 
-      'add label':
+      'addlabel':
         bindKey: win: ':', mac: ':'
         multiSelectAction: 'forEach'
         exec: =>
@@ -1107,9 +1145,11 @@ exports.Mode = class extends TextMode
         @editor.selection.addRange range
     return yes # command handled response
 
-  handleCommandExecution: =>
+  handleCommandExecution: (e) =>
     # 8. Highlight edited in editor
     @updateEditingMarkers()
+    # 9. Trigger autocompletion
+    @doAutocomplete e
 
   select: (selections, shouldEdit) ->
     @editor.selection.$nodes = selections
@@ -1530,6 +1570,18 @@ merge = (objects) ->
 
 extend = (a, b) ->
   merge [a, b]
+
+findSymbols = (ast) ->
+  symbols = {}
+  crawl = (node) ->
+    if isForm node
+      for child in node
+        crawl child
+    else if (not isHalfDelimitedAtom node) and node.symbol.length > 1
+      symbols[node.symbol] = yes
+  crawl ast
+  symbols
+
 
 findTokensBetween = (expression, start, end) ->
   if start < expression.end and expression.start < end
