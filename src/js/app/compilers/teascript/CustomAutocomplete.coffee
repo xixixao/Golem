@@ -5,4 +5,5 @@ module.exports = class CustomAutocomplete extends Autocomplete
   constructor: ->
     delete @commands['Return']
     delete @commands['Shift-Return']
+    delete @commands['Space']
     super

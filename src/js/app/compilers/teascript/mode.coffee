@@ -263,6 +263,9 @@ exports.Mode = class extends TextMode
           # Disable autoInsert
           #editor.completer.autoInsert = false;
           editor.completer.showPopup editor
+    else
+      if editor.completer
+        editor.completer.detach()
 
   completer: =>
     completer =
