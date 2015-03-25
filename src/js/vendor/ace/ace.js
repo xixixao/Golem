@@ -8572,6 +8572,8 @@ var EditSession = function(text, mode) {
         if (this.$mode === mode)
             return;
 
+        if (this.$mode && this.$mode.detachFromSession)
+            this.$mode.detachFromSession(this);
         this.$mode = mode;
 
         this.$stopWorker();
@@ -13328,7 +13330,7 @@ var Marker = function(parentEl) {
         extraStyle = extraStyle || "";
 
         stringBuilder.push(
-            "<div class='", clazz, " ace_start' style='",
+            "<div class='", clazz, " ace_start ace_multiline' style='",
             "height:", height, "px;",
             "right:0;",
             "top:", top, "px;",
@@ -13338,7 +13340,7 @@ var Marker = function(parentEl) {
         var width = range.end.column * config.characterWidth;
 
         stringBuilder.push(
-            "<div class='", clazz, "' style='",
+            "<div class='", clazz, " ace_finish' style='",
             "height:", height, "px;",
             "width:", width, "px;",
             "top:", top, "px;",
@@ -13350,7 +13352,7 @@ var Marker = function(parentEl) {
         top = this.$getTop(range.start.row + 1, config);
 
         stringBuilder.push(
-            "<div class='", clazz, "' style='",
+            "<div class='", clazz, " ace_start' style='",
             "height:", height, "px;",
             "right:0;",
             "top:", top, "px;",
@@ -18267,12 +18269,3 @@ exports.createEditSession = function(text, mode) {
 exports.EditSession = EditSession;
 exports.UndoManager = UndoManager;
 });
-            (function() {
-                window.require(["ace/ace"], function(a) {
-                    a && a.config.init(true);
-                    if (!window.ace)
-                        window.ace = a;
-                    for (var key in a) if (a.hasOwnProperty(key))
-                        window.ace[key] = a[key];
-                });
-            })();
