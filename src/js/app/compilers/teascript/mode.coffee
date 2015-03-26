@@ -425,6 +425,11 @@ exports.Mode = class extends TextMode
         exec: =>
           @replaceSpace BACKWARD, '\n'
 
+      'disable tab':
+        bindKey: win: 'Tab', mac: 'Tab'
+        exec: =>
+          yes
+
   createMultiSelectKeyboardHandler: =>
     @multiSelectKeyboardHandler = new HashHandler [
       name: 'escape multi select'
@@ -555,11 +560,6 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach'
         exec: =>
           @insertSpace BACKWARD, ' '
-
-      'disable tab':
-        bindKey: win: 'Tab', mac: 'Tab'
-        exec: =>
-          yes
 
       'removeback':
         bindKey: win: 'Backspace', mac: 'Backspace'
