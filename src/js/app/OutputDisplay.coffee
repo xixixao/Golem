@@ -78,6 +78,8 @@ module.exports = hyper class OutputDisplay
     @props.onDelete id
 
   handleFocusSibling: (position, offset) ->
+    if not @props.focus
+      @props.onFocusOutput()
     @setState
       focusedOutput: Math.max 0, Math.min position + offset, @numBoxes() - 1
 

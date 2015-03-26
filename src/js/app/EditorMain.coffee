@@ -517,5 +517,6 @@ module.exports = hyper class EditorMain
         onCommand: @handleExpressionCommand
         focus: @state.focused is @focus.output
         onDelete: @handleOutputDelete
+        onFocusOutput: @handleFocus @focus.output
 
 hyper.render document.getElementById('editor'), module.exports()

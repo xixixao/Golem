@@ -21,6 +21,9 @@ module.exports = hyper class OutputDisplay
         @props.onFocusSibling @props.position, -1
         e.preventDefault()
 
+  handleClick: (e) ->
+    @props.onFocusSibling @props.position, 0
+
   render: ->
     _div
       id: @props.key
@@ -30,6 +33,7 @@ module.exports = hyper class OutputDisplay
         selected: @props.focus
       style:
         'max-width': @props.width
+      onClick: @handleClick
       _div
         style:
           overflow: 'hidden'
