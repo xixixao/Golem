@@ -1610,8 +1610,7 @@ findSymbols = (ast) ->
     if isForm node
       for child in node
         crawl child
-    else if (not isHalfDelimitedAtom node) and
-        node.symbol.length > 1
+    else if (not isHalfDelimitedAtom node)
       symbols[node.symbol] = yes
   crawl ast
   symbols
