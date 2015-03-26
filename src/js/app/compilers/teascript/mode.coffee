@@ -585,23 +585,29 @@ exports.Mode = class extends TextMode
         exec: =>
           @insertString FORWARD, '\\_'
 
+      'wrap in a call':
+        bindKey: win: 'Ctrl-Shift-9', mac: 'Command-Shift-9'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @wrap '(', ' ', yes, ')'
+
       'wrap in parens':
         bindKey: win: '(', mac: '('
         multiSelectAction: 'forEach'
         exec: =>
-          @insertOpeningDelim '('
+          @insertOpeningDelim '(', ')'
 
       'wrap in brackets':
         bindKey: win: '[', mac: '['
         multiSelectAction: 'forEach'
         exec: =>
-          @insertOpeningDelim '['
+          @insertOpeningDelim '[', ']'
 
       'wrap in braces':
         bindKey: win: '{', mac: '{'
         multiSelectAction: 'forEach'
         exec: =>
-          @insertOpeningDelim '{'
+          @insertOpeningDelim '{', '}'
 
       'add quotes':
         bindKey: win: '"', mac: '"'
@@ -810,12 +816,11 @@ exports.Mode = class extends TextMode
       else
         {})
 
-  insertOpeningDelim: (delim) ->
-    closer = '(': ')', '{': '}', '[': ']'
+  insertOpeningDelim: (open, close) ->
     if @isEditingHalfDelimited()
-      @insertString FORWARD, delim
+      @insertString FORWARD, open,
     else
-      @wrap delim, yes, closer[delim]
+      @wrap open, yes, close
 
   wrap: (tokens...) ->
     i = tokens.indexOf yes
