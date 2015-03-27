@@ -81,7 +81,8 @@ module.exports = hyper class CommandLine
     editor.commands.addCommand
       name: 'jump to output'
       bindKey: win: 'Tab', mac: 'Tab'
-      exec: @props.onFocusOutput
+      exec: =>
+        @props.onFocusOutput 0
 
 
     commandWorker = mode.worker

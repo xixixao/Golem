@@ -45,9 +45,6 @@ _UpdatingDisplay = require './UpdatingDisplay'
 
 module.exports = hyper class OutputDisplay
 
-  getInitialState: ->
-    focusedOutput: undefined
-
   windowResized: ->
     @setState
       height: window.innerHeight
@@ -55,10 +52,6 @@ module.exports = hyper class OutputDisplay
   componentWillMount: ->
     window.addEventListener 'resize', @windowResized
     @windowResized()
-
-  componentWillReceiveProps: ({focus, logs}) ->
-    if focus and not @state.focusedOutput?
-      @setState focusedOutput: 0
 
   componentDidUpdate: ({logs}, prevState) ->
     if logs.length isnt @props.logs.length or logs[0] and logs[0][0] isnt @props.logs[0][0]
@@ -69,19 +62,17 @@ module.exports = hyper class OutputDisplay
       , duration
 
   handleDelete: (id, position) ->
-    @setState
-      focusedOutput:
-        if @numBoxes() is 1
-          undefined
-        else
-          Math.min(@numBoxes() - 2, position)
+    if @numBoxes() is 1
+      @props.onRemoveFocus()
+    else
+      @props.onFocusOutput Math.min(@numBoxes() - 2, position)
     @props.onDelete id
 
   handleFocusSibling: (position, offset) ->
-    if not @props.focus
-      @props.onFocusOutput()
-    @setState
-      focusedOutput: Math.max 0, Math.min position + offset, @numBoxes() - 1
+    @props.onFocusOutput Math.max 0, Math.min position + offset, @numBoxes() - 1
+
+  handleRemoveFocus: ->
+    @props.onRemoveFocus()
 
   numBoxes: ->
     @props.logs.length
@@ -107,11 +98,12 @@ module.exports = hyper class OutputDisplay
           id: key
           key: key
           position: i
-          focus: @props.focus and i is @state.focusedOutput
+          focus: @props.focus and i is @props.focusedOutputIndex
           width: @props.width - 45
           html: if isHtml then value else undefined
           onDelete: @handleDelete
           onFocusSibling: @handleFocusSibling
+          onRemoveFocus: @handleRemoveFocus
           if isBareReact
             value
           else if isSourceLine

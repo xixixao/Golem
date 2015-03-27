@@ -416,11 +416,13 @@ module.exports = hyper class EditorMain
     @displayMessage 'command', "Command Line: #{text}"
 
   handleFocus: (to) ->
-    =>
+    (index) =>
       # if to is @focus.output
       #   console.log "hey", @refs.fakeInput.getDOMNode()
       #   @refs.fakeInput.getDOMNode().focus()
-      @setState focused: to
+      @setState
+        focused: to
+        focusedOutputIndex: index
 
   componentWillMount: ->
     window.addEventListener 'unload', =>
@@ -516,7 +518,9 @@ module.exports = hyper class EditorMain
         completer: @state.mode.completer
         onCommand: @handleExpressionCommand
         focus: @state.focused is @focus.output
+        focusedOutputIndex: @state.focusedOutputIndex
         onDelete: @handleOutputDelete
         onFocusOutput: @handleFocus @focus.output
+        onRemoveFocus: @handleFocus null
 
 hyper.render document.getElementById('editor'), module.exports()

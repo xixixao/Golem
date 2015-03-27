@@ -22,7 +22,10 @@ module.exports = hyper class OutputDisplay
         e.preventDefault()
 
   handleClick: (e) ->
-    @props.onFocusSibling @props.position, 0
+    if e.target is @getDOMNode()
+      @props.onFocusSibling @props.position, 0
+    else
+      @props.onRemoveFocus()
 
   render: ->
     _div
@@ -33,6 +36,7 @@ module.exports = hyper class OutputDisplay
         selected: @props.focus
       style:
         'max-width': @props.width
+        cursor: 'pointer'
       onClick: @handleClick
       _div
         style:
@@ -45,5 +49,7 @@ module.exports = hyper class OutputDisplay
             outline: 'none'
           onKeyDown: @handleKeyPress
       _div
+        style:
+          cursor: 'auto'
         dangerouslySetInnerHTML: if @props.html then __html: @props.html else undefined
         @props.children
