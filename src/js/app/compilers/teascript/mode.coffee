@@ -27,6 +27,7 @@ log = (arg) ->
   concatMap
   filter
   join
+  __
   _notEmpty
   _operator
   _arguments
@@ -589,7 +590,7 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Ctrl-Shift-9', mac: 'Command-Shift-9'
         multiSelectAction: 'forEach'
         exec: =>
-          @wrap '(', ' ', yes, ')'
+          @wrap '(', {insert: yes}, ' ', {selected: yes}, ')'
 
       'wrap in parens':
         bindKey: win: '(', mac: '('
@@ -683,7 +684,7 @@ exports.Mode = class extends TextMode
         bindKey: win: '#', mac: '#'
         multiSelectAction: 'forEach'
         exec: =>
-          @wrap '(', '#', ' ', yes, ')'
+          @wrap '(', '#', ' ', {selected: yes, select: yes}, ')'
 
       # Temporary
       'show type of expression':
@@ -723,13 +724,14 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Ctrl-F', mac: 'Ctrl-F'
         multiSelectAction: 'forEach'
         exec: =>
-          @wrap '(', 'fn', ' ', '[]', ' ', yes, ')'
+          @wrap '(', 'fn', ' ', '[]', ' ', {selected: yes, select: yes}, ')'
 
       'wrap current in a match':
         bindKey: win: 'Ctrl-M', mac: 'Ctrl-M'
         multiSelectAction: 'forEach'
         exec: =>
-          @wrap '(', 'match', ' ', '\n', '    ', ' ', yes, ')'
+          @wrap '(', 'match', ' ', {insert: yes}, '\n',
+            '    ', ' ', {selected: yes}, ')'
 
       'replace expression by new function param':
         bindKey: win: 'Ctrl-A', mac: 'Ctrl-A'
@@ -820,15 +822,28 @@ exports.Mode = class extends TextMode
     if @isEditingHalfDelimited()
       @insertString FORWARD, open,
     else
-      @wrap open, yes, close
+      @wrap open, {selected: yes, select: yes}, close
 
   wrap: (tokens...) ->
-    i = tokens.indexOf yes
-    throw new Error "missing yes in wrap" if i is -1
-    string = (join tokens[0...i], tokens[i + 1...]).join ''
-    @wrapIn string, i, @selectedTangible()
+    isString = (s) -> typeof s is 'string'
+    findTags = (tokens) ->
+      tags = {}
+      offset = 0
+      for tagged, i in tokens when not isString tagged
+        for key of tagged
+          (tags[key] ?= []).push i - offset
+        offset++
+      tags
 
-  wrapIn: (wrapperString, index, tangible) ->
+    tags = findTags tokens
+    # i = tokens.indexOf yes
+    # throw new Error "missing yes in wrap" if i is -1
+
+    string = (filter isString, tokens).join ''
+    @wrapIn string, @selectedTangible(), tags
+
+  wrapIn: (wrapperString, tangible, {selected, select, insert}) ->
+    throw new Error "missing selected in wrapIn" unless selected?
     [wrapper] = astize wrapperString, parentOfTangible tangible
     empty = tangible.in.length is 0
 
@@ -844,13 +859,14 @@ exports.Mode = class extends TextMode
       changeInTree:
         at:
           in: []
-          out: [wrapper[index]]
+          out: [wrapper[selected[0]]]
         added: wrapped
-      inSelections: wrapped if not empty
+      inSelections: wrapped if select and not empty
       tangibleSelection:
-        if empty
+        if not select or empty
           in: []
-          out: [wrapper[index]]
+          out: [wrapper[(insert or selected)[0]]]
+      newSelections: map ((i) -> in: [], out: [wrapper[i]]), (insert or [])[1...]
     @finishGroupMutation()
 
   # direction ignored for now
