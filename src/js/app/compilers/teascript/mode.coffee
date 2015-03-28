@@ -254,13 +254,12 @@ exports.Mode = class extends TextMode
 
     # Make sure this is an actual command and not an action on the updater
     # TODO: I would prefer to capture all our insertion events
-    capturedCommands = ['insertstring', 'removeback', 'removeforward', 'addlabel']
     ignoredCommands = ['Up', 'Down', 'Ctrl-Up|Ctrl-Home', 'Ctrl-Down|Ctrl-End',
       'PageUp', 'PageDown']
-    if e?.command.name in capturedCommands and
+    if e?.command.autocomplete and
         (atom = @editedAtom()) and (not isHalfDelimitedAtom atom) and
         (atom.label isnt 'numerical') and
-        @editedAtom().symbol.length > 0
+        (@offsetToCursor atom) is atom.symbol.length
       prefix = @editedAtom().symbol
       if prefix && !hasCompleter
           if !editor.completer
@@ -457,6 +456,7 @@ exports.Mode = class extends TextMode
       'insertstring': # This is the default unhandled command name
         multiSelectAction: 'forEach'
         scrollIntoView: 'cursor'
+        autocomplete: yes
         exec: (editor, string) =>
           if @commandMode or (@editor.getValue() is '') and (string is ':')
             @editor.insert string
@@ -467,12 +467,14 @@ exports.Mode = class extends TextMode
     @editor.commands.addCommands @commands =
       'select by click':
         multiSelectAction: 'forEach' #selects multiple
+        autocomplete: yes
         exec: =>
           @mutate
             tangibleSelection: @tangibleAtPos @cursorPosition()
 
       'edit by click':
         multiSelectAction: 'forEach' #edits multiple
+        autocomplete: yes
         exec: =>
           tangible = @tangibleAtPos @cursorPosition()
           node = onlyExpression tangible
@@ -517,24 +519,28 @@ exports.Mode = class extends TextMode
       'next atom or position':
         bindKey: win: 'Right', mac: 'Right'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @selectFollowingAtomOrPosition NEXT
 
       'previous atom or position':
         bindKey: win: 'Left', mac: 'Left'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @selectFollowingAtomOrPosition PREVIOUS
 
       'next sibling':
         bindKey: win: 'Ctrl-Right', mac: 'Command-Right'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @selectSibling NEXT
 
       'previous sibling':
         bindKey: win: 'Ctrl-Left', mac: 'Command-Left'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @selectSibling PREVIOUS
 
@@ -553,60 +559,70 @@ exports.Mode = class extends TextMode
       'add new sibling expression':
         bindKey: win: 'Space', mac: 'Space'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @insertSpace FORWARD, ' '
 
       'add new sibling expression before current':
         bindKey: win: 'Shift-Space', mac: 'Shift-Space'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @insertSpace BACKWARD, ' '
 
       'removeback':
         bindKey: win: 'Backspace', mac: 'Backspace'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @remove BACKWARD
 
       'remove ala delete':
         bindKey: win: 'Delete', mac: 'Delete'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @remove FORWARD
 
       'removeforward':
         bindKey: win: 'Ctrl-Backspace', mac: 'Ctrl-Backspace'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @remove FORWARD
 
       'add char':
         bindKey: win: '\\', mac: '\\'
         multiSelectAction: 'forEach'
+        #autocomplete: yes # TODO: add char autocompletion for special chars
         exec: =>
           @insertString FORWARD, '\\_'
 
       'wrap in a call':
         bindKey: win: 'Ctrl-Shift-9', mac: 'Command-Shift-9'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @wrap '(', {insert: yes}, ' ', {selected: yes}, ')'
 
       'wrap in parens':
         bindKey: win: '(', mac: '('
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @insertOpeningDelim '(', ')'
 
       'wrap in brackets':
         bindKey: win: '[', mac: '['
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @insertOpeningDelim '[', ']'
 
       'wrap in braces':
         bindKey: win: '{', mac: '{'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @insertOpeningDelim '{', '}'
 
@@ -657,6 +673,7 @@ exports.Mode = class extends TextMode
       'addlabel':
         bindKey: win: ':', mac: ':'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           if @isSingleLineInput and @editor.getValue() is ''
             return no
@@ -785,6 +802,7 @@ exports.Mode = class extends TextMode
           targetMode = targetEditor.session.getMode()
           selected = targetMode.onlySelectedExpression()
           if selected and isAtom atom = selected
+            # TODO: better location than just currect insert position
             @insertString FORWARD, if isOperator atom
               labeled = false
               i = 0
