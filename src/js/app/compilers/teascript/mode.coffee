@@ -261,8 +261,8 @@ exports.Mode = class extends TextMode
           (atom = @editedAtom()) and (not isHalfDelimitedAtom atom) and
           (atom.label isnt 'numerical') and
           (@offsetToCursor atom) is atom.symbol.length or
-          not @isEditing() and not @isSelecting())
-      if !hasCompleter
+          inserting = (not @isEditing() and not @isSelecting()))
+      if !hasCompleter or inserting
           if !editor.completer
             # Create new autocompleter
             editor.completer = new CustomAutocomplete()
@@ -1648,7 +1648,8 @@ findSymbols = (ast) ->
     if isForm node
       for child in node
         crawl child
-    else if (not isHalfDelimitedAtom node)
+    else if (isExpression node) and (not isHalfDelimitedAtom node) and
+        (node.label isnt 'numerical')
       symbols[node.symbol] = yes
   crawl ast
   symbols
