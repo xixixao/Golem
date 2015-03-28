@@ -250,21 +250,22 @@ exports.Mode = class extends TextMode
 
   doAutocomplete: (e) ->
     editor = @editor
-    hasCompleter = editor.completer && editor.completer.activated;
+    hasCompleter = editor.completer and editor.completer.activated
 
     # Make sure this is an actual command and not an action on the updater
     # TODO: I would prefer to capture all our insertion events
     ignoredCommands = ['Up', 'Down', 'Ctrl-Up|Ctrl-Home', 'Ctrl-Down|Ctrl-End',
       'PageUp', 'PageDown']
     if e?.command.autocomplete and
-        (atom = @editedAtom()) and (not isHalfDelimitedAtom atom) and
-        (atom.label isnt 'numerical') and
-        (@offsetToCursor atom) is atom.symbol.length
-      prefix = @editedAtom().symbol
-      if prefix && !hasCompleter
+        (
+          (atom = @editedAtom()) and (not isHalfDelimitedAtom atom) and
+          (atom.label isnt 'numerical') and
+          (@offsetToCursor atom) is atom.symbol.length or
+          not @isEditing() and not @isSelecting())
+      if !hasCompleter
           if !editor.completer
-              # Create new autocompleter
-              editor.completer = new CustomAutocomplete()
+            # Create new autocompleter
+            editor.completer = new CustomAutocomplete()
           # Disable autoInsert
           #editor.completer.autoInsert = false;
           editor.completer.showPopup editor
@@ -275,7 +276,7 @@ exports.Mode = class extends TextMode
     completer =
       getCompletions: (editor, session, pos, prefix, callback) =>
         # TODO: type directed and other
-        editedSymbol = session.getMode().editedAtom().symbol
+        editedSymbol = session.getMode().editedAtom()?.symbol
         completions = findSymbols @ast
         callback null, (for symbol of completions when symbol isnt editedSymbol
           name: symbol
@@ -286,12 +287,15 @@ exports.Mode = class extends TextMode
       insertMatch: (editor, data) =>
         mode = editor.session.getMode()
         atom = mode.editedAtom()
-        mode.mutate
-          changeWithinAtom:
-            string: data.value
-            atom: atom
-            range:
-              [0, atom.symbol.length]
+        if atom
+          mode.mutate
+            changeWithinAtom:
+              string: data.value
+              atom: atom
+              range:
+                [0, atom.symbol.length]
+        else
+          mode.insertString FORWARD, data.value
 
   handleClick: (event) =>
     if event.domEvent.altKey
