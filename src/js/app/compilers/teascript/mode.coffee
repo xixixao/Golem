@@ -288,18 +288,19 @@ exports.Mode = class extends TextMode
           typed = targetMode.selectedTangible().out[0]
         setTimeout =>
           reference =
-            tea: typed.tea
+            type: typed.tea
             scope: typed.scope
           if @dirty
             console.log "not giving completions because dirty"
             return
+          console.log "HELLO"
           @worker.call 'matchingDefinitions', [reference], (completions) =>
-            callback null, (for symbol in completions# when symbol isnt editedSymbol
+            callback null, (for symbol, type of completions# when symbol isnt editedSymbol
               name: symbol
               value: symbol
               completer: completer
               score: 0
-              meta: 'keyword')
+              meta: type)
         , 50
 
       insertMatch: (editor, data) =>
