@@ -10,7 +10,7 @@ window.addEventListener = ->
 exports.Worker = class extends Mirror
   constructor: (sender) ->
     super sender
-    @setTimeout 200 # Take over the scheduling from Mirror
+    @setTimeout 20 # Take over the scheduling from Mirror
     @compiler = compiler
     # @trigger = delay 700
 
@@ -53,6 +53,10 @@ exports.Worker = class extends Mirror
         text: e.message
         type: 'error'
       return
+
+  matchingDefinitions: (reference, id) ->
+    defs = compiler.findMatchingDefinitions @moduleName, reference
+    @sender.callback defs, id
 
 
 # Returns a function which runs given function maximally once during given

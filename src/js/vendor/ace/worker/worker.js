@@ -164,7 +164,6 @@ var sender = window.sender = null;
 window.onmessage = function(e) {
     var msg = e.data;
     if (msg.command) {
-        console.log(e.data.command);
         if (main[msg.command])
             main[msg.command].apply(main, msg.args);
         else
@@ -175,7 +174,6 @@ window.onmessage = function(e) {
         require("ace/lib/es5-shim");
         sender = window.sender = initSender();
         var clazz = require(msg.module)[msg.classname];
-        console.log("worked")
         main = window.main = new clazz(sender, msg.aux);
     }
     else if (msg.event && sender) {

@@ -153,7 +153,7 @@ exports.Mode = class extends TextMode
 
     session.setUndoManager @undoManager()
 
-    # session.on 'change', @onDocumentChange
+    session.on 'change', @onDocumentChange
     @editor.on 'click', @handleClick
     @__editorOnPaste = @editor.onPaste
     @editor.onPaste = @handlePaste
@@ -173,6 +173,10 @@ exports.Mode = class extends TextMode
 
     # Initial parse
     @initAst ""
+
+  onDocumentChange: =>
+    console.log "setting DIRTY true"
+    @dirty = true
 
   setContent: (string, selectedRange, moduleName) ->
     # console.log "setting content"
@@ -226,6 +230,7 @@ exports.Mode = class extends TextMode
   updateAst: (ast) ->
     # console.log ast, @ast
     duplicateProperties ast, @ast
+    @dirty = false
     @$tokenizer._signal 'update', data: rows: first: 1
 
   # Traverses the AST in order, fixing positions
@@ -253,7 +258,6 @@ exports.Mode = class extends TextMode
     hasCompleter = editor.completer and editor.completer.activated
 
     # Make sure this is an actual command and not an action on the updater
-    # TODO: I would prefer to capture all our insertion events
     ignoredCommands = ['Up', 'Down', 'Ctrl-Up|Ctrl-Home', 'Ctrl-Down|Ctrl-End',
       'PageUp', 'PageDown']
     if e?.command.autocomplete and
@@ -276,14 +280,28 @@ exports.Mode = class extends TextMode
     completer =
       getCompletions: (editor, session, pos, prefix, callback) =>
         # TODO: type directed and other
-        editedSymbol = session.getMode().editedAtom()?.symbol
-        completions = findSymbols @ast
-        callback null, (for symbol of completions when symbol isnt editedSymbol
-          name: symbol
-          value: symbol
-          completer: completer
-          score: 0
-          meta: 'keyword')
+        targetMode = session.getMode()
+        if targetMode.isEditing()
+          typed = targetMode.editedAtom()
+          editedSymbol = typed.symbol
+        else
+          typed = targetMode.selectedTangible().out[0]
+        setTimeout =>
+          reference =
+            tea: typed.tea
+            scope: typed.scope
+          if @dirty
+            console.log "not giving completions because dirty"
+            return
+          @worker.call 'matchingDefinitions', [reference], (completions) =>
+            callback null, (for symbol in completions# when symbol isnt editedSymbol
+              name: symbol
+              value: symbol
+              completer: completer
+              score: 0
+              meta: 'keyword')
+        , 50
+
       insertMatch: (editor, data) =>
         mode = editor.session.getMode()
         atom = mode.editedAtom()
@@ -712,6 +730,7 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Ctrl-T', mac: 'Ctrl-T'
         multiSelectAction: 'forEach'
         exec: =>
+          # TODO: check fake type if inserting
           expression = @onlySelectedExpression()
           if expression
             if expression.malformed
@@ -1642,19 +1661,6 @@ merge = (objects) ->
 extend = (a, b) ->
   merge [a, b]
 
-findSymbols = (ast) ->
-  symbols = {}
-  crawl = (node) ->
-    if isForm node
-      for child in node
-        crawl child
-    else if (isExpression node) and (not isHalfDelimitedAtom node) and
-        (node.label isnt 'numerical')
-      symbols[node.symbol] = yes
-  crawl ast
-  symbols
-
-
 findTokensBetween = (expression, start, end) ->
   if start < expression.end and expression.start < end
     if isForm expression
@@ -1775,6 +1781,7 @@ duplicateProperties = (newAst, oldAst) ->
   oldAst.malformed = newAst.malformed
   oldAst.tea = newAst.tea
   oldAst.id = newAst.id
+  oldAst.scope = newAst.scope
   if isForm newAst
     for node, i in newAst
       duplicateProperties node, oldAst[i]
