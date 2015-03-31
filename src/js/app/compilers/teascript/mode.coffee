@@ -1208,7 +1208,7 @@ exports.Mode = class extends TextMode
       # 2. Now reposition AST to get correct locations
       @repositionAst()
       # 3. Perform editor actions to reconcile AST with contents
-      @editor.session.replace removedRange, addedString
+      @docReplace removedRange, addedString
     # 4.1. selections
     if state.inSelection or state.inSelections or state.tangibleSelection or state.selectionRange
       selections = state.tangibleSelection or
@@ -1379,6 +1379,13 @@ exports.Mode = class extends TextMode
   # Proc Pos Pos
   shiftPosBy: (pos, offset) ->
     @idxToPos (@posToIdx pos) + offset
+
+  # Ace's document#replace shortcuts changes, but we have to recompile
+  docReplace: (range, text) ->
+    # Like: @editor.session.doc.replace range, text
+    doc = @editor.session.doc
+    doc.remove range
+    doc.insert range.start, text
 
   prepareWorker: ->
     worker = new DistributingWorkerClient ["ace", "compilers"],
