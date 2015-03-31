@@ -1426,8 +1426,8 @@ var Autocomplete = function() {
 
 
     this.commands = {
-        "Up": function(editor) { console.log("wtf"); editor.completer.goTo("up"); },
-        "Down": function(editor) { console.log("wtf");editor.completer.goTo("down"); },
+        "Up": function(editor) { editor.completer.goTo("up"); },
+        "Down": function(editor) { editor.completer.goTo("down"); },
         "Ctrl-Up|Ctrl-Home": function(editor) { editor.completer.goTo("start"); },
         "Ctrl-Down|Ctrl-End": function(editor) { editor.completer.goTo("end"); },
 
