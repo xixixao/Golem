@@ -265,7 +265,7 @@ exports.Mode = class extends TextMode
           (atom = @editedAtom()) and (not isHalfDelimitedAtom atom) and
           (atom.label isnt 'numerical') and
           (@offsetToCursor atom) is atom.symbol.length or
-          inserting = (not @isEditing() and not @isSelecting()))
+          inserting = @isInserting())
       if !hasCompleter or inserting
           if !editor.completer
             # Create new autocompleter
@@ -510,7 +510,7 @@ exports.Mode = class extends TextMode
 
 
       'find':
-        bindKey: win: "Ctrl-F", mac: "Command-F"
+        bindKey: win: "Ctrl-Shift-F", mac: "Command-F"
         readOnly: true
         exec: =>
           if not @isSingleLineInput
@@ -765,6 +765,9 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Ctrl-F', mac: 'Ctrl-F'
         multiSelectAction: 'forEach'
         exec: =>
+          # if @isInserting()
+          #   @wrap '(', 'fn', ' ', '[', {insert: yes}, ']', ' ', {selected: yes, select: yes}, ')'
+          # else
           @wrap '(', 'fn', ' ', '[]', ' ', {selected: yes, select: yes}, ')'
 
       'wrap current in a match':
@@ -897,6 +900,7 @@ exports.Mode = class extends TextMode
         added: [wrapper]
     # reindentTangible tangible, wrapper
     wrapped = reindentNodes (cloneNodes tangible.in), wrapper
+    selections = join (select || []), (insert || [])
     @mutate
       changeInTree:
         at:
@@ -907,8 +911,8 @@ exports.Mode = class extends TextMode
       tangibleSelection:
         if not select or empty
           in: []
-          out: [wrapper[(insert or selected)[0]]]
-      newSelections: map ((i) -> in: [], out: [wrapper[i]]), (insert or [])[1...]
+          out: [wrapper[selections[0]]]
+      newSelections: map ((i) -> in: [], out: [wrapper[i]]), selections[1...]
     @finishGroupMutation()
 
   # direction ignored for now
@@ -1295,6 +1299,9 @@ exports.Mode = class extends TextMode
 
   isSelectingMultiple: ->
     @isSelecting() and @selectedTangible().in.length > 1
+
+  isInserting: ->
+    @selectedTangible().in.length is 0
 
   findParentFunction: (form) ->
     operator = _operator form
