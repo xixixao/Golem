@@ -530,6 +530,7 @@ exports.Mode = class extends TextMode
       'down the tree':
         bindKey: win: 'Ctrl-Down', mac: 'Command-Down'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @moveDown FIRST, LAST
 
