@@ -620,7 +620,11 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach'
         #autocomplete: yes # TODO: add char autocompletion for special chars
         exec: =>
-          @insertString FORWARD, '\\_'
+          @insertString FORWARD,
+            if @isEditingHalfDelimited()
+              '\\'
+            else
+              '\\_'
 
       'wrap in a call':
         bindKey: win: 'Ctrl-Shift-9', mac: 'Command-Shift-9'
