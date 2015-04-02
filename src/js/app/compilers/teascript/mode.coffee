@@ -742,7 +742,7 @@ exports.Mode = class extends TextMode
             if expression.malformed
               window.log expression.malformed
             else if expression.tea
-              window.log expression.tea
+              window.log compiler.prettyPrint expression.tea
 
       # For debugging
       'remove all source':
