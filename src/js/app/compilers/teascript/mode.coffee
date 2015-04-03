@@ -319,6 +319,8 @@ exports.Mode = class extends TextMode
   handleClick: (event) =>
     if event.domEvent.altKey
       @editor.execCommand 'edit by click'
+    else if event.domEvent.shiftKey
+      @editor.execCommand 'expand selection by click'
     else
       # TODO: show what will be selected on mousemove
       # Select preceding expression
@@ -508,6 +510,17 @@ exports.Mode = class extends TextMode
             else
               tangibleSelection: tangible)
 
+      'expand selection by click':
+        multiSelectAction: 'forEach' #selects multiple
+        exec: =>
+          # 1. find ancestors with a common parent
+          #    of the current selections
+          #    of the clicked tangible
+          # 2. select between the ancestors
+          [from, to] = siblingTangibleAncestors @selectedTangible(),
+            (@tangibleAtPos @cursorPosition())
+          @mutate
+            tangibleSelection: tangibleBetween from, to
 
       'find':
         bindKey: win: "Ctrl-Shift-F", mac: "Command-F"
@@ -1018,10 +1031,10 @@ exports.Mode = class extends TextMode
   # Returns node at cursor (only atoms, not forms)
   tangibleAtPos: (pos) ->
     # TODO: return selections object
-    console.log @posToIdx pos
+    # console.log @posToIdx pos
     [before, after] = @tokensSurroundingPos pos
     res = tangibleSurroundedBy FORWARD, before, after or before
-    console.log "at pos", res
+    # console.log "at pos", res
     res
 
   tokenFollowingPos: (pos) ->
@@ -1430,6 +1443,39 @@ onlyExpression = (tangible) ->
   if tangible.in.length is 1 and isExpression node
     node
 
+siblingTangibleAncestors = (tangible1, tangible2) ->
+  d1 = depthOf (parentOfTangible tangible1)
+  d2 = depthOf (parentOfTangible tangible2)
+  p1 = tangibleAncestor tangible1, Math.max 0, d1 - d2
+  p2 = tangibleAncestor tangible2, Math.max 0, d2 - d1
+  siblingAncestorsFrom p1, p2
+
+siblingAncestorsFrom = (tangible1, tangible2) ->
+  if (parentOfTangible tangible1) is (parentOfTangible tangible2)
+    [tangible1, tangible2]
+  else
+    siblingAncestorsFrom (tangibleParent tangible1), (tangibleParent tangible2)
+
+tangibleAncestor = (tangible, levels) ->
+  if levels is 0
+    tangible
+  else
+    tangibleAncestor (tangibleParent tangible), levels - 1
+
+# precondtion: these have the same parent
+tangibleBetween = (tangible1, tangible2) ->
+  [from, to] = sortSiblingTangibles tangible1, tangible2
+  parent = parentOfTangible from
+  fromNode = nodeEdgeOfTangible FIRST, from
+  in: parent[(childIndex fromNode)...(childIndexOfTangible to)]
+  out: to.out
+
+sortSiblingTangibles = (tangible1, tangible2) ->
+  if (childIndexOfTangible tangible1) > (childIndexOfTangible tangible2)
+    [tangible2, tangible1]
+  else
+    [tangible1, tangible2]
+
 tangibleEdge = (direction, tangible) ->
   edge = edgeOfList direction, tangible.in
   if direction is FORWARD or tangible.in.length is 0
@@ -1444,6 +1490,9 @@ tangibleEdge = (direction, tangible) ->
 
 parentOfTangible = (tangible) ->
   tangible.out[0].parent
+
+childIndexOfTangible = (tangible) ->
+  childIndex tangible.out[0]
 
 nodeEdgeOfTangible = (direction, tangible) ->
   edgeOfList direction, nodeEdgesOfTangible tangible
