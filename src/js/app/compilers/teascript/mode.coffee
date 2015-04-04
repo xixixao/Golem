@@ -175,7 +175,7 @@ exports.Mode = class extends TextMode
     @initAst ""
 
   onDocumentChange: =>
-    console.log "setting DIRTY true"
+    # console.log "setting DIRTY true"
     @dirty = true
 
   setContent: (string, selectedRange, moduleName) ->
@@ -293,7 +293,6 @@ exports.Mode = class extends TextMode
           if @dirty
             console.log "not giving completions because dirty"
             return
-          console.log "HELLO"
           @worker.call 'matchingDefinitions', [reference], (completions) =>
             callback null, (for symbol, type of completions# when symbol isnt editedSymbol
               name: symbol
@@ -1872,6 +1871,7 @@ duplicateProperties = (newAst, oldAst) ->
   oldAst.malformed = newAst.malformed
   oldAst.tea = newAst.tea
   oldAst.id = newAst.id
+  oldAst.fake = newAst.fake
   oldAst.scope = newAst.scope
   if isForm newAst
     for node, i in newAst
