@@ -698,6 +698,14 @@ exports.Mode = class extends TextMode
               inSelection:
                 @realParentOfSelected()
 
+      'jump to parent definition':
+        bindKey: win: 'Ctrl-Shift-0', mac: 'Command-Shift-0'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @mutate
+            inSelection:
+              definitionParentOf nodeEdgeOfTangible FIRST, @selectedTangible()
+
       # 'add new sibling to parent':
       #   bindKey: win: ')', mac: ')'
       #   exec: =>
@@ -856,11 +864,12 @@ exports.Mode = class extends TextMode
                 if labeled
                   labeled = false
                   continue
-                args.push if isLabel term
-                  labeled = true
-                  _labelName term
-                else if (isAtom term) and (not isHalfDelimitedAtom term)
-                  String.fromCharCode 97 + i++
+                args.push(
+                  if isLabel term
+                    labeled = true
+                    _labelName term
+                  else if (isAtom term) and (not isHalfDelimitedAtom term)
+                    String.fromCharCode 97 + i++)
               """
               #{atom.symbol} (fn [#{args.join ' '}]
                 )"""
@@ -1438,6 +1447,18 @@ exports.Mode = class extends TextMode
       @moduleName = moduleName
       @worker.call 'setModuleName', [moduleName]
 
+definitionParentOf = (node) ->
+  if (parent = parentOf node)
+    if (siblingTerm PREVIOUS, parent)?.label is 'name'
+      parent
+    else
+      definitionParentOf parent
+
+siblingTerm = (direction, node) ->
+  terms = _terms node.parent
+  for t, i in terms when t is node
+    return if direction is FORWARD then terms[i + 1] else terms[i - 1]
+
 onlyExpression = (tangible) ->
   [node] = tangible.in
   if tangible.in.length is 1 and isExpression node
@@ -1510,6 +1531,7 @@ insToTangible = (ins) ->
   in: ins
   out: validOut next
 
+# Used by navigation over atoms and insert positions
 followingTangibleAtomOrPosition = (direction, tangible) ->
   node = paddingEdge direction, tangible
   if isDelim node
