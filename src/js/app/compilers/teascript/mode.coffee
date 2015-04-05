@@ -1032,9 +1032,7 @@ exports.Mode = class extends TextMode
         toSibling = append direction, margin, siblingTangible
         tangibleSelection: append direction, @selectedTangible(), toSibling
       else
-        inSelection:
-          if isReal parent = @parentOfSelected()
-            parent)
+        inSelection: @realParentOfSelected())
 
   # Returns node at cursor (only atoms, not forms)
   tangibleAtPos: (pos) ->
@@ -1564,11 +1562,11 @@ tangibleSurroundedBy = (direction, first, second) ->
     out: validOut after
   else if (isExpression after)
     insToTangible [after]
-  else if (isOpeningDelim before) or (not isIndent after)
+  else #if (isOpeningDelim before) or (not isIndent after)
     in: []
-    out: [after]
-  else
-    tangibleInAfter direction, second
+    out: validOut after
+  # else
+  #   tangibleInAfter direction, second
 
 tangibleInAfter = (direction, node) ->
   (other = sibling direction, node) and tangibleSurroundedBy direction, node, other
