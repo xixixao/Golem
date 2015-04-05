@@ -331,7 +331,6 @@ exports.Mode = class extends TextMode
 
   handlePaste: (string) =>
     @editor.commands.exec "insertstring", @editor, string
-
     # TODO: Figure out how to do multi-copy-paste, Ace does it based on lines
     #       would be nice if we could do it based on actual selections
     #       - might require memorizing the copy.
@@ -520,6 +519,15 @@ exports.Mode = class extends TextMode
             (@tangibleAtPos @cursorPosition())
           @mutate
             tangibleSelection: tangibleBetween from, to
+
+      'cut': # This is the default unhandled command name
+        scrollIntoView: 'cursor'
+        multiSelectAction: 'forEach'
+        autocomplete: yes
+        exec: =>
+          range = @editor.getSelectionRange()
+          @editor._emit('cut', range) # performs copy
+          @remove FORWARD
 
       'find':
         bindKey: win: "Ctrl-Shift-F", mac: "Command-F"
