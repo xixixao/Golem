@@ -852,6 +852,7 @@ exports.Mode = class extends TextMode
             tangibles = (insToTangible [other] for other in others)
 
             @mutate
+              inSelection: atom
               newSelections: tangibles
 
       'define selected token':
