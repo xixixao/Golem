@@ -40,13 +40,20 @@ module.exports = hyper class UpdatingDisplay
             result = eval compiled
             @parseValue result
           catch error
-            @displayError error
+            @displayError error, compiled
     else
       @cached
 
-  displayError: (error) ->
-      _span style: color: '#cc0000',
-        "#{error}"
+  displayError: (error, compiled) ->
+    _div style: color: '#cc0000',
+      _div "#{error}"
+      _div "#{
+        if error instanceof SyntaxError
+          compiled
+        else
+          error.stack
+            .replace(/\n?((\w+)[^>\n]+>[^>\n]+:(\d+:\d+)|.*)(?=\n)/g, '\n$2 $3')
+            .replace(/\n (?=\n)/g, '')}"
 
   handleCommand: (name) ->
     => @props.onCommand name, @editor

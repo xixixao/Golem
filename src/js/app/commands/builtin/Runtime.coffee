@@ -12,6 +12,8 @@ class DumpCommand
   @symbols = @defaultSymbols
 
   @execute = (args, state, editor) ->
+    # TODO: add full output and line numbers
+    # ("#{i} #{line}" for line, i in state.compiledJs.split('\n')).join '\n'
     ifCompiled state, editor, ->
       editor.logResult state.compiledJs
 

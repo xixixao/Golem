@@ -9,7 +9,7 @@ module.exports = React.createClass
     $lastChild = $(@getDOMNode()).children().last()
     lastChild = @props.children[@props.children.length - 1]
 
-    @props.onResize windowHeight - $lastChild.offset().top - 20
+    @props.onResize windowHeight - $lastChild.offset().top - 25
 
   componentDidMount: (rootNode) ->
     window.addEventListener 'resize', @windowResized
