@@ -536,6 +536,13 @@ exports.Mode = class extends TextMode
           if not @isSingleLineInput
             CustomSearchBox.Search @editor
 
+      'selectall':
+        bindKey: win: "Ctrl-A", mac: "Command-A"
+        readOnly: true
+        exec: =>
+          @mutate
+            tangibleSelection: insideTangible @ast
+
       'up the tree':
         bindKey: win: 'Ctrl-Up', mac: 'Command-Up'
         multiSelectAction: 'forEach'
@@ -811,7 +818,7 @@ exports.Mode = class extends TextMode
             '    ', ' ', {selected: yes}, ')'
 
       'replace expression by new function param':
-        bindKey: win: 'Ctrl-A', mac: 'Ctrl-A'
+        bindKey: win: 'Ctrl-Shift-A', mac: 'Ctrl-A'
         multiSelectAction: 'forEach'
         exec: =>
           parent = @realParentOfSelected()
