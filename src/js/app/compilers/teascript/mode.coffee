@@ -200,6 +200,7 @@ exports.Mode = class extends TextMode
     catch e
       # Make sure we don't error so data is never lost when loading files
       console.error e, e.stack
+      console.error string
       @editor.insert string
 
   tangibleSelectionFromRange: (range) ->
