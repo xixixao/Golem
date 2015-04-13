@@ -18,8 +18,14 @@ exports.Worker = class extends Mirror
 
   compileModule: (value, moduleName) ->
     console.log  "compiling module", moduleName
-    cacheModule compiler.compileTopLevel, value, moduleName
-    @compile()
+    try
+      cacheModule compiler.compileTopLevel, value, moduleName
+      @compile()
+    catch e
+      @sender.emit "error",
+        text: e.message
+        type: 'error'
+        inDependency: yes
 
   onUpdate: ->
     # @trigger @compile
