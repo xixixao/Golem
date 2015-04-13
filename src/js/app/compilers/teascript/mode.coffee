@@ -396,23 +396,32 @@ exports.Mode = class extends TextMode
     packGroupMutation: =>
       {stack, states} = @groupMutationRegister
       states.reverse()
-      stack.push states
+      stack.push (#if @sameKindMutation stack[stack.length - 1] or [], states
+        #stack.pop().concat states
+      #else
+        states)
       @groupMutationRegister = states: []
     undo: =>
-      states = @undoStack.pop()
-      if states
-        for state in states
-          @mutate state, redo: yes
+      @replay @undoStack, redo: yes
       # console.log "should have undone"
     redo: =>
-      states = @redoStack.pop()
-      if states
-        for state in states
-          @mutate state, undo: yes
+      @replay @redoStack, undo: yes
       # console.log "should have redone"
     clear: =>
       @undoStack = []
       @redoStack = []
+
+  replay: (stack, way) =>
+    states = stack.pop()
+    if states
+      for state in states
+        @mutate state, way
+
+  sameKindMutation: (previousStates, nextStates) ->
+    if previousStates.length is 1 and nextStates.length is 1
+      [p] = previousStates
+      [n] = nextStates
+      p.changeWithinAtom and n.changeWithinAtom or p.changeInTree and n.changeInTree
 
   addVerticalCommands: ->
     @editor.commands.addCommands
