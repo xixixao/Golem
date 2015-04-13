@@ -723,7 +723,7 @@ exports.Mode = class extends TextMode
         exec: =>
           @mutate
             inSelection:
-              definitionParentOf nodeEdgeOfTangible FIRST, @selectedTangible()
+              definitionAncestorOf nodeEdgeOfTangible FIRST, @selectedTangible()
 
       # 'add new sibling to parent':
       #   bindKey: win: ')', mac: ')'
@@ -798,8 +798,7 @@ exports.Mode = class extends TextMode
           parent = @realParentOfSelected()
           if parent
             added = @selectedTangible()
-            lifted = reindentNodes (cloneNodes added.in), parent.parent
-            # reindentTangible added, parent.parent
+            lifted = reindentTangible added, parent.parent
             @mutate
               changeInTree:
                 added: lifted
@@ -827,8 +826,8 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach'
         exec: =>
           parent = @realParentOfSelected()
-          fun = @findParentFunction parent if parent
-          params = @findParamList fun if fun
+          fun = findParentFunction parent if parent
+          params = findParamList fun if fun
           if params
             @startGroupMutation()
             # insert space for new param if necessary and put cursors at both places
@@ -896,6 +895,38 @@ exports.Mode = class extends TextMode
             else
               """
               #{atom.symbol} """
+          else
+            # Find parent scope
+            # Add empty space and selected form
+            # put cursor to original place and the new space
+            # --- actually it's like adding an argument
+            after = ancestorInDefinitonList @selectedNodeEdge FIRST
+            movedTo = nodeEdgeOfTangible LAST, insToTangible [after]
+            moved = reindentTangible @selectedTangible(), movedTo.parent
+            space = if parentOf after then '\n' else '\n\n'
+
+            @startGroupMutation()
+            @mutate @removeSelectable @selectedTangible()
+            originalHole = @selectedTangible()
+
+            @insertSpaceAt FORWARD, space, movedTo
+
+            @insertSpaceAt FORWARD, " ", movedTo
+            newHole = previous @selectedNodeEdge FIRST
+
+            @mutate
+              changeInTree:
+                added: moved
+                at:
+                  in: []
+                  out: [movedTo]
+              tangibleSelection:
+                in: []
+                out: [newHole]
+              newSelections: [
+                originalHole
+              ]
+            @finishGroupMutation()
 
   moveDown: (inTree, inAtom) ->
     @mutate(
@@ -945,15 +976,14 @@ exports.Mode = class extends TextMode
       changeInTree:
         at: tangible
         added: [wrapper]
-    # reindentTangible tangible, wrapper
-    wrapped = reindentNodes (cloneNodes tangible.in), wrapper
+    wrapped = reindentTangible tangible, wrapper
     selections = join (select || []), (insert || [])
     @mutate
       changeInTree:
+        added: wrapped
         at:
           in: []
           out: [wrapper[selected[0]]]
-        added: wrapped
       inSelections: wrapped if select and not empty
       tangibleSelection:
         if not select or empty
@@ -1348,17 +1378,6 @@ exports.Mode = class extends TextMode
   isInserting: ->
     @selectedTangible().in.length is 0
 
-  findParentFunction: (form) ->
-    operator = _operator form
-    if operator.symbol is 'fn'
-      form
-    else if form.parent
-      @findParentFunction form.parent
-
-  findParamList: (form) ->
-    [params] = _arguments form
-    params
-
   toText: (node) ->
     @editor.session.doc.getTextRange @range node
 
@@ -1465,12 +1484,34 @@ exports.Mode = class extends TextMode
       @moduleName = moduleName
       @worker.call 'setModuleName', [moduleName]
 
-definitionParentOf = (node) ->
+ancestorInDefinitonList = (expression) ->
+  if (parent = parentOf expression)
+    if isFunction parent
+      expression
+    else
+      ancestorInDefinitonList parent
+  else
+    expression
+
+findParentFunction = (form) ->
+  if isFunction form
+    form
+  else if form.parent
+    @findParentFunction form.parent
+
+findParamList = (form) ->
+  [params] = _arguments form
+  params
+
+isFunction = (form) ->
+  (_operator form).symbol is 'fn'
+
+definitionAncestorOf = (node) ->
   if (parent = parentOf node)
     if (siblingTerm PREVIOUS, parent)?.label is 'name'
       parent
     else
-      definitionParentOf parent
+      definitionAncestorOf parent
 
 siblingTerm = (direction, node) ->
   terms = _terms node.parent
@@ -1558,12 +1599,12 @@ followingTangibleAtomOrPosition = (direction, tangible) ->
   else
     siblingTangible = tangibleSurroundedBy direction, node, sibling direction, node
     if isForm siblingNode = toNode siblingTangible
-      tangibleInAfter direction, limitToken (opposite direction), siblingNode
+      previous @selectedNodeEdge FIRST direction, limitToken (opposite direction), siblingNode
     else
       siblingTangible
 
 # siblingTangible = (direction, node) ->
-#   (other = sibling direction, node) and tangibleInAfter direction, other
+#   (other = sibling direction, node) and previous @selectedNodeEdge FIRST direction, other
 
 tangibleParent = (tangible) ->
   parent = parentOfTangible tangible
@@ -1587,7 +1628,7 @@ tangibleSurroundedBy = (direction, first, second) ->
     in: []
     out: validOut after
   # else
-  #   tangibleInAfter direction, second
+  #   previous @selectedNodeEdge FIRST direction, second
 
 tangibleInAfter = (direction, node) ->
   (other = sibling direction, node) and tangibleSurroundedBy direction, node, other
@@ -1897,6 +1938,10 @@ duplicateProperties = (newAst, oldAst) ->
       duplicateProperties node, oldAst[i]
   else
     oldAst.label = newAst.label
+
+# Fn Tangible Nodes
+reindentTangible = (tangible, to) ->
+  reindentNodes (cloneNodes tangible.in), to
 
 # Astizes string and reindents it properly
 astize = (string, parent) ->
