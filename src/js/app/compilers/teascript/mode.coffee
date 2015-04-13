@@ -1599,12 +1599,12 @@ followingTangibleAtomOrPosition = (direction, tangible) ->
   else
     siblingTangible = tangibleSurroundedBy direction, node, sibling direction, node
     if isForm siblingNode = toNode siblingTangible
-      previous @selectedNodeEdge FIRST direction, limitToken (opposite direction), siblingNode
+      tangibleInAfter direction, limitToken (opposite direction), siblingNode
     else
       siblingTangible
 
 # siblingTangible = (direction, node) ->
-#   (other = sibling direction, node) and previous @selectedNodeEdge FIRST direction, other
+#   (other = sibling direction, node) and tangibleInAfter direction, other
 
 tangibleParent = (tangible) ->
   parent = parentOfTangible tangible
@@ -1628,7 +1628,7 @@ tangibleSurroundedBy = (direction, first, second) ->
     in: []
     out: validOut after
   # else
-  #   previous @selectedNodeEdge FIRST direction, second
+  #   tangibleInAfter direction, second
 
 tangibleInAfter = (direction, node) ->
   (other = sibling direction, node) and tangibleSurroundedBy direction, node, other

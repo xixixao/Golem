@@ -52,6 +52,7 @@ exports.Worker = class extends Mirror
       @sender.emit "error",
         text: e.message
         type: 'error'
+        source: value
       return
 
   matchingDefinitions: (reference, id) ->
@@ -103,6 +104,7 @@ class ExpressionWorker extends exports.Worker
         @sender.emit "error",
           text: e.message
           type: 'error'
+          commandSource: value
         return
 
 cache = {}
