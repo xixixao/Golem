@@ -294,6 +294,10 @@ exports.Mode = class extends TextMode
           if @dirty
             console.log "not giving completions because dirty"
             return
+          # TODO: plain text for non-typed expressions
+          unless reference.type
+            callback "error", []
+            return
           @worker.call 'matchingDefinitions', [reference], (completions) =>
             callback null, (for symbol, type of completions# when symbol isnt editedSymbol
               name: symbol
