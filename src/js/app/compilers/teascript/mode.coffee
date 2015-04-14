@@ -781,9 +781,8 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Ctrl-T', mac: 'Ctrl-T'
         multiSelectAction: 'forEach'
         exec: =>
-          # TODO: check fake type if inserting
-          expression = @onlySelectedExpression()
-          if expression
+          selected = @selectedTangible()
+          if expression = (onlyExpression selected) or (fakeAtInsertion selected)
             if expression.malformed
               window.log expression.malformed
             else if expression.tea
@@ -1530,6 +1529,11 @@ onlyExpression = (tangible) ->
   [node] = tangible.in
   if tangible.in.length is 1 and isExpression node
     node
+
+fakeAtInsertion = (tangible) ->
+  [fake] = tangible.out
+  if fake.fake
+    fake
 
 siblingTangibleAncestors = (tangible1, tangible2) ->
   d1 = depthOf (parentOfTangible tangible1)
