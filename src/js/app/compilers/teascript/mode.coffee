@@ -495,11 +495,7 @@ exports.Mode = class extends TextMode
         scrollIntoView: 'cursor'
         autocomplete: yes
         exec: (editor, string) =>
-          if @commandMode or (@editor.getValue() is '') and (string is ':')
-            @editor.insert string
-            return
-
-          @insertString FORWARD, string
+          @insertStringForward string
 
     @editor.commands.addCommands @commands =
       'select by click':
@@ -1000,6 +996,9 @@ exports.Mode = class extends TextMode
           out: [wrapper[selections[0]]]
       newSelections: map ((i) -> in: [], out: [wrapper[i]]), selections[1...]
     @finishGroupMutation()
+
+  insertStringForward: (string) ->
+    @insertString FORWARD, string
 
   # direction ignored for now
   insertString: (direction, string) ->

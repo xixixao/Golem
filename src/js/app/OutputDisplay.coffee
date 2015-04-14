@@ -54,7 +54,7 @@ module.exports = hyper class OutputDisplay
     @windowResized()
 
   componentDidUpdate: ({logs}, prevState) ->
-    if logs.length isnt @props.logs.length and logs[0]?[0] isnt @props.logs[0][0]
+    if logs.length isnt @props.logs.length and logs[0]?[0] isnt @props.logs[0]?[0]
       $this = $ @getDOMNode()
       duration = $this.scrollTop() / 10
       $this.animate
