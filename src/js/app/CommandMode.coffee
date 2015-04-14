@@ -60,3 +60,7 @@ module.exports = class CommandMode extends Mode
             return
 
           @insertStringForward string
+
+  doAutocomplete: ->
+    return if @commandMode
+    super
