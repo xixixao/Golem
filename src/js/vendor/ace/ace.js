@@ -8380,7 +8380,6 @@ var EditSession = function(text, mode) {
         this._signal("changeBreakpoint", {});
     };
     this.addMarker = function(range, clazz, type, inFront) {
-        console.log(clazz, inFront)
         var id = this.$markerId++;
 
         var marker = {
