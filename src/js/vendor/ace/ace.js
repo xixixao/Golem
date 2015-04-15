@@ -8380,6 +8380,7 @@ var EditSession = function(text, mode) {
         this._signal("changeBreakpoint", {});
     };
     this.addMarker = function(range, clazz, type, inFront) {
+        console.log(clazz, inFront)
         var id = this.$markerId++;
 
         var marker = {
@@ -13254,7 +13255,7 @@ var Marker = function(parentEl) {
     this.setSession = function(session) {
         this.session = session;
     };
-
+    
     this.setMarkers = function(markers) {
         this.markers = markers;
     };
@@ -13283,7 +13284,7 @@ var Marker = function(parentEl) {
             if (marker.renderer) {
                 var top = this.$getTop(range.start.row, config);
                 var left = this.$padding + range.start.column * config.characterWidth;
-                marker.renderer(html, range, left, top, config);
+                marker.renderer(html, range, left, top, config, this);
             } else if (marker.type == "fullLine") {
                 this.drawFullLineMarker(html, range, marker.clazz, config);
             } else if (marker.type == "screenLine") {
@@ -13303,39 +13304,50 @@ var Marker = function(parentEl) {
     this.$getTop = function(row, layerConfig) {
         return (row - layerConfig.firstRowScreen) * layerConfig.lineHeight;
     };
-    this.drawTextMarker = function(stringBuilder, range, clazz, layerConfig, extraStyle) {
+
+    // Draws a marker, which spans a range of text on multiple lines 
+    this.drawTextMarker = function(stringBuilder, range, clazz, layerConfig, extraStyle, extraAttributes) {
+        // selection start
         var row = range.start.row;
 
         var lineRange = new Range(
             row, range.start.column,
             row, this.session.getScreenLastRowColumn(row)
         );
-        this.drawSingleLineMarker(stringBuilder, lineRange, clazz + " ace_start", layerConfig, 1, extraStyle);
+        this.drawSingleLineMarker(stringBuilder, lineRange, clazz + " ace_start", layerConfig, 1, extraStyle, extraAttributes);
+
+        // selection end
         row = range.end.row;
         lineRange = new Range(row, 0, row, range.end.column);
-        this.drawSingleLineMarker(stringBuilder, lineRange, clazz, layerConfig, 0, extraStyle);
+        this.drawSingleLineMarker(stringBuilder, lineRange, clazz, layerConfig, 0, extraStyle, extraAttributes);
 
         for (row = range.start.row + 1; row < range.end.row; row++) {
             lineRange.start.row = row;
             lineRange.end.row = row;
             lineRange.end.column = this.session.getScreenLastRowColumn(row);
-            this.drawSingleLineMarker(stringBuilder, lineRange, clazz, layerConfig, 1, extraStyle);
+            this.drawSingleLineMarker(stringBuilder, lineRange, clazz, layerConfig, 1, extraStyle, extraAttributes);
         }
     };
-    this.drawMultiLineMarker = function(stringBuilder, range, clazz, config, extraStyle) {
+
+    // Draws a multi line marker, where lines span the full width
+    this.drawMultiLineMarker = function(stringBuilder, range, clazz, config, extraStyle, extraAttributes) {
+        // from selection start to the end of the line
         var padding = this.$padding;
         var height = config.lineHeight;
         var top = this.$getTop(range.start.row, config);
         var left = padding + range.start.column * config.characterWidth;
         extraStyle = extraStyle || "";
+        extraAttributes = extraAttributes || "";
 
         stringBuilder.push(
             "<div class='", clazz, " ace_start ace_multiline' style='",
             "height:", height, "px;",
             "right:0;",
             "top:", top, "px;",
-            "left:", left, "px;", extraStyle, "'></div>"
+            "left:", left, "px;", extraStyle, "' ", extraAttributes, "></div>"
         );
+
+        // from start of the last line to the selection end
         top = this.$getTop(range.end.row, config);
         var width = range.end.column * config.characterWidth;
 
@@ -13344,10 +13356,12 @@ var Marker = function(parentEl) {
             "height:", height, "px;",
             "width:", width, "px;",
             "top:", top, "px;",
-            "left:", padding, "px;", extraStyle, "'></div>"
+            "left:", padding, "px;", extraStyle, "' ", extraAttributes, "></div>"
         );
+
+        // all the complete lines
         height = (range.end.row - range.start.row - 1) * config.lineHeight;
-        if (height < 0)
+        if (height <= 0)
             return;
         top = this.$getTop(range.start.row + 1, config);
 
@@ -13356,10 +13370,12 @@ var Marker = function(parentEl) {
             "height:", height, "px;",
             "right:0;",
             "top:", top, "px;",
-            "left:", padding, "px;", extraStyle, "'></div>"
+            "left:", padding, "px;", extraStyle, "' ", extraAttributes, "></div>"
         );
     };
-    this.drawSingleLineMarker = function(stringBuilder, range, clazz, config, extraLength, extraStyle) {
+
+    // Draws a marker which covers part or whole width of a single screen line
+    this.drawSingleLineMarker = function(stringBuilder, range, clazz, config, extraLength, extraStyle, extraAttributes) {
         var height = config.lineHeight;
         var width = (range.end.column + (extraLength || 0) - range.start.column) * config.characterWidth;
 
@@ -13371,11 +13387,11 @@ var Marker = function(parentEl) {
             "height:", height, "px;",
             "width:", width, "px;",
             "top:", top, "px;",
-            "left:", left, "px;", extraStyle || "", "'></div>"
+            "left:", left, "px;", extraStyle || "", "' ", extraAttributes, "></div>"
         );
     };
 
-    this.drawFullLineMarker = function(stringBuilder, range, clazz, config, extraStyle) {
+    this.drawFullLineMarker = function(stringBuilder, range, clazz, config, extraStyle, extraAttributes) {
         var top = this.$getTop(range.start.row, config);
         var height = config.lineHeight;
         if (range.start.row != range.end.row)
@@ -13385,11 +13401,11 @@ var Marker = function(parentEl) {
             "<div class='", clazz, "' style='",
             "height:", height, "px;",
             "top:", top, "px;",
-            "left:0;right:0;", extraStyle || "", "'></div>"
+            "left:0;right:0;", extraStyle || "", "' ", extraAttributes, "></div>"
         );
     };
-
-    this.drawScreenLineMarker = function(stringBuilder, range, clazz, config, extraStyle) {
+    
+    this.drawScreenLineMarker = function(stringBuilder, range, clazz, config, extraStyle, extraAttributes) {
         var top = this.$getTop(range.start.row, config);
         var height = config.lineHeight;
 
@@ -13397,7 +13413,7 @@ var Marker = function(parentEl) {
             "<div class='", clazz, "' style='",
             "height:", height, "px;",
             "top:", top, "px;",
-            "left:0;right:0;", extraStyle || "", "'></div>"
+            "left:0;right:0;", extraStyle || "", "' ", extraAttributes, "></div>"
         );
     };
 
