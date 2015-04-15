@@ -307,18 +307,21 @@ exports.Mode = class extends TextMode
               meta: type)
         , 50
 
-      insertMatch: (editor, data) =>
+      insertMatch: (editor, {value}) =>
         mode = editor.session.getMode()
         atom = mode.editedAtom()
         if atom
           mode.mutate
             changeWithinAtom:
-              string: data.value
+              string: value
               atom: atom
               range:
                 [0, atom.symbol.length]
         else
-          mode.insertString FORWARD, data.value
+          if value is '{}'
+            mode.insertOpeningDelim '{', '}'
+          else
+            mode.insertString FORWARD, value
 
   handleClick: (event) =>
     if event.domEvent.altKey
