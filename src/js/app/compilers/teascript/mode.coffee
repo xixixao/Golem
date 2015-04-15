@@ -880,6 +880,7 @@ exports.Mode = class extends TextMode
           targetEditor ?= @editor
           targetMode = targetEditor.session.getMode()
           selected = targetMode.onlySelectedExpression()
+          defaultNames = "xyzwtuvmnopqrs"
           if selected and isAtom atom = selected
             # TODO: better location than just currect insert position
             @insertString FORWARD, if isOperator atom
@@ -895,7 +896,7 @@ exports.Mode = class extends TextMode
                     labeled = true
                     _labelName term
                   else if (isAtom term) and (not isHalfDelimitedAtom term)
-                    String.fromCharCode 97 + i++)
+                    defaultNames[i++])
               """
               #{atom.symbol} (fn [#{args.join ' '}]
                 )"""
