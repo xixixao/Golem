@@ -27,5 +27,5 @@ module.exports = hyper class MessageDisplay
           color: @_getColor()
         off:
           opacity: 0
-          transition: 'opacity .7s ease-in'
+          transition: 'opacity .2s ease-in'
         @props.message.value
