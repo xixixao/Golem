@@ -945,11 +945,10 @@ exports.Mode = class extends TextMode
                 at:
                   in: []
                   out: [movedTo]
-              tangibleSelection:
+              tangibleSelection: originalHole
+              newSelections: [
                 in: []
                 out: [newHole]
-              newSelections: [
-                originalHole
               ]
             @finishGroupMutation()
 
