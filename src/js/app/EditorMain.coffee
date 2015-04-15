@@ -262,10 +262,12 @@ module.exports = hyper class EditorMain
       console.log "source worker finished ok"#, result, result.ast, result.types
       if mode.editor.getValue() is source
         if result.errors
-          @handleSourceFailed result.errors[0]
+          firstError = result.errors[0]
+          @handleSourceFailed firstError.message or firstError
         else
           @handleSourceCompiled result#, @refs.sourceEditor.editor.getValue()
         mode.updateAst result.ast
+        mode.showErrors result.errors or []
 
     worker.on 'error', ({data: {text, source, inDependency}}) =>
       console.log "error in source worker", text

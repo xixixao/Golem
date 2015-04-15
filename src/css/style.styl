@@ -91,7 +91,7 @@ infoBar()
 
 
 /* popup for autocompletion */
-.golem 
+.golem
   .ace_editor.ace_autocomplete .ace_marker-layer .ace_active-line {
     background-color: #333;
     z-index: 1;
@@ -275,4 +275,40 @@ infoBar()
       user-select: none;
       color: #fff;
   }
+
+  .ace_marker-layer .golem_error-origin
+    position: absolute
+    pointer-events: auto
+
+  .ace_marker-layer .golem_error-origin.ace_start::after,
+  .ace_marker-layer .golem_error-origin.golem_single-line::after {
+    content: "";
+    position: absolute;
+    left: -1px;
+    top: 0px;
+    border: 1px solid #800;
+    box-shadow: 0px 0px 2px black;
+    width: 2px;
+    height: 2px;
+    background: #800;
+    border-radius: 2px;
+    display: block;
+  }
+
+  .ace_marker-layer .golem_error-origin.ace_start:hover::after,
+  .ace_marker-layer .golem_error-origin.golem_single-line:hover::after {
+    content: attr(data-type);
+    position: absolute;
+    transition: width 0.5s ease;
+    color: #800;
+    left: 0;
+    top: 15px;
+    width: auto;
+    height: auto;
+    border-style: none;
+    background: #222;
+    padding: 0px 3px;
+    z-index: 500;
+  }
+
 

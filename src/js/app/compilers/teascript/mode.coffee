@@ -254,6 +254,23 @@ exports.Mode = class extends TextMode
         node.end += offset
         currentPosition = node.end
 
+  showErrors: (errors) ->
+    @editor.session.removeMarker id for id in @errorMarkers or []
+    @errorMarkers = concat (for {message, conflicts} in errors when message
+      for origin in conflicts
+        range = @nodeRange origin
+        type = compiler.plainPrettyPrint origin.tea
+        @editor.session.addMarker range, 'clazz', (@showError range, type), yes)
+
+  showError: (range, type) -> (stringBuilder, r, l, t, config, layer) ->
+    clazz = 'golem_error-origin'
+    if range.isMultiLine()
+      layer.drawTextMarker stringBuilder, range,
+        clazz, config, null, "data-type='#{type}'"
+    else
+      layer.drawSingleLineMarker stringBuilder, range,
+        clazz + ' golem_single-line', config, null, null, "data-type='#{type}'"
+
   doAutocomplete: (e) ->
     editor = @editor
     hasCompleter = editor.completer and editor.completer.activated
@@ -1435,6 +1452,9 @@ exports.Mode = class extends TextMode
 
   edgeOfToken: (direction, node) ->
     @idxToPos edgeIdxOfNode direction, node
+
+  nodeRange: (node) ->
+    positionsToRange (@startPos node), (@endPos node)
 
   # Proc Node Pos
   startPos: (node) ->
