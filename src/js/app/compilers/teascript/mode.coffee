@@ -257,7 +257,7 @@ exports.Mode = class extends TextMode
   showErrors: (errors) ->
     @editor.session.removeMarker id for id in @errorMarkers or []
     @errorMarkers = concat (for {message, conflicts} in errors when message
-      for origin in conflicts
+      for origin in conflicts when origin
         range = @nodeRange origin
         type = compiler.plainPrettyPrint origin.tea
         @editor.session.addMarker range, 'clazz', (@showError range, type), yes)
