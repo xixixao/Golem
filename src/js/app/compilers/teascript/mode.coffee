@@ -299,11 +299,11 @@ exports.Mode = class extends TextMode
             callback "error", []
             return
           @worker.call 'matchingDefinitions', [reference], (completions) =>
-            callback null, (for symbol, type of completions# when symbol isnt editedSymbol
+            callback null, (for symbol, {type, score} of completions# when symbol isnt editedSymbol
               name: symbol
               value: symbol
               completer: completer
-              score: 0
+              score: score
               meta: type)
         , 50
 
