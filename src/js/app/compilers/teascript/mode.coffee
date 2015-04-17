@@ -141,8 +141,11 @@ exports.Mode = class extends TextMode
 
   detachFromSession: (session) ->
     # session.removeListener 'change', @onDocumentChange
-    @editor.removeListener 'click', @handleClick
+    # @editor.removeListener 'click', @handleClick
+    @editor.removeListener 'mousedown', @handleMouseDown
+    @editor.removeListener 'mouseup', @handleMouseUp
     @editor.onPaste = @__editorOnPaste
+    editor.setOption 'dragEnabled', yes
     # session.getDocument().removeListener 'change', @selectInserted
 
   attachToEditor: (editor) ->
@@ -153,8 +156,12 @@ exports.Mode = class extends TextMode
 
     session.setUndoManager @undoManager()
 
+    editor.setOption 'dragEnabled', no
+
     session.on 'change', @onDocumentChange
-    @editor.on 'click', @handleClick
+    # @editor.on 'click', @handleClick
+    @editor.on 'mousedown', @handleMouseDown
+    @editor.on 'mouseup', @handleMouseUp
     @__editorOnPaste = @editor.onPaste
     @editor.onPaste = @handlePaste
     @editor.selection.on 'removeRange', @handleRangeDeselect
@@ -340,8 +347,17 @@ exports.Mode = class extends TextMode
           else
             mode.insertString FORWARD, value
 
+  handleMouseDown: (event) =>
+    @mouseDownTime = +new Date
+
+  handleMouseUp: (event) =>
+    event.duration = (new Date) - @mouseDownTime
+    event.preventDefault()
+    @handleClick event
+
   handleClick: (event) =>
-    if event.domEvent.altKey
+    LONG_CLICK_DURATION = 200
+    if event.duration > LONG_CLICK_DURATION #event.domEvent.altKey
       @editor.execCommand 'edit by click'
     else if event.domEvent.shiftKey
       @editor.execCommand 'expand selection by click'
