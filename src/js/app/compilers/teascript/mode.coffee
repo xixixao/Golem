@@ -1659,11 +1659,11 @@ tangibleSurroundedBy = (direction, first, second) ->
     out: validOut after
   else if (isExpression after)
     insToTangible [after]
-  else #if (isOpeningDelim before) or (not isIndent after)
+  else if (isOpeningDelim before) or (not isIndent after)
     in: []
     out: validOut after
-  # else
-  #   tangibleInAfter direction, second
+  else
+    tangibleInAfter direction, second
 
 tangibleInAfter = (direction, node) ->
   (other = sibling direction, node) and tangibleSurroundedBy direction, node, other
