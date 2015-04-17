@@ -298,13 +298,17 @@ module.exports = hyper class EditorMain
   load: (fileName, mustExist) ->
     if fileName isnt @state.module.name
       @save()
-    @setState
-      module: loaded = @loadSource fileName
+    loaded = @loadSource fileName, mustExist
+    if loaded
+      @setState
+        module: loaded
     # @save fileName if loaded or not mustExist
     !!loaded
 
-  loadSource: (fileName) ->
+  loadSource: (fileName, mustExist) ->
     serialized = @memory.loadSource fileName
+    if mustExist and not serialized
+      return
     if not serialized # First time use of the editor
       serialized = value: ''
     serialized.moduleName = fileName
