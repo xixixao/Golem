@@ -11,7 +11,7 @@ class SaveCommand
 
 class LoadCommand
   @defaultSymbols = ['load']
-  @description = 'Load code from local storage under name'
+  @description = 'Load code from local storage under name.'
   @symbols = @defaultSymbols
 
   @execute = ([name], state, editor) ->
@@ -20,6 +20,21 @@ class LoadCommand
       editor.displayMessage 'file', "#{name} loaded."
     else
       editor.displayMessage 'file', "There is no #{name}."
+
+class RenameCommand
+  @defaultSymbols = ['rename']
+  @description = 'Rename code under some name to a different name.'
+  @symbols = @defaultSymbols
+
+  @execute = ([fromName, toName], state, editor) ->
+    loaded = editor.load fromName, true
+    if not loaded
+      editor.displayMessage 'file', "There is no #{name}."
+      return
+    editor.save toName
+    editor.memory.removeFromClient fromName
+    editor.displayMessage 'file', "#{fromName} renamed to #{toName}."
+    editor.save name
 
 class DeleteCommand
   @defaultSymbols = ['delete']
@@ -84,4 +99,4 @@ class BrowseCommand
   @execute = (args, state, editor) ->
     editor.log _FileBrowser memory: editor.memory
 
-module.exports = [SaveCommand, LoadCommand, DeleteCommand, BrowseCommand, CloseCommand]
+module.exports = [SaveCommand, LoadCommand, RenameCommand, DeleteCommand, BrowseCommand, CloseCommand]

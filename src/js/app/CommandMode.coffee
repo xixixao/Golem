@@ -55,12 +55,15 @@ module.exports = class CommandMode extends Mode
         scrollIntoView: 'cursor'
         autocomplete: yes
         exec: (editor, string) =>
-          if @commandMode or (@editor.getValue() is '') and (string is ':')
+          if @isInCommandMode() or (@editor.getValue() is '') and (string is ':')
             @editor.insert string
             return
 
           @insertStringForward string
 
   doAutocomplete: ->
-    return if @commandMode
+    return if @isInCommandMode()
     super
+
+  isInCommandMode: ->
+    @editor.getValue()[0] is ':'
