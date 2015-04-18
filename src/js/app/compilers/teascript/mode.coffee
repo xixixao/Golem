@@ -158,7 +158,7 @@ exports.Mode = class extends TextMode
 
     editor.setOption 'dragEnabled', no
 
-    session.on 'change', @onDocumentChange
+    # session.on 'change', @onDocumentChange
     # @editor.on 'click', @handleClick
     @editor.on 'mousedown', @handleMouseDown
     @editor.on 'mouseup', @handleMouseUp
@@ -181,9 +181,9 @@ exports.Mode = class extends TextMode
     # Initial parse
     @initAst ""
 
-  onDocumentChange: =>
-    # console.log "setting DIRTY true"
-    @dirty = true
+  # onDocumentChange: =>
+  #   # console.log "setting DIRTY true"
+  #   @dirty = true
 
   setContent: (string, selectedRange, moduleName) ->
     # console.log "setting content"
@@ -238,8 +238,9 @@ exports.Mode = class extends TextMode
   updateAst: (ast) ->
     # console.log ast, @ast
     duplicateProperties ast, @ast
-    @dirty = false
+    # @dirty = false
     @$tokenizer._signal 'update', data: rows: first: 1
+    @updateAutocomplete()
 
   # Traverses the AST in order, fixing positions
   repositionAst: ->
@@ -280,7 +281,6 @@ exports.Mode = class extends TextMode
 
   doAutocomplete: (e) ->
     editor = @editor
-    hasCompleter = editor.completer and editor.completer.activated
 
     # Make sure this is an actual command and not an action on the updater
     ignoredCommands = ['Up', 'Down', 'Ctrl-Up|Ctrl-Home', 'Ctrl-Down|Ctrl-End',
@@ -291,7 +291,7 @@ exports.Mode = class extends TextMode
           (atom.label isnt 'numerical') and
           (@offsetToCursor atom) is atom.symbol.length or
           inserting = @isInserting())
-      if !hasCompleter or inserting
+      if !@isAutocompleting() or inserting
           if !editor.completer
             # Create new autocompleter
             editor.completer = new CustomAutocomplete()
@@ -300,6 +300,13 @@ exports.Mode = class extends TextMode
           editor.completer.showPopup editor
     else if editor.completer and not e?.command.name in ignoredCommands
       editor.completer.detach()
+
+  updateAutocomplete: ->
+    if @isAutocompleting()
+      @editor.completer.updateCompletions()
+
+  isAutocompleting: ->
+    @editor.completer and @editor.completer.activated
 
   createCompleter: =>
     completer =
@@ -311,25 +318,22 @@ exports.Mode = class extends TextMode
           editedSymbol = typed.symbol
         else
           typed = targetMode.selectedTangible().out[0]
-        setTimeout =>
-          reference =
-            type: typed.tea
-            scope: typed.scope
-          if @dirty
-            console.log "not giving completions because dirty"
-            return
-          # TODO: plain text for non-typed expressions
-          unless reference.type
-            callback "error", []
-            return
-          @worker.call 'matchingDefinitions', [reference], (completions) =>
-            callback null, (for symbol, {type, score} of completions# when symbol isnt editedSymbol
-              name: symbol
-              value: symbol
-              completer: completer
-              score: score
-              meta: type)
-        , 50
+
+        console.log typed.tea
+        reference =
+          type: typed.tea
+          scope: typed.scope
+        # TODO: plain text for non-typed expressions
+        unless reference.type
+          # callback "error", []
+          return
+        @worker.call 'matchingDefinitions', [reference], (completions) =>
+          callback null, (for symbol, {type, score} of completions# when symbol isnt editedSymbol
+            name: symbol
+            value: symbol
+            completer: completer
+            score: score
+            meta: type)
 
       insertMatch: (editor, {value}) =>
         mode = editor.session.getMode()
