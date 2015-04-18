@@ -300,6 +300,7 @@ module.exports = hyper class EditorMain
       @save()
     loaded = @loadSource fileName, mustExist
     if loaded
+      @memory.setLastOpenFileName fileName
       @setState
         module: loaded
     # @save fileName if loaded or not mustExist
@@ -387,16 +388,19 @@ module.exports = hyper class EditorMain
     @setState
       commandMap: commandMap
 
+  executeCommand: (name, args...) ->
+    command = @state.commandMap[name]
+    if !command
+      @displayMessage 'command',
+        "Command Line: #{name} is not a command"
+    else
+      @_executeCommand command, args
+
   handleCommandExecution: (source, moduleName, result, type) ->
     @_hideMessage 'command', 'runtime'
     if type is 'command'
       [symbol, args] = CommandParser result
-      command = @state.commandMap[symbol]
-      if !command
-        @displayMessage 'command',
-          "Command Line: #{symbol} is not a command"
-      else
-        @_executeCommand command, args
+      @executeCommand symbol, args...
     else
       # result = @execute @state.compiledJs + result
       # @state.compiler.preExecute? @memory

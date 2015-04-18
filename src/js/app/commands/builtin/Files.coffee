@@ -60,6 +60,9 @@ class CloseCommand
 
 _FileBrowser = hyper class FileBrowser
 
+  handleClick: (name) -> (event) =>
+    @props.editor.executeCommand 'load', name
+
   handleChange: ->
     @setState
       data: @props.memory.getFileTable()
@@ -86,7 +89,10 @@ _FileBrowser = hyper class FileBrowser
           _th 'Name'
           _th 'Lines'
         for {name, numLines} in data
-          _tr key: name,
+          _tr
+            key: name
+            onClick: @handleClick(name)
+            style: cursor: 'pointer'
             _td if name is @state.fileName then '>'
             _td "#{name} "
             _td numLines
@@ -97,6 +103,6 @@ class BrowseCommand
   @symbols = @defaultSymbols
 
   @execute = (args, state, editor) ->
-    editor.log _FileBrowser memory: editor.memory
+    editor.log _FileBrowser editor: editor, memory: editor.memory
 
 module.exports = [SaveCommand, LoadCommand, RenameCommand, DeleteCommand, BrowseCommand, CloseCommand]

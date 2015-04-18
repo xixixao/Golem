@@ -48,6 +48,9 @@ module.exports = class Memory
   getLastOpenFileName: ->
     @_lastOpenFileStorage() || @unnamed
 
+  setLastOpenFileName: (fileName) ->
+    @_lastOpenFileStorage fileName
+
   _lastOpenFileStorage: (fileName) ->
     @emitter.emit 'lastOpen' if fileName isnt undefined
     $.totalStorage "lastOpenFileCOOKIE", fileName
