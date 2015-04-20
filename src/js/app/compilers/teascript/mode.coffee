@@ -264,11 +264,14 @@ exports.Mode = class extends TextMode
 
   showErrors: (errors) ->
     @editor.session.removeMarker id for id in @errorMarkers or []
-    @errorMarkers = _fst (for {message, conflicts} in errors when message
-      for origin in conflicts when origin
+    # for {message, conflicts} in errors when message
+    [firstError] = errors
+    {message, conflicts} = firstError
+    if message
+      @errorMarkers = for origin in conflicts when origin
         range = @nodeRange origin
         type = compiler.plainPrettyPrint origin.tea
-        @editor.session.addMarker range, 'clazz', (@showError range, type), yes)
+        @editor.session.addMarker range, 'clazz', (@showError range, type), yes
 
   showError: (range, type) -> (stringBuilder, r, l, t, config, layer) ->
     clazz = 'golem_error-origin'
