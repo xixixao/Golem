@@ -103,7 +103,7 @@ class ExpressionWorker extends exports.Worker
           type: (if execute then 'execute' else 'normal')
           commandSource: value
           result:
-            cacheModule @compiler.compileExpression, value, @moduleName
+            @compiler.compileExpression value, @moduleName
 
       catch e
         console.log e.stack
