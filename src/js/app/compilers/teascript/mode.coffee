@@ -319,7 +319,6 @@ exports.Mode = class extends TextMode
         else
           typed = targetMode.selectedTangible().out[0]
 
-        console.log typed.tea
         reference =
           type: typed.tea
           scope: typed.scope
