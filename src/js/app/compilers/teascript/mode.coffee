@@ -613,6 +613,7 @@ exports.Mode = class extends TextMode
       'down the tree to the last child':
         bindKey: win: 'Ctrl-Shift-Down', mac: 'Command-Shift-Down'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @moveDown LAST, FIRST
 
