@@ -100,13 +100,13 @@ module.exports = hyper class CommandLine
         if type in ['execute', 'command']
           if source.length > 0
             timeline.push source
-            @props.onCommandExecution source, @props.moduleName, result, type
-            @props.memory.saveCommands timeline
             if type is 'command'
               editor.setValue ""
               # editor.session.getMode().initAst ""
             else
               editor.session.getMode().setContent ""
+            @props.onCommandExecution source, @props.moduleName, result, type
+            @props.memory.saveCommands timeline
           else
             @props.onCommandCompiled()
         else

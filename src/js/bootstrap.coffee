@@ -13,6 +13,7 @@ require
     ejquery: 'app/jquery.extended'
     'coffee-script': 'vendor/coffee-script/coffee-script'
     'tinyemitter': 'vendor/tiny-emitter/tinyemitter'
+    'file-saver': 'vendor/file-saver/FileSaver'
   shim:
     'vendor/jquery/jquery.cookie': ['jquery']
     'vendor/jquery/jquery.total-storage': ['jquery']

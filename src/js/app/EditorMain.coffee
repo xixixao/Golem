@@ -250,6 +250,7 @@ module.exports = hyper class EditorMain
       require './commands/builtin/Runtime'
       # require './commands/builtin/Modes'
       require './commands/builtin/Files'
+      require './commands/builtin/Download'
     ].flatten()
 
   mixins: [
