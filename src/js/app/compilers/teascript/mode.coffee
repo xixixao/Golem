@@ -262,6 +262,8 @@ exports.Mode = class extends TextMode
         node.end += offset
         currentPosition = node.end
 
+  # TODO: THIS SUCKS, put the highlights on tokens directly instead, so they
+  # update before recompilation
   showErrors: (errors) ->
     @editor.session.removeMarker id for id in @errorMarkers or []
     # for {message, conflicts} in errors when message
