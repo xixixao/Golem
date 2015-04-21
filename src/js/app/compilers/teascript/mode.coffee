@@ -922,7 +922,7 @@ exports.Mode = class extends TextMode
           targetMode = targetEditor.session.getMode()
           selected = targetMode.onlySelectedExpression()
           defaultNames = "xyzwtuvmnopqrs"
-          if selected and isAtom atom = selected
+          if selected and (isAtom atom = selected) and atom.malformed
             # TODO: better location than just currect insert position
             @insertString FORWARD, if isOperator atom
               labeled = false
