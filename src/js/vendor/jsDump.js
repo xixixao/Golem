@@ -39,6 +39,10 @@ var jsDump;
     }
     return length;
   }
+  function magnitude( arr ) {
+    if( !arr || !arr[0] ) return 0;
+    return arr.length;
+  }
   function join( pre, arr, post ){
     var comma     = '',
         inlineSep = jsDump.separator(false),
@@ -46,7 +50,8 @@ var jsDump;
 
 
     // Inline if short
-    var inline = size(arr, comma + inlineSep) < jsDump.lineLimit
+    var inline = size(arr, comma + inlineSep) < jsDump.lineLimit ||
+      magnitude(arr) > jsDump.numLinesLimit;
     var s = inline ? inlineSep : jsDump.separator(true);
     var inner = inline ? '' : jsDump.indent(1);
     if( arr.join )
@@ -124,6 +129,7 @@ var jsDump;
       return type;
     },
     lineLimit: 80,
+    numLinesLimit: 40,
     separator:function(multiline){
       return this.multiline && multiline ? this.HTML ? '<br />' : '\n' : this.HTML ? '&nbsp;' : ' ';
     },
