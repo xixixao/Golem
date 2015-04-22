@@ -22,6 +22,7 @@ exports.Worker = class extends Mirror
       cacheModule compiler.compileTopLevel, value, moduleName
       @compile()
     catch e
+      console.log e.stack
       @sender.emit "error",
         text: e.message
         type: 'error'
