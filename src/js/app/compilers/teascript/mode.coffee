@@ -930,7 +930,7 @@ exports.Mode = class extends TextMode
               labeled = false
               i = 0
               args = []
-              for term in _terms atom.parent when term isnt atom
+              for term in _arguments atom.parent
                 if labeled
                   labeled = false
                   continue
@@ -939,6 +939,8 @@ exports.Mode = class extends TextMode
                     labeled = true
                     _labelName term
                   else if (isAtom term) and (not isHalfDelimitedAtom term)
+                    term.symbol
+                  else
                     defaultNames[i++])
               """
               #{atom.symbol} (fn [#{args.join ' '}]
