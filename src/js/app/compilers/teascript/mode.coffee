@@ -84,7 +84,7 @@ exports.Mode = class extends TextMode
     #   @onDocumentChange doc
     if not @ast
       return undefined
-    findTokensBetween (topList @ast), start, end
+    findNodesBetween (topList @ast), start, end
 
   # onDocumentChange: (doc) =>
   #   # console.log "tokenizing document", @editor.getValue()
@@ -948,24 +948,25 @@ exports.Mode = class extends TextMode
             else
               """
               #{atom.symbol} """
-          else
+          else if selected = @onlySelectedExpression()
             # Find parent scope
             # Add empty space and selected form
             # put cursor to original place and the new space
             # --- actually it's like adding an argument
-            after = ancestorInDefinitonList @selectedNodeEdge FIRST
-            movedTo = nodeEdgeOfTangible LAST, insToTangible [after]
-            moved = reindentTangible @selectedTangible(), movedTo.parent
-            space = if parentOf after then '\n' else '\n\n'
+            top = ancestorAtDefinitonList selected
+            # Position after top
+            movedTo = nodeEdgeOfTangible LAST, toTangible top
+            moved = reindentTangible @selectedTangible(), top.parent
+            separator = if parentOf top then '\n' else '\n\n'
 
             @startGroupMutation()
             @mutate @removeSelectable @selectedTangible()
-            originalHole = @selectedTangible()
+            originalHole = bookmarkBefore @selectedTangible()
 
-            @insertSpaceAt FORWARD, space, movedTo
+            @insertSpaceAt FORWARD, separator, movedTo
 
+            newHole = bookmarkBefore @selectedTangible()
             @insertSpaceAt FORWARD, " ", movedTo
-            newHole = previous @selectedNodeEdge FIRST
 
             @mutate
               changeInTree:
@@ -973,10 +974,10 @@ exports.Mode = class extends TextMode
                 at:
                   in: []
                   out: [movedTo]
-              tangibleSelection: originalHole
+              tangibleSelection: originalHole()
               newSelections: [
                 in: []
-                out: [newHole]
+                out: [newHole()]
               ]
             @finishGroupMutation()
 
@@ -1155,7 +1156,7 @@ exports.Mode = class extends TextMode
 
   tokensSurroundingPos: (pos) ->
     idx = @posToIdx pos
-    findTokensBetween @ast, idx - 1, idx + 1
+    findNodesBetween @ast, idx - 1, idx + 1
 
   tangibleRange: (tangible) ->
     [start, end] = nodeEdgesOfTangible tangible
@@ -1542,12 +1543,12 @@ exports.Mode = class extends TextMode
       @moduleName = moduleName
       @worker.call 'setModuleName', [moduleName]
 
-ancestorInDefinitonList = (expression) ->
+ancestorAtDefinitonList = (expression) ->
   if (parent = parentOf expression)
     if isFunction parent
       expression
     else
-      ancestorInDefinitonList parent
+      ancestorAtDefinitonList parent
   else
     expression
 
@@ -1653,21 +1654,30 @@ insToTangible = (ins) ->
   in: ins
   out: validOut next
 
+
+
 # Used by navigation over atoms and insert positions
 followingTangibleAtomOrPosition = (direction, tangible) ->
-  node = paddingEdge direction, tangible
-  if isDelim node
-    if parent = tangibleParent tangible
-      followingTangibleAtomOrPosition direction, parent
-  else
-    siblingTangible = tangibleSurroundedBy direction, node, sibling direction, node
-    if isForm siblingNode = toNode siblingTangible
-      tangibleInAfter direction, limitToken (opposite direction), siblingNode
-    else
-      siblingTangible
+  atomOrPositionFrom direction,
+    (siblingLeaf direction,
+      (nodeEdgeOfTangible direction, tangible))
+  # candidate = tangibleSibling direction, tangible
+  # toTangibleAtomOrPosition (opposite direction), candidate
 
-# siblingTangible = (direction, node) ->
-#   (other = sibling direction, node) and tangibleInAfter direction, other
+atomOrPositionFrom = (direction, token) ->
+  if token
+    if tangible = isAtomOrPositionAt token
+      tangible
+    else
+      atomOrPositionFrom direction, (siblingLeaf direction, token)
+
+isAtomOrPositionAt = (after) ->
+  before = preceding after
+  if ((isWhitespace after) or (isClosingDelim after)) and (not isClosingDelim before)
+    in: if isExpression before then [before] else []
+    out: validOut after
+
+
 
 tangibleParent = (tangible) ->
   parent = parentOfTangible tangible
@@ -1716,6 +1726,18 @@ padding = (direction, tangible) ->
     tangible.out
   else
     precedingWhitespace sibling PREVIOUS, toNode tangible
+
+# Remembers the preceding token to given insert position, returns a function
+# which called will return a tangible at that same position, regardless
+# of changes following the insert position
+bookmarkBefore = (tangible) ->
+  at = preceding toNode tangible
+  ->
+    in: []
+    out: validOut following at
+
+toTangible = (node) ->
+  insToTangible [node]
 
 # Returns the first in or first out node, for convenience
 toNode = (tangible) ->
@@ -1820,16 +1842,16 @@ atomDelimiter = (atom) ->
   atom.symbol[0]
 
 # Fn Atom Bool
-isDelim = (atom) ->
-  /^[\(\)\[\]\{\}]$/.test atom.symbol
+isDelim = (node) ->
+  /^[\(\)\[\]\{\}]$/.test node.symbol
 
 # Fn Atom Bool
-isClosingDelim = (atom) ->
-  /^[\)\]\}]$/.test atom.symbol
+isClosingDelim = (node) ->
+  /^[\)\]\}]$/.test node.symbol
 
 # Fn Atom Bool
-isOpeningDelim = (atom) ->
-  /^[\(\[\{]$/.test atom.symbol
+isOpeningDelim = (node) ->
+  /^[\(\[\{]$/.test node.symbol
 
 isOperator = (atom) ->
   parent = parentOf atom
@@ -1874,13 +1896,13 @@ merge = (objects) ->
 extend = (a, b) ->
   merge [a, b]
 
-findTokensBetween = (expression, start, end) ->
-  if start < expression.end and expression.start < end
-    if isForm expression
-      concat (for expr in expression
-        findTokensBetween expr, start, end)
+findNodesBetween = (node, start, end) ->
+  if start < node.end and node.start < end
+    if isForm node
+      concat (for expr in node
+        findNodesBetween expr, start, end)
     else
-      [expression]
+      [node]
   else
     []
 
@@ -1957,6 +1979,21 @@ nextExpression = (expression) ->
       reached = yes
   # Default for now to the same expression
   expression
+
+preceding = (node) ->
+  siblingLeaf BACKWARD, node
+
+following = (node) ->
+  siblingLeaf FORWARD, node
+
+siblingLeaf = (direction, node) ->
+  candidate = (sibling direction, node) or
+    (isReal node.parent) and (siblingLeaf direction, node.parent)
+  if candidate
+    if isForm candidate
+      edgeOfList (opposite direction), candidate
+    else
+      candidate
 
 # Proc Node (Maybe Node)
 parentOf = (node) ->
