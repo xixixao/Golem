@@ -964,7 +964,6 @@ exports.Mode = class extends TextMode
             originalHole = bookmarkBefore @selectedTangible()
 
             @insertSpaceAt FORWARD, separator, movedTo
-
             newHole = bookmarkBefore @selectedTangible()
             @insertSpaceAt FORWARD, " ", movedTo
 
@@ -975,10 +974,7 @@ exports.Mode = class extends TextMode
                   in: []
                   out: [movedTo]
               tangibleSelection: originalHole()
-              newSelections: [
-                in: []
-                out: [newHole()]
-              ]
+              newSelections: [newHole()]
             @finishGroupMutation()
 
   moveDown: (inTree, inAtom) ->
