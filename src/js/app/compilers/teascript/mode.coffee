@@ -25,8 +25,10 @@ log = (arg) ->
   concat
   map
   concatMap
+  zipWith
   filter
   join
+  all
   __
   _notEmpty
   _operator
@@ -511,13 +513,13 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Tab', mac: 'Tab'
         multiSelectAction: 'forEach'
         exec: =>
-          @selectOccurenceInDirection FORWARD
+          @selectReferenceInDirection FORWARD
 
       'jump to previous reference':
         bindKey: win: 'Shift-Tab', mac: 'Shift-Tab'
         multiSelectAction: 'forEach'
         exec: =>
-          @selectOccurenceInDirection BACKWARD
+          @selectReferenceInDirection BACKWARD
 
   createMultiSelectKeyboardHandler: =>
     @multiSelectKeyboardHandler = new HashHandler [
@@ -704,6 +706,18 @@ exports.Mode = class extends TextMode
         autocomplete: yes
         exec: =>
           @remove FORWARD
+
+      'jump to next occurence':
+        bindKey: win: 'Ctrl-Tab', mac: 'Alt-Tab'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @selectOccurenceInDirection FORWARD
+
+      'jump to previous occurence':
+        bindKey: win: 'Ctrl-Shift-Tab', mac: 'Alt-Shift-Tab'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @selectOccurenceInDirection BACKWARD
 
       'add char':
         bindKey: win: '\\', mac: '\\'
@@ -911,7 +925,7 @@ exports.Mode = class extends TextMode
         exec: =>
           selected = @onlySelectedExpression()
           if selected and isAtom atom = selected
-            others = (findOtherOccurences atom) @ast
+            others = (findOtherReferences atom) @ast
             tangibles = map toTangible, others
 
             @mutate
@@ -971,7 +985,7 @@ exports.Mode = class extends TextMode
           # For now assume name is selected
           selected = @onlySelectedExpression()
           if selected and (isAtom atom = selected)
-            others = (findOtherOccurences atom) @ast
+            others = (findOtherReferences atom) @ast
             if isName atom
               # Replace all occurences
               if isExpression definition = siblingTerm FORWARD, atom
@@ -1000,12 +1014,21 @@ exports.Mode = class extends TextMode
                     added: (reindentTangible inlined, atom.parent)
                     at: @selectedTangible()
 
-  selectOccurenceInDirection: (direction) ->
+  selectReferenceInDirection: (direction) ->
     selected = @onlySelectedExpression()
     if selected and isAtom atom = selected
-      occurences = (findAllOccurences atom) @ast
+      references = (findAllReferences atom) @ast
       @mutate
-        inSelection: findAdjecentInList direction, atom, occurences
+        inSelection: findAdjecentInList direction, atom, references
+    else
+      @selectOccurenceInDirection direction
+
+  selectOccurenceInDirection: (direction) ->
+    if not @isInserting()
+      selected = @selectedTangible().in
+      occurences = (findAllOccurences selected) @ast
+      @mutate
+        inSelections: findAdjecentInList direction, selected, occurences
 
   moveDown: (inTree, inAtom) ->
     @mutate(
@@ -1604,7 +1627,7 @@ findParentFunction = (expression) ->
   if isFunction expression
     expression
   else if isReal expression.parent
-    @findParentFunction expression.parent
+    findParentFunction expression.parent
 
 findParamList = (form) ->
   [params] = _arguments form
@@ -1623,15 +1646,36 @@ definitionAncestorOf = (node) ->
 isName = (expression) ->
   expression?.label is 'name'
 
-findAllOccurences = (atom) -> (node) ->
+findAllOccurences = (nodes) -> (node) ->
+  numNodes = nodes.length
+
+  current =
+    if numNodes is 1
+      if nodesEqual nodes[0], node
+        [[node]]
+    else if (isForm node) and node.length >= numNodes
+      for i in [0..node.length - numNodes] when nodeListsEqual (terms = node[i...(i + numNodes)]), nodes
+        terms
+  child =
+    if isForm node
+      concatMap (findAllOccurences nodes), node
+  join (current or []), (child or [])
+
+nodesEqual = (a, b) ->
+  if isForm a
+    (isForm b) and a.length is b.length and all zipWith nodesEqual, a, b
+  else
+    a.symbol is b.symbol
+
+findAllReferences = (atom) -> (node) ->
   if isForm node
-    concatMap (findAllOccurences atom), node
+    concatMap (findAllReferences atom), node
   else
     if node.id is atom.id then [node] else []
 
-findOtherOccurences = (atom) -> (node) ->
+findOtherReferences = (atom) -> (node) ->
   if isForm node
-    concatMap (findOtherOccurences atom), node
+    concatMap (findOtherReferences atom), node
   else
     if node.id is atom.id and node isnt atom then [node] else []
 
@@ -1644,7 +1688,7 @@ findAdjecentInList = (direction, what, list) ->
   for element in list by direction
     if returnNext
       return element
-    if element is what
+    if element is what or element[0] and element[0] is what[0]
       returnNext = yes
   return edgeOfList (opposite direction), list
 
