@@ -966,7 +966,8 @@ exports.Mode = class extends TextMode
           selected = @onlySelectedExpression()
           if selected and (isAtom atom = selected)
             others = (findOtherOccurences atom) @ast
-            if atom.label is 'name'
+            if isName atom
+              # Replace all occurences
               if isExpression definition = siblingTerm FORWARD, atom
                 inlined = (toTangible definition)
 
@@ -980,6 +981,16 @@ exports.Mode = class extends TextMode
                       added: (reindentTangible inlined, other.parent)
                       at: toTangible other
                 @finishGroupMutation()
+            else
+              # Replace selection with definition
+              name = _fst (other for other in others when isName other)
+              if isExpression definition = siblingTerm FORWARD, name
+                inlined = (toTangible definition)
+                @mutate
+                  changeInTree:
+                    added: (reindentTangible inlined, atom.parent)
+                    at: @selectedTangible()
+
 
   moveDown: (inTree, inAtom) ->
     @mutate(
@@ -1589,10 +1600,13 @@ isFunction = (expression) ->
 
 definitionAncestorOf = (node) ->
   if (parent = parentOf node)
-    if (siblingTerm PREVIOUS, parent)?.label is 'name'
+    if isName (siblingTerm PREVIOUS, parent)
       parent
     else
       definitionAncestorOf parent
+
+isName = (expression) ->
+  expression?.label is 'name'
 
 findOtherOccurences = (atom) -> (node) ->
   if isForm node
