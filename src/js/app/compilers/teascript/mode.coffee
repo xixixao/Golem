@@ -904,13 +904,9 @@ exports.Mode = class extends TextMode
         exec: =>
           selected = @onlySelectedExpression()
           if selected and isAtom atom = selected
-            findOther = (node) ->
-              if isForm node
-                concatMap findOther, node
-              else
-                if node.id is atom.id and node isnt atom then [node] else []
-            others = findOther @ast
-            tangibles = (insToTangible [other] for other in others)
+            debugger
+            others = (findOtherOccurences atom) @ast
+            tangibles = map toTangible, others
 
             @mutate
               inSelection: atom
@@ -923,25 +919,10 @@ exports.Mode = class extends TextMode
           targetEditor ?= @editor
           targetMode = targetEditor.session.getMode()
           selected = targetMode.onlySelectedExpression()
-          defaultNames = "xyzwtuvmnopqrs"
           if selected and (isAtom atom = selected) and atom.malformed
             # TODO: better location than just currect insert position
             @insertString FORWARD, if isOperator atom
-              labeled = false
-              i = 0
-              args = []
-              for term in _arguments atom.parent
-                if labeled
-                  labeled = false
-                  continue
-                args.push(
-                  if isLabel term
-                    labeled = true
-                    _labelName term
-                  else if (isAtom term) and (not isHalfDelimitedAtom term)
-                    term.symbol
-                  else
-                    defaultNames[i++])
+              args = argumentNamesFromCall atom.parent
               """
               #{atom.symbol} (fn [#{args.join ' '}]
                 )"""
@@ -976,6 +957,29 @@ exports.Mode = class extends TextMode
               tangibleSelection: originalHole()
               newSelections: [newHole()]
             @finishGroupMutation()
+
+      'inline selected expression or replace name by its definition':
+        bindKey: win: 'Ctrl-I', mac: 'Ctrl-I'
+        multiSelectAction: 'forEach'
+        exec: =>
+          # For now assume name is selected
+          selected = @onlySelectedExpression()
+          if selected and (isAtom atom = selected)
+            others = (findOtherOccurences atom) @ast
+            if atom.label is 'name'
+              if isExpression definition = siblingTerm FORWARD, atom
+                inlined = (toTangible definition)
+
+                @startGroupMutation()
+                @mutate @removeSelectable tangibleBetween (toTangible atom), inlined
+                @mutate @remove BACKWARD
+                @mutate @remove BACKWARD if @isInserting()
+                for other in others
+                  @mutate
+                    changeInTree:
+                      added: (reindentTangible inlined, other.parent)
+                      at: toTangible other
+                @finishGroupMutation()
 
   moveDown: (inTree, inAtom) ->
     @mutate(
@@ -1539,6 +1543,25 @@ exports.Mode = class extends TextMode
       @moduleName = moduleName
       @worker.call 'setModuleName', [moduleName]
 
+argumentNamesFromCall = (call) ->
+  defaultNames = "xyzwtuvmnopqrs"
+  labeled = false
+  i = 0
+  args = []
+  for term in _arguments call
+    if labeled
+      labeled = false
+      continue
+    args.push(
+      if isLabel term
+        labeled = true
+        _labelName term
+      else if (isAtom term) and (not isHalfDelimitedAtom term)
+        term.symbol
+      else
+        defaultNames[i++])
+  args
+
 ancestorAtDefinitonList = (expression) ->
   if (parent = parentOf expression)
     if isFunction parent
@@ -1548,18 +1571,21 @@ ancestorAtDefinitonList = (expression) ->
   else
     expression
 
-findParentFunction = (form) ->
-  if isFunction form
-    form
-  else if form.parent
-    @findParentFunction form.parent
+findParentScope = (top, expression) ->
+  (findParentFunction expression) or top
+
+findParentFunction = (expression) ->
+  if isFunction expression
+    expression
+  else if isReal expression.parent
+    @findParentFunction expression.parent
 
 findParamList = (form) ->
   [params] = _arguments form
   params
 
-isFunction = (form) ->
-  (_operator form).symbol is 'fn'
+isFunction = (expression) ->
+  (isForm expression) and (_operator expression).symbol is 'fn'
 
 definitionAncestorOf = (node) ->
   if (parent = parentOf node)
@@ -1567,6 +1593,12 @@ definitionAncestorOf = (node) ->
       parent
     else
       definitionAncestorOf parent
+
+findOtherOccurences = (atom) -> (node) ->
+  if isForm node
+    concatMap (findOtherOccurences atom), node
+  else
+    if node.id is atom.id and node isnt atom then [node] else []
 
 siblingTerm = (direction, node) ->
   terms = _terms node.parent
