@@ -507,10 +507,17 @@ exports.Mode = class extends TextMode
         exec: =>
           @replaceSpace BACKWARD, '\n'
 
-      'disable tab':
+      'jump to next reference':
         bindKey: win: 'Tab', mac: 'Tab'
+        multiSelectAction: 'forEach'
         exec: =>
-          yes
+          @selectOccurenceInDirection FORWARD
+
+      'jump to previous reference':
+        bindKey: win: 'Shift-Tab', mac: 'Shift-Tab'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @selectOccurenceInDirection BACKWARD
 
   createMultiSelectKeyboardHandler: =>
     @multiSelectKeyboardHandler = new HashHandler [
@@ -904,7 +911,6 @@ exports.Mode = class extends TextMode
         exec: =>
           selected = @onlySelectedExpression()
           if selected and isAtom atom = selected
-            debugger
             others = (findOtherOccurences atom) @ast
             tangibles = map toTangible, others
 
@@ -991,6 +997,12 @@ exports.Mode = class extends TextMode
                     added: (reindentTangible inlined, atom.parent)
                     at: @selectedTangible()
 
+  selectOccurenceInDirection: (direction) ->
+    selected = @onlySelectedExpression()
+    if selected and isAtom atom = selected
+      occurences = (findAllOccurences atom) @ast
+      @mutate
+        inSelection: findAdjecentInList direction, atom, occurences
 
   moveDown: (inTree, inAtom) ->
     @mutate(
@@ -1608,6 +1620,12 @@ definitionAncestorOf = (node) ->
 isName = (expression) ->
   expression?.label is 'name'
 
+findAllOccurences = (atom) -> (node) ->
+  if isForm node
+    concatMap (findAllOccurences atom), node
+  else
+    if node.id is atom.id then [node] else []
+
 findOtherOccurences = (atom) -> (node) ->
   if isForm node
     concatMap (findOtherOccurences atom), node
@@ -1618,6 +1636,14 @@ siblingTerm = (direction, node) ->
   terms = _terms node.parent
   for t, i in terms when t is node
     return if direction is FORWARD then terms[i + 1] else terms[i - 1]
+
+findAdjecentInList = (direction, what, list) ->
+  for element in list by direction
+    if returnNext
+      return element
+    if element is what
+      returnNext = yes
+  return edgeOfList (opposite direction), list
 
 onlyExpression = (tangible) ->
   [node] = tangible.in
