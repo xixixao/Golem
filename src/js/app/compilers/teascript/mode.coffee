@@ -982,10 +982,13 @@ exports.Mode = class extends TextMode
                 @mutate @remove BACKWARD
                 @mutate @remove BACKWARD if @isInserting()
                 for other in others
+                  indented = (reindentTangible inlined, other.parent)
                   @mutate
                     changeInTree:
-                      added: (reindentTangible inlined, other.parent)
+                      added: indented
                       at: toTangible other
+                  @mutate
+                    newSelections: [(insToTangible indented)]
                 @finishGroupMutation()
             else
               # Replace selection with definition
