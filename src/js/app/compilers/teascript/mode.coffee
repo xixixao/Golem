@@ -1744,7 +1744,8 @@ atomOrPositionFrom = (direction, token) ->
 
 isAtomOrPositionAt = (after) ->
   before = preceding after
-  if ((isWhitespace after) or (isClosingDelim after)) and (not isClosingDelim before)
+  if (((isWhitespace after) and not isIndent after) or (isClosingDelim after)) and
+      (not isClosingDelim before)
     in: if isExpression before then [before] else []
     out: validOut after
 
