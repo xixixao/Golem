@@ -263,6 +263,7 @@ module.exports = hyper class EditorMain
       console.log "source worker finished ok"#, result, result.ast, result.types
       if mode.editor.getValue() is source
         if result.errors
+          console.log result.errors
           firstError = result.errors[0]
           @handleSourceFailed firstError.message or firstError
         else
