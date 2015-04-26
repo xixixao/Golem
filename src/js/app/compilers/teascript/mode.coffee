@@ -511,12 +511,14 @@ exports.Mode = class extends TextMode
 
       'jump to next reference':
         bindKey: win: 'Tab', mac: 'Tab'
+        scrollIntoView: 'center'
         multiSelectAction: 'forEach'
         exec: =>
           @selectReferenceInDirection FORWARD
 
       'jump to previous reference':
         bindKey: win: 'Shift-Tab', mac: 'Shift-Tab'
+        scrollIntoView: 'center'
         multiSelectAction: 'forEach'
         exec: =>
           @selectReferenceInDirection BACKWARD
@@ -709,12 +711,14 @@ exports.Mode = class extends TextMode
 
       'jump to next occurence':
         bindKey: win: 'Ctrl-Tab', mac: 'Alt-Tab'
+        scrollIntoView: 'center'
         multiSelectAction: 'forEach'
         exec: =>
           @selectOccurenceInDirection FORWARD
 
       'jump to previous occurence':
         bindKey: win: 'Ctrl-Shift-Tab', mac: 'Alt-Shift-Tab'
+        scrollIntoView: 'center'
         multiSelectAction: 'forEach'
         exec: =>
           @selectOccurenceInDirection BACKWARD
