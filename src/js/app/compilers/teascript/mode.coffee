@@ -1016,7 +1016,7 @@ exports.Mode = class extends TextMode
 
   selectReferenceInDirection: (direction) ->
     selected = @onlySelectedExpression()
-    if selected and isAtom atom = selected
+    if selected and (isAtom atom = selected) and atom.id?
       references = (findAllReferences atom) @ast
       @mutate
         inSelection: findAdjecentInList direction, atom, references
