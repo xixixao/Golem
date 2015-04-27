@@ -117,6 +117,9 @@ module.exports = hyper class UpdatingDisplay
   componentWillUpdate: (nextProps, {compiled}) ->
     @shouldRun = compiled isnt @state.compiled
 
+  componentWillUnmount: ->
+    @editor.completer.detach()
+
   render: ->
     # @i ?= 0
     _div {},

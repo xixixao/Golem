@@ -237,12 +237,13 @@ exports.Mode = class extends TextMode
     #   @handleClick {}
 
   # Called after worker compiles
-  updateAst: (ast) ->
+  updateAst: (ast, errors = []) ->
     # console.log ast, @ast
     duplicateProperties ast, @ast
     # @dirty = false
     @$tokenizer._signal 'update', data: rows: first: 1
     @updateAutocomplete()
+    @showErrors errors
 
   # Traverses the AST in order, fixing positions
   repositionAst: ->
