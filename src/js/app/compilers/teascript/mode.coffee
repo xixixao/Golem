@@ -296,7 +296,7 @@ exports.Mode = class extends TextMode
     if e?.command.autocomplete and
         (
           (atom = @editedAtom()) and (not isHalfDelimitedAtom atom) and
-          (atom.label isnt 'numerical') and
+          (not isNumerical atom) and
           (@offsetToCursor atom) is atom.symbol.length or
           inserting = @isInserting())
       if !@isAutocompleting() or inserting
@@ -1609,7 +1609,7 @@ argumentNamesFromCall = (call) ->
       if isLabel term
         labeled = true
         _labelName term
-      else if (isAtom term) and (not isHalfDelimitedAtom term)
+      else if (isAtom term) and (not isHalfDelimitedAtom term) and not isNumerical term
         term.symbol
       else
         defaultNames[i++])
@@ -1948,6 +1948,9 @@ isExpression = (node) ->
 # Fn Node Bool
 isAtom = (node) ->
   (isExpression node) and not isForm node
+
+isNumerical = (atom) ->
+  atom.label is 'numerical'
 
 # Fn Node Bool
 isDelimitedAtom = (atom) ->
