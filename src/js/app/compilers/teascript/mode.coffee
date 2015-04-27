@@ -944,15 +944,37 @@ exports.Mode = class extends TextMode
           targetMode = targetEditor.session.getMode()
           selected = targetMode.onlySelectedExpression()
           if selected and (isAtom atom = selected) and atom.malformed
-            # TODO: better location than just currect insert position
-            @insertString FORWARD, if isOperator atom
-              args = argumentNamesFromCall atom.parent
-              """
-              #{atom.symbol} (fn [#{args.join ' '}]
-                )"""
+            if targetEditor isnt @editor
+              # TODO: better location than just current insert position
+              @insertString FORWARD, if isOperator atom
+                args = argumentNamesFromCall atom.parent
+                """
+                #{atom.symbol} (fn [#{args.join ' '}]
+                  )"""
+              else
+                """
+                #{atom.symbol} """
             else
-              """
-              #{atom.symbol} """
+              top = ancestorAtDefinitonList selected
+              # Position after top
+              movedTo = nodeEdgeOfTangible LAST, toTangible top
+              separator = if parentOf top then '\n' else '\n\n'
+              @startGroupMutation()
+              @insertSpaceAt FORWARD, separator, movedTo
+              @insertString FORWARD, if isOperator atom
+                args = argumentNamesFromCall atom.parent
+                """
+                #{atom.symbol} (fn [#{args.join ' '}]
+                  )"""
+              else
+                """
+                #{atom.symbol} """
+              hole = definition = @selectableEdge LAST
+              if isOperator atom
+                hole = tangibleInside LAST, toNode definition
+              @mutate
+                tangibleSelection: hole
+              @finishGroupMutation()
           else if selected = @onlySelectedExpression()
             # Find parent scope
             # Add empty space and selected form
