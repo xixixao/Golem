@@ -91,20 +91,24 @@ oop.inherits(TokenTooltip, Tooltip);
             return;
         }
 
-        var tokenText = token.type;
-        if (token.state)
-            tokenText += "|" + token.state;
-        if (token.merge)
-            tokenText += "\n  merge";
-        if (token.stateTransitions)
-            tokenText += "\n  " + token.stateTransitions.join("\n  ");
+        if (this.setTooltipContentForToken) {
+            this.setTooltipContentForToken(token);
+        } else {
+            var tokenText = token.type;
+            if (token.state)
+                tokenText += "|" + token.state;
+            if (token.merge)
+                tokenText += "\n  merge";
+            if (token.stateTransitions)
+                tokenText += "\n  " + token.stateTransitions.join("\n  ");
 
-        if (this.tokenText != tokenText) {
-            this.setText(tokenText);
-            this.width = this.getWidth();
-            this.height = this.getHeight();
-            this.tokenText = tokenText;
+            if (this.tokenText != tokenText) {
+                this.setText(tokenText);
+                this.tokenText = tokenText;
+            }
         }
+        this.width = this.getWidth();
+        this.height = this.getHeight();
 
         this.show(null, this.x, this.y);
 
