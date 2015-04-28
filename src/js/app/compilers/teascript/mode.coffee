@@ -336,12 +336,29 @@ exports.Mode = class extends TextMode
           # callback "error", []
           return
         @worker.call 'matchingDefinitions', [reference], (completions) =>
-          callback null, (for symbol, {type, score} of completions# when symbol isnt editedSymbol
+          callback null, (for symbol, {type, score, rawType, arity, docs} of completions# when symbol isnt editedSymbol
             name: symbol
             value: symbol
             completer: completer
             score: score
-            meta: type)
+            meta: type
+            rawType: rawType
+            arity: arity
+            docs: docs)
+
+      getDocTooltip: (selected) ->
+        unless selected.docHTML
+          paramNames = selected.arity or []
+          params = paramNames.join ' '
+          docs = compiler.labelDocs selected.docs, paramNames
+          selected.docHTML =
+            """
+            <span style='color: #9EE062'>#{selected.name}</span> \
+            <span style='color: #9C49B6'>#{params}</span>
+            #{compiler.prettyPrint selected.rawType}
+            #{docs}
+            """
+        return
 
       insertMatch: (editor, {value}) =>
         mode = editor.session.getMode()
