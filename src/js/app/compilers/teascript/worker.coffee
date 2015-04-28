@@ -17,50 +17,40 @@ exports.Worker = class extends Mirror
   setModuleName: (@moduleName) ->
 
   compileModule: (value, moduleName) ->
-    console.log  "compiling module", moduleName
-    try
-      cacheModule compiler.compileTopLevel, value, moduleName
-      @compile()
-    catch e
-      console.log e.stack
-      @sender.emit "error",
-        text: e.message
-        type: 'error'
-        inDependency: yes
+    @_compile value, moduleName, no
 
   onUpdate: ->
     # @trigger @compile
     @compile()
 
   compile: =>
-    console.log "compiling", @moduleName
-
-    @sourceCompiled = true
     value = @doc.getValue()
+    @_compile value, @moduleName, yes
+
+  _compile: (value, moduleName, current) ->
+    console.log "worker: compiling #{moduleName}, current: #{current}"
     try
-      result = cacheModule compiler.compileTopLevel, value, @moduleName
+      result = cacheModule compiler.compileTopLevel, value, moduleName
       if result.request
+        listening = @sender.on 'ok', (requested) =>
+          if requested.moduleName is result.request
+            @sender.off 'ok', listening
+            @_compile value, moduleName, current
         @sender.emit "request", moduleName: result.request
       else
         @sender.emit "ok",
           result: result
           source: value
+        @sender._emit "ok",
+          moduleName: moduleName
     catch e
-      # loc = e.location
-      # if loc
-      #   @sender.emit "error",
-      #     row: loc.first_line
-      #     column: loc.first_column
-      #     endRow: loc.last_line
-      #     endColumn: loc.last_column
-      #     text: e.message
-      #     type: "error"
       console.log e.stack
       @sender.emit "error",
         text: e.message
         type: 'error'
         source: value
-      return
+        inDependency: not current
+
 
   matchingDefinitions: (reference, id) ->
     defs = compiler.findMatchingDefinitions @moduleName, reference
