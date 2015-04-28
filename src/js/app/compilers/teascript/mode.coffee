@@ -350,14 +350,20 @@ exports.Mode = class extends TextMode
         unless selected.docHTML
           paramNames = selected.arity or []
           params = paramNames.join ' '
-          docs = compiler.labelDocs selected.docs, paramNames
           selected.docHTML =
             """
             <span style='color: #9EE062'>#{selected.name}</span> \
             <span style='color: #9C49B6'>#{params}</span>
             #{compiler.prettyPrint selected.rawType}
-            #{docs}
-            """
+            """ +
+            if selected.docs
+              docs = compiler.labelDocs selected.docs, paramNames
+              """
+
+              #{docs}
+              """
+            else
+              ''
         return
 
       insertMatch: (editor, {value}) =>
