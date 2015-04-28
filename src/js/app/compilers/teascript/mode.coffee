@@ -8,6 +8,7 @@ Selection    = require("ace/selection").Selection
 oop          = require("ace/lib/oop")
 EventEmitter = require("ace/lib/event_emitter").EventEmitter
 HashHandler  = require("ace/keyboard/hash_handler").HashHandler
+TokenTooltip = require("ace/token-tooltip").TokenTooltip
 
 CustomAutocomplete = require "./CustomAutocomplete"
 CustomSearchBox = require "./CustomSearchBox"
@@ -166,6 +167,7 @@ exports.Mode = class extends TextMode
     # @editor.on 'click', @handleClick
     @editor.on 'mousedown', @handleMouseDown
     @editor.on 'mouseup', @handleMouseUp
+    @editor.tokenTooltip = new TokenTooltip @editor
     @__editorOnPaste = @editor.onPaste
     @editor.onPaste = @handlePaste
     @editor.selection.on 'removeRange', @handleRangeDeselect
