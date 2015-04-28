@@ -111,7 +111,7 @@ oop.inherits(TokenTooltip, Tooltip);
         this.token = token;
         session.removeMarker(this.marker);
         this.range = new Range(docPos.row, token.start, docPos.row, token.start + token.value.length);
-        this.marker = session.addMarker(this.range, "ace_bracket", "text");
+        this.marker = session.addMarker(this.range, "ace_tooltip-bracket", "text");
     };
 
     this.onMouseMove = function(e) {

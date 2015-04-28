@@ -147,9 +147,10 @@ exports.Mode = class extends TextMode
     # @editor.removeListener 'click', @handleClick
     @editor.removeListener 'mousedown', @handleMouseDown
     @editor.removeListener 'mouseup', @handleMouseUp
+    @editor.tokenTooltip.destroy()
     @editor.onPaste = @__editorOnPaste
-    editor.setOption 'dragEnabled', yes
-    editor.setOption 'enableBlockSelect', yes
+    @editor.setOption 'dragEnabled', yes
+    @editor.setOption 'enableBlockSelect', yes
     # session.getDocument().removeListener 'change', @selectInserted
 
   attachToEditor: (editor) ->
