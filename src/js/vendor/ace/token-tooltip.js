@@ -44,6 +44,8 @@ function TokenTooltip (editor) {
     editor.tokenTooltip = this;
     this.editor = editor;
 
+    this.displayDelay = 100;
+
     this.update = this.update.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseOut = this.onMouseOut.bind(this);
@@ -86,13 +88,12 @@ oop.inherits(TokenTooltip, Tooltip);
             };
         }
         if (!token) {
-            session.removeMarker(this.marker);
-            this.hide();
+            this.hideAndRemoveMarker();
             return;
         }
 
         if (this.setTooltipContentForToken) {
-            this.setTooltipContentForToken(token);
+            this.setTooltipContentForToken(token, this);
         } else {
             var tokenText = token.type;
             if (token.state)
@@ -118,6 +119,11 @@ oop.inherits(TokenTooltip, Tooltip);
         this.marker = session.addMarker(this.range, "ace_tooltip-bracket", "text");
     };
 
+    this.hideAndRemoveMarker = function() {
+        session.removeMarker(this.marker);
+        this.hide();
+    }
+
     this.onMouseMove = function(e) {
         this.x = e.clientX;
         this.y = e.clientY;
@@ -126,7 +132,7 @@ oop.inherits(TokenTooltip, Tooltip);
             this.setPosition(this.x, this.y);
         }
         if (!this.$timer)
-            this.$timer = setTimeout(this.update, 100);
+            this.$timer = setTimeout(this.update, this.displayDelay);
     };
 
     this.onMouseOut = function(e) {
@@ -140,10 +146,10 @@ oop.inherits(TokenTooltip, Tooltip);
     this.setPosition = function(x, y) {
         if (x + 10 + this.width > this.maxWidth)
             x = window.innerWidth - this.width - 10;
-        if (y > window.innerHeight * 0.75 || y + 20 + this.height > this.maxHeight)
-            y = y - this.height - 30;
+        if (y > window.innerHeight * 0.75 || y + 10 + this.height > this.maxHeight)
+            y = y - this.height - 20;
 
-        Tooltip.prototype.setPosition.call(this, x + 10, y + 20);
+        Tooltip.prototype.setPosition.call(this, x + 10, y + 10);
     };
 
     this.destroy = function() {

@@ -169,6 +169,7 @@ exports.Mode = class extends TextMode
     @editor.on 'mousedown', @handleMouseDown
     @editor.on 'mouseup', @handleMouseUp
     @editor.tokenTooltip = new TokenTooltip @editor
+    @editor.tokenTooltip.setTooltipContentForToken = @docsTooltip
     @__editorOnPaste = @editor.onPaste
     @editor.onPaste = @handlePaste
     @editor.selection.on 'removeRange', @handleRangeDeselect
@@ -386,6 +387,11 @@ exports.Mode = class extends TextMode
             mode.insertOpeningDelim '{', '}'
           else
             mode.insertString FORWARD, value
+
+  docsTooltip: (token, tooltip) =>
+    if token.id
+      #@worker.call 'docsFor', token.id
+      tooltip.setText token.id
 
   handleMouseDown: (event) =>
     @mouseDownTime = +new Date
@@ -2092,6 +2098,7 @@ convertToAceLineTokens = (tokens) ->
 
 convertToAceToken = (token) ->
   value: token.symbol
+  id: token.id
   type:
     if (isDelim token) and token.parent.malformed or token.malformed
       'token_malformed'
