@@ -15,7 +15,10 @@ class DumpCommand
     # TODO: add full output and line numbers
     # ("#{i} #{line}" for line, i in state.compiledJs.split('\n')).join '\n'
     ifCompiled state, editor, ->
-      editor.logResult state.compiledJs
+      editor.logResult (state.compiledJs
+        .replace /&/g,'&amp;'
+        .replace /</g,'&lt;'
+        .replace />/g,'&gt;')
 
 class RunCommand
   @defaultSymbols = ['run', 'r']
