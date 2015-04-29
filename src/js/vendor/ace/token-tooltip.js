@@ -92,34 +92,45 @@ oop.inherits(TokenTooltip, Tooltip);
             return;
         }
 
-        if (this.setTooltipContentForToken) {
-            this.setTooltipContentForToken(token, this);
-        } else {
-            var tokenText = token.type;
-            if (token.state)
-                tokenText += "|" + token.state;
-            if (token.merge)
-                tokenText += "\n  merge";
-            if (token.stateTransitions)
-                tokenText += "\n  " + token.stateTransitions.join("\n  ");
-
-            if (this.tokenText != tokenText) {
-                this.setText(tokenText);
-                this.tokenText = tokenText;
-            }
-        }
-        this.width = this.getWidth();
-        this.height = this.getHeight();
-
-        this.show(null, this.x, this.y);
+        var changed = this.token != token;
 
         this.token = token;
-        session.removeMarker(this.marker);
-        this.range = new Range(docPos.row, token.start, docPos.row, token.start + token.value.length);
-        this.marker = session.addMarker(this.range, "ace_tooltip-bracket", "text");
+        this.docPos = docPos;
+
+        if (changed) {
+            if (this.setTooltipContentForToken) {
+                this.setTooltipContentForToken(token, this);
+            } else {
+                var tokenText = token.type;
+                if (token.state)
+                    tokenText += "|" + token.state;
+                if (token.merge)
+                    tokenText += "\n  merge";
+                if (token.stateTransitions)
+                    tokenText += "\n  " + token.stateTransitions.join("\n  ");
+
+                if (this.tokenText != tokenText) {
+                    this.setText(tokenText);
+                    this.tokenText = tokenText;
+                }
+                this.open();
+            }
+        }
     };
 
+    this.open = function() {
+        var session = this.editor.session;
+        this.width = this.getWidth();
+        this.height = this.getHeight();
+        this.show(null, this.x, this.y);
+        session.removeMarker(this.marker);
+        this.range = new Range(this.docPos.row, this.token.start,
+            this.docPos.row, this.token.start + this.token.value.length);
+        this.marker = session.addMarker(this.range, "ace_tooltip-bracket", "text");
+    }
+
     this.hideAndRemoveMarker = function() {
+        var session = this.editor.session;
         session.removeMarker(this.marker);
         this.hide();
     }
@@ -132,7 +143,7 @@ oop.inherits(TokenTooltip, Tooltip);
             this.setPosition(this.x, this.y);
         }
         if (!this.$timer)
-            this.$timer = setTimeout(this.update, this.displayDelay);
+            this.$timer = setTimeout(this.update, 100);
     };
 
     this.onMouseOut = function(e) {

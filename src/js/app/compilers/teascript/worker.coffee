@@ -56,6 +56,9 @@ exports.Worker = class extends Mirror
     defs = compiler.findMatchingDefinitions @moduleName, reference
     @sender.callback defs, id
 
+  docsFor: (declarationId, id) ->
+    info = compiler.findDocsFor @moduleName, declarationId
+    @sender.callback info, id
 
 # Returns a function which runs given function maximally once during given
 # duration.

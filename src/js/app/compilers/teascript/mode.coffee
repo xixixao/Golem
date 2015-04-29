@@ -352,24 +352,9 @@ exports.Mode = class extends TextMode
             arity: arity
             docs: docs)
 
-      getDocTooltip: (selected) ->
+      getDocTooltip: (selected) =>
         unless selected.docHTML
-          paramNames = selected.arity or []
-          params = paramNames.join ' '
-          selected.docHTML =
-            """
-            <span style='color: #9EE062'>#{selected.name}</span> \
-            <span style='color: #9C49B6'>#{params}</span>
-            #{compiler.prettyPrint selected.rawType}
-            """ +
-            if selected.docs
-              docs = compiler.labelDocs selected.docs, paramNames
-              """
-
-              #{docs}
-              """
-            else
-              ''
+          selected.docHTML = @createDocTooltipHtml selected
         return
 
       insertMatch: (editor, {value}) =>
@@ -389,9 +374,36 @@ exports.Mode = class extends TextMode
             mode.insertString FORWARD, value
 
   docsTooltip: (token, tooltip) =>
-    if token.id
-      #@worker.call 'docsFor', token.id
-      tooltip.setText token.id
+    clearTimeout @docTooltipTimer
+    tooltip.hideAndRemoveMarker();
+    if token.scope?
+      reference = name: token.value, scope: token.scope
+      @docTooltipTimer = setTimeout =>
+        @worker.call 'docsFor', [reference], (info) =>
+          if info
+            tooltip.setHtml @createDocTooltipHtml info
+            tooltip.open()
+      , 1500
+
+  detach: ->
+    clearTimeout @docTooltipTimer
+
+  createDocTooltipHtml: (info) ->
+    paramNames = info.arity or []
+    params = paramNames.join ' '
+    """
+    <span style='color: #9EE062'>#{info.name}</span> \
+    <span style='color: #9C49B6'>#{params}</span>
+    #{compiler.prettyPrint info.rawType}
+    """ +
+    if info.docs
+      docs = compiler.labelDocs info.docs, paramNames
+      """
+
+      #{docs}
+      """
+    else
+      ''
 
   handleMouseDown: (event) =>
     @mouseDownTime = +new Date
@@ -2098,7 +2110,7 @@ convertToAceLineTokens = (tokens) ->
 
 convertToAceToken = (token) ->
   value: token.symbol
-  id: token.id
+  scope: token.scope
   type:
     if (isDelim token) and token.parent.malformed or token.malformed
       'token_malformed'

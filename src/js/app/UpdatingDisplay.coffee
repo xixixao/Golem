@@ -51,9 +51,17 @@ module.exports = hyper class UpdatingDisplay
         if error instanceof SyntaxError
           compiled
         else
-          error.stack
-            .replace(/\n?((\w+)[^>\n]+>[^>\n]+:(\d+:\d+)|.*)(?=\n)/g, '\n$2 $3')
-            .replace(/\n (?=\n)/g, '')}"
+          @formatStackTrace error.stack}"
+
+  formatStackTrace: (trace = '') ->
+    cutoff = compiler.builtInLibraryNumLines
+    trace
+      .replace /\n?(?:(\w+)[^>\n]+>[^>\n]+:(\d+:\d+)|.*)(?=\n)/g, (match, name, location) ->
+        if (parseInt location) > cutoff
+          "#{name} #{location}\n"
+        else
+          ""
+      .replace /\n (?=\n)/g, ''
 
   handleCommand: (name) ->
     => @props.onCommand name, @editor
@@ -119,6 +127,7 @@ module.exports = hyper class UpdatingDisplay
 
   componentWillUnmount: ->
     @editor.completer.detach()
+    @editor.session.getMode().detach()
 
   render: ->
     # @i ?= 0
