@@ -126,7 +126,7 @@ module.exports = hyper class UpdatingDisplay
     @shouldRun = compiled isnt @state.compiled
 
   componentWillUnmount: ->
-    @editor.completer.detach()
+    @editor.completer?.detach()
     @editor.session.getMode().detach()
 
   render: ->
