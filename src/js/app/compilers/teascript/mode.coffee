@@ -611,7 +611,6 @@ exports.Mode = class extends TextMode
 
     @editor.commands.addCommands @commands =
       'select by click':
-        multiSelectAction: 'forEach' #selects multiple
         autocomplete: yes
         exec: =>
           @mutate
