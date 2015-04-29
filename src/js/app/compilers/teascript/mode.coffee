@@ -179,6 +179,8 @@ exports.Mode = class extends TextMode
     session.multiSelect.on 'multiSelect', @addMultiSelectKeyboardHandler
     session.multiSelect.on 'singleSelect', @removeMultiSelectKeyboardHandler
 
+    @editor.on 'blur', @detach
+
     # attaching as last listener, so that everything is updated already
     # session.getDocument().on 'change', @selectInserted, no
 
@@ -381,11 +383,15 @@ exports.Mode = class extends TextMode
       @docTooltipTimer = setTimeout =>
         @worker.call 'docsFor', [reference], (info) =>
           if info
-            tooltip.setHtml @createDocTooltipHtml info
+            # TODO: until we insert the type directly into text
+            tooltip.setHtml if token.label is 'name'
+              @prettyPrintTypeForDoc info
+            else
+              @createDocTooltipHtml info
             tooltip.open()
       , 1500
 
-  detach: ->
+  detach: =>
     clearTimeout @docTooltipTimer
 
   createDocTooltipHtml: (info) ->
@@ -394,7 +400,7 @@ exports.Mode = class extends TextMode
     """
     <span style='color: #9EE062'>#{info.name}</span> \
     <span style='color: #9C49B6'>#{params}</span>
-    #{compiler.prettyPrint info.rawType}
+    #{@prettyPrintTypeForDoc info}
     """ +
     if info.docs
       docs = compiler.labelDocs info.docs, paramNames
@@ -404,6 +410,9 @@ exports.Mode = class extends TextMode
       """
     else
       ''
+
+  prettyPrintTypeForDoc: ({rawType}) ->
+    compiler.prettyPrint rawType
 
   handleMouseDown: (event) =>
     @mouseDownTime = +new Date
@@ -2111,6 +2120,7 @@ convertToAceLineTokens = (tokens) ->
 convertToAceToken = (token) ->
   value: token.symbol
   scope: token.scope
+  label: token.label
   type:
     if (isDelim token) and token.parent.malformed or token.malformed
       'token_malformed'
