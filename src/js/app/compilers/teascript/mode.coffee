@@ -384,7 +384,7 @@ exports.Mode = class extends TextMode
       reference = name: token.value, scope: token.scope
       @docTooltipTimer = setTimeout =>
         @worker.call 'docsFor', [reference], (info) =>
-          if info
+          if info?.rawType
             # TODO: until we insert the type directly into text
             tooltip.setHtml if token.label is 'name'
               @prettyPrintTypeForDoc info
@@ -945,6 +945,7 @@ exports.Mode = class extends TextMode
       'wrap current in a function':
         bindKey: win: 'Ctrl-F', mac: 'Ctrl-F'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           # if @isInserting()
           #   @wrap '(', 'fn', ' ', '[', {insert: yes}, ']', ' ', {selected: yes, select: yes}, ')'
@@ -955,6 +956,7 @@ exports.Mode = class extends TextMode
       'wrap current in a match':
         bindKey: win: 'Ctrl-M', mac: 'Ctrl-M'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @wrap '(', 'match', ' ', {insert: yes}, '\n',
             '    ', ' ', {selected: yes}, ')'
