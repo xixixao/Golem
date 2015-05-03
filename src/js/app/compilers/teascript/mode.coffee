@@ -973,9 +973,9 @@ exports.Mode = class extends TextMode
                 tangibleSelection: inParams
 
             @mutate
+              tangibleSelection: outsToTangible hole.out
               newSelections: [
-                in: []
-                out: hole.out
+                @selectedTangible()
               ]
             @finishGroupMutation()
 
