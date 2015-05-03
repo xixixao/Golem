@@ -3,7 +3,8 @@ class EraseCommand
   @description = 'Clear all results'
   @symbols = @defaultSymbols
 
-  @execute = (args, state) ->
-    logs: []
+  @execute = (args, state, editor) ->
+    editor.setState
+      logs: []
 
 module.exports = [EraseCommand]

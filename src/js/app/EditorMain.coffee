@@ -251,6 +251,7 @@ module.exports = hyper class EditorMain
       # require './commands/builtin/Modes'
       require './commands/builtin/Files'
       require './commands/builtin/Download'
+      require './commands/builtin/Demos'
     ].flatten()
 
   mixins: [
@@ -378,7 +379,7 @@ module.exports = hyper class EditorMain
       error
 
   _executeCommand: (command, args) ->
-    @setState command.execute args, @state, this
+    command.execute args, @state, this
 
   _bindCommands: ->
     commandMap = {}
@@ -459,6 +460,7 @@ module.exports = hyper class EditorMain
   componentDidMount: ->
     if @state.timeline.size() < 10
       @_executeCommand @state.commandMap.help
+    @_executeCommand @state.commandMap['load-demos']
     window.log = @logResult
 
   logResult: (input) ->
