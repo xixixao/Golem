@@ -27,6 +27,7 @@ log = (arg) ->
   map
   concatMap
   zipWith
+  unzip
   filter
   join
   all
@@ -1095,6 +1096,52 @@ exports.Mode = class extends TextMode
                     added: (reindentTangible inlined, atom.parent)
                     at: @selectedTangible()
 
+      'push definition up':
+        bindKey: win: 'Ctrl-U', mac: 'Ctrl-U'
+        multiSelectAction: 'forEach'
+        exec: =>
+          # Copy definition in subscope
+          # Remove it and trailing space if any
+          # find parent definition
+          # add the copied definition after it
+          # put cursor where it was
+          selection = @selectedTangible()
+          pushUp = (at) =>
+            top = ancestorAtDefinitonList at
+            definitionPair =
+              if isName top
+                if isExpression definition = siblingTerm FORWARD, top
+                  tangibleBetween (toTangible top), (toTangible definition)
+              else
+                if isName name = siblingTerm BACKWARD, top
+                  tangibleBetween (toTangible name), (toTangible top)
+            if definitionPair
+              parent = ancestorAtDefinitonList top.parent
+              movedTo = nodeEdgeOfTangible LAST, toTangible parent
+              [selectionNodes, recover] = memorable selection
+              [moved, newSelectionNodes] = reindentTangiblePreserving definitionPair,
+                parent.parent, selectionNodes
+              separator = if parentOf parent then '\n' else '\n\n'
+
+              @startGroupMutation()
+              @mutate @removeSelectable definitionPair
+              @mutate @remove BACKWARD if @isInserting()
+
+              @insertSpaceAt FORWARD, separator, movedTo
+
+              @mutate
+                changeInTree:
+                  added: moved
+                  at:
+                    in: []
+                    out: [movedTo]
+                memorableSelection: [recover, newSelectionNodes]
+              @finishGroupMutation()
+            else
+              pushUp parentOf at
+
+          pushUp toNode @selectedTangible()
+
   selectReferenceInDirection: (direction) ->
     selected = @onlySelectedExpression()
     if selected and (isAtom atom = selected) and atom.id?
@@ -1476,9 +1523,10 @@ exports.Mode = class extends TextMode
       # 3. Perform editor actions to reconcile AST with contents
       @docReplace removedRange, addedString
     # 4.1. selections
-    if state.inSelection or state.inSelections or state.tangibleSelection or state.selectionRange
+    if state.inSelection or state.inSelections or state.tangibleSelection or state.selectionRange or state.memorableSelection
       selections = state.tangibleSelection or
         state.selectionRange and (@tangibleSelectionFromRange state.selectionRange) or
+        state.memorableSelection and ([recover, selectionNodes] = state.memorableSelection) and (recover selectionNodes) or
         insToTangible state.inSelections or [state.inSelection]
       selectionRange = @rangeOfTangible selections
       editing = no
@@ -1692,14 +1740,14 @@ argumentNamesFromCall = (call) ->
         defaultNames[i++])
   args
 
-ancestorAtDefinitonList = (expression) ->
-  if (parent = parentOf expression)
-    if isFunction parent
-      expression
+ancestorAtDefinitonList = (node) ->
+  if (parent = parentOf node)
+    if (isFunction parent) and isExpression node
+      node
     else
       ancestorAtDefinitonList parent
   else
-    expression
+    node
 
 findParentScope = (top, expression) ->
   (findParentFunction expression) or top
@@ -1850,6 +1898,9 @@ insToTangible = (ins) ->
   in: ins
   out: validOut next
 
+outsToTangible = (outs) ->
+  in: []
+  out: validOut outs[0]
 
 
 # Used by navigation over atoms and insert positions
@@ -1932,6 +1983,14 @@ bookmarkBefore = (tangible) ->
   ->
     in: []
     out: validOut following at
+
+# Used before cloning, returns those nodes needed to clone a tangible
+# And a function which reconstructs the tangible
+memorable = (tangible) ->
+  if tangible.in.length is 0
+    [[tangible.out[0]], outsToTangible]
+  else
+    [tangible.in, insToTangible]
 
 toTangible = (node) ->
   insToTangible [node]
@@ -2241,9 +2300,22 @@ duplicateProperties = (newAst, oldAst) ->
   else
     oldAst.label = newAst.label
 
-# Fn Tangible Nodes
+# Fn Tangible Node Nodes [Nodes Nodes]
+# The second returned value is a list of nodes which are reindented versions
+# of those in the preservedList (which is in order of nodes in the AST
+# and not overlapping for now).
+reindentTangiblePreserving = (tangible, to, preservedList) ->
+  [cloned, preserved] = cloneNodes tangible.in, preservedList
+  console.log "preantinas", cloned
+  for node in cloned
+    node.parent = to
+  console.log "preantinas", cloned
+  [(reindentNodes cloned, to), preserved]
+
+# Fn Tangible Node Nodes
 reindentTangible = (tangible, to) ->
-  reindentNodes (cloneNodes tangible.in), to
+  [reindented] = reindentTangiblePreserving tangible, to, []
+  reindented
 
 # Astizes string and reindents it properly
 astize = (string, parent) ->
@@ -2252,22 +2324,27 @@ astize = (string, parent) ->
   [open, expressions..., close] = wrapped
   expressions
 
-cloneNodes = (nodes) ->
-  map cloneNode, nodes
+cloneNodes = (nodes, preserving) ->
+  [clones, preservedLists] = unzip map (cloneNode preserving), nodes
+  [clones, concat preservedLists]
 
-cloneNode = (node) ->
+cloneNode = (preserving) -> (node) ->
   if isForm node
-    clone = cloneNodes node
+    [clone, preserved] = cloneNodes node, preserving
     for child in clone
       child.parent = clone
   else
+    preserved = []
     clone = symbol: node.symbol, label: node.label
   clone.start = node.start
   clone.end = node.end
   clone.malformed = node.malformed
   clone.tea = node.tea
   clone.id = node.id
-  clone
+  if node in preserving
+    # preserved = join [clone], preserved
+    preserved = [clone] # not overlapping for now
+  [clone, preserved]
 
 reindentNodes = (nodes, parent) ->
   reindent (depthOf parent), nodes
