@@ -315,6 +315,7 @@ exports.Mode = class extends TextMode
             editor.completer = new CustomAutocomplete()
           # Disable autoInsert
           #editor.completer.autoInsert = false;
+          @closeTooltip()
           editor.completer.showPopup editor
     else if editor.completer and not e?.command.name in ignoredCommands
       editor.completer.detach()
@@ -390,7 +391,12 @@ exports.Mode = class extends TextMode
             else
               @createDocTooltipHtml info
             tooltip.open()
+            @activeTooltip = tooltip
       , 1500
+
+  closeTooltip: =>
+    @activeTooltip?.hideAndRemoveMarker()
+    @detach()
 
   detach: =>
     clearTimeout @docTooltipTimer
@@ -943,7 +949,8 @@ exports.Mode = class extends TextMode
           # if @isInserting()
           #   @wrap '(', 'fn', ' ', '[', {insert: yes}, ']', ' ', {selected: yes, select: yes}, ')'
           # else
-          @wrap '(', 'fn', ' ', '[]', ' ', {selected: yes, select: yes}, ')'
+          separator = if parentOf (toNode @selectedTangible()) then [' '] else ['\n', '  ']
+          @wrap (concat [['(', 'fn', ' ', '[]'], separator, [{selected: yes, select: yes}, ')']])...
 
       'wrap current in a match':
         bindKey: win: 'Ctrl-M', mac: 'Ctrl-M'
