@@ -512,6 +512,7 @@ exports.Mode = class extends TextMode
         states)
       @groupMutationRegister = states: []
     undo: =>
+      console.log @undoStack
       @replay @undoStack, redo: yes
       # console.log "should have undone"
     redo: =>
