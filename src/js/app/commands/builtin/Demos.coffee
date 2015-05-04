@@ -45,20 +45,20 @@ smallest-of-3 (fn [x y z]
   (smaller (smaller x y) z))
 
 is-digit? (fn [x]
-  (in-range-inclusively \0 \9))
+  (in-range-inclusively \\0 \\9))
 
 is-alphabetic? (fn [x]
-  (in-range-inclusively \a \Z))
+  (in-range-inclusively \\a \\Z))
 
 digit-char-to-int (fn [digit]
-  (- (code-from-char \0) (code-from-char digit)))
+  (- (code-from-char \\0) (code-from-char digit)))
 
 to-upper-case (fn [char]
   (if is-lower-case?
     (char-from-code (+ diff (code-from-char char)))
     char)
-  is-lower-case? (in-range-inclusively \a \z char)
-  diff (- (code-from-char \a) (code-from-char \A)))'''
+  is-lower-case? (in-range-inclusively \\a \\z char)
+  diff (- (code-from-char \\a) (code-from-char \\A)))'''
 ,
   name: 'DoC-Recursion'
   source: '''is-prime? (fn [x]
@@ -129,13 +129,13 @@ cli-arguments! (:: (Io (Array String))
 
 read-file! (fn [name]
   (: (Fn String (Io String)))
-  (io (replace-regex /\\n/g "\n" (:: String
+  (io (replace-regex /\\\\n/g "\\n" (:: String
         (.prompt (global) (format "What are the contents of '%s'?" name))))))
 
 write-file! (fn [name content]
   (: (Fn String String (Io Void)))
   (io (.alert (global)
-      (format "Would write the following into '%s':\n %s" name content))))
+      (format "Would write the following into '%s':\\n %s" name content))))
 
 examples (fn []
   (#
@@ -332,11 +332,11 @@ show-boolean (instance (Show Bool)
 show-num (instance (Show Num)
   show (macro [n]
     (: (Fn Num String))
-    (Js.binary "+" n "\"\"")))
+    (Js.binary "+" n "\\"\\"")))
 
 show-string (instance (Show String)
   show (fn [s]
-    (format "\"%s\"" s)))
+    (format "\\"%s\\"" s)))
 
 show-char (instance (Show Char)
   show (fn [c]
