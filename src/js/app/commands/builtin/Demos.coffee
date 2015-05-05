@@ -12,6 +12,274 @@ class DemosCommand
 module.exports = [DemosCommand]
 
 demos = [
+  name: 'DoC-Calculus'
+  source: '''Un-Op (data Neg Sin Cos Log)
+Bin-Op (data Add Mul Div)
+Exp (data
+  Val [value: Num]
+  Id [name: String]
+  Un-App [op: Un-Op exp: Exp]
+  Bin-App [op: Bin-Op left: Exp right: Exp])
+
+Env (type (Map String Num))
+
+unaries (Map
+  Neg ~
+  Sin sin
+  Cos cos
+  Log ln)
+
+binaries (Map
+  Add +
+  Mul *
+  Div (flip /))
+
+un-op-show (instance (Show Un-Op)
+  show (fn [op]
+    (match op
+      Neg "-"
+      Sin "sin"
+      Cos "cos"
+      Log "ln")))
+
+bin-op-show (instance (Show Bin-Op)
+  show (fn [op]
+    (match op
+      Add "+"
+      Mul "*"
+      Div "/")))
+
+exp-show (instance (Show Exp)
+  show (fn [exp]
+    (match exp
+      (Val value) (format "%n" value)
+      (Id name) name
+      (Un-App op arg) (format "(%s %s)" (show op) (show arg))
+      (Bin-App op left right) (format "(%s %s %s)" (show op) (show left) (show right)))))
+
+eval (fn [exp env]
+  (: (Fn Exp Env Num))
+  (match exp
+    (Val value) value
+    (Id name) (!! (at name env))
+    (Un-App op arg) ((!! (at op unaries)) (eval arg env))
+    (Bin-App op left right) ((!! (at op binaries)) (eval left env) (eval right env))))
+
+diff (fn [exp var]
+  (match exp
+    (Val value) (Val 0)
+    (Id name) (if (= name var)
+      (Val 1)
+      (Val 0))
+    (Un-App op arg) (match op
+      Neg (Un-App Neg (diff arg var))
+      Sin (Bin-App Mul (Un-App Cos arg) (diff arg var))
+      Cos (Bin-App Mul (Un-App Neg (Un-App Sin arg)) (diff arg var))
+      Log (Bin-App Div (diff arg var) arg))
+    (Bin-App op left right) (match op
+      Add (Bin-App Add (diff left var) (diff right var))
+      Mul (Bin-App Add
+        (Bin-App Mul left (diff right var))
+        (Bin-App Mul right (diff left var)))
+      Div (Bin-App Div
+        (Bin-App Add
+          (Bin-App Mul right (diff left var))
+          (Un-App Neg (Bin-App Mul left (diff right var))))
+        (Bin-App Mul right right)))))
+
+mclaurin (fn [exp value iterations]
+  (sum (zip-3 form-term differentials powers factorials))
+  form-term (fn [differential power factorial]
+    (/ factorial (* differential power)))
+  differentials (map (eval env: {x: 0}) (iterate (diff var: "x") exp iterations))
+  powers (iterate (* value) 1 iterations)
+  factorials (scan * 1 (range 1 iterations)))
+
+'''
+,
+  name: 'DoC-L-Systems'
+  source: '''Rules (type (Map Char String))
+System (record angle: Num base: String rules: Rules)
+
+tree (fn [angle] (System
+    angle
+    "M"
+    (Map
+      \\M "N[-M][+M][NM]"
+      \\N "NM"
+      \\[ "["
+      \\] "]"
+      \\+ "+"
+      \\- "-")))
+
+snowflake (System
+  60
+  "M--M--M"
+  (Map
+    \\M "M+M--M+M"
+    \\+ "+"
+    \\- "-"))
+
+peano (System
+  60
+  "M"
+  (Map
+    \\M "M+N++N-M--MM-N+"
+    \\N "-M+NN++N+M--M-N"
+    \\+ "+"
+    \\- "-"))
+
+l-system (fn [system n]
+  (trace
+    (expand-one mapper
+      (expand (System-rules system) (System-base system) n))
+    (System-angle system)
+    [1 0.7 0.5]))
+
+lookup-char (fn [char from]
+  (from-? "" (at char from)))
+
+expand-one (fn [rules base]
+  (concat (map-into (lookup-char from: rules) {} base)))
+
+expand (fn [rules base n]
+  (reapply (expand-one rules) base n))
+
+reapply (fn [what input n]
+  (match n
+    0 input
+    else (reapply what (what input) (- 1 n))))
+
+Vertex (type [Num Num])
+Angle (type Num)
+TurtleState (type [Vertex Angle])
+
+move (fn [command state rotation]
+  (match command
+    \\F [[(+ x (cos a)) (+ y (sin a))] angle]
+    \\L [pos (+ rotation angle)]
+    \\R [pos (- rotation angle)])
+  [x y] pos
+  a (radians angle)
+  [pos angle] state)
+
+Color (type [Num Num Num])
+ColoredLine (type [Vertex Vertex Color])
+
+trace (fn [commands rotation color]
+  lines
+  [end empty lines] (fold step [initial (List) {}] commands)
+  step (fn [command current]
+    (match command
+      \\[ [state (& state stack) lines]
+      \\] [(!! (first stack)) (rest stack) lines]
+      dir (do-move dir))
+    [state stack lines] current
+    do-move (fn [command]
+      [next stack (& [from to color] lines)]
+      [to _] next
+      [from _] state
+      next (move command state rotation)
+      c [(/ 400 (size lines)) 0.5 0])
+    [r g b] color)
+  initial [[0 0] 270])
+
+mapper (Map
+  \\M "F"
+  \\N "F"
+  \\+ "R"
+  \\- "L"
+  \\[ "["
+  \\] "]")
+
+canvas (fn [contents]
+  (tag "svg"
+    {width: "500"
+      height: "500"}
+    (concat contents)))
+
+svg-line (fn [line]
+  (tag "line"
+    {x1: (x x1)
+      y1: (y y1)
+      x2: (x x2)
+      y2: (y y2)
+      stroke: (css-color color)
+      stroke-width: "3"} "")
+  [[x1 y1] [x2 y2] color] line
+  x (fn [x] (format "%i" (round (+ 250 (* 5 x)))))
+  y (fn [x] (format "%i" (round (+ 400 (* 5 x))))))
+
+css-color (fn [color]
+  (format "rgb(%i, %i, %i)" (byte r) (byte g) (byte b))
+  [r g b] color
+  byte (* 255))
+
+tag (fn [tag-name attrs content]
+  (format "<%s%s>%s</%s>"
+    tag-name
+    (concat-map (uncurry attr) (entry-array attrs))
+    content
+    tag-name)
+  attr (fn [name value]
+    (format " %s=\\"%s\\"" name value)))
+'''
+,
+  name: 'DoC-Macroprocessor'
+  source: '''[cli-arguments! read-file! write-file! print-line!] (req Web-File-System)
+
+FileContents (type String)
+Keyword (type String)
+KeywordValue (type String)
+KeywordDefs (type (Array [Keyword KeywordValue]))
+
+separators "\\n\\t.,:;!\\' "
+
+lookup (fn [what in]
+  (map snd (filter (. (= what) fst) in)))
+
+split- (fn [separators text]
+  (fold-right distinguish ["" {""}] text)
+  distinguish (fn [letter done]
+    (if (elem? letter separators-set)
+      [(& letter seps-in-order) (& "" words)]
+      [seps-in-order (& (& letter first-word) rest-words)])
+    {first-word ..rest-words} words
+    [seps-in-order words] done)
+  separators-set (to-set separators))
+
+combine- (fn [separators words]
+  (: (Fn String (Array String) (Array String)))
+  (match words
+    {} {}
+    {w} {w}
+    {w ..ws} (& (join w (singleton (!! (first separators))))
+      (combine- (rest separators) ws))))
+
+get-keyword-definitions (fn [lines]
+  (map-into get-keyword-definitions-on-line (Map) lines))
+
+get-keyword-definitions-on-line (fn [line]
+  [keyword (concat (combine- spaces words))]
+  [spaces {keyword ..words}] (split- " " line))
+
+expand (fn [template specification]
+  (concat (combine- spaces (map lookup words)))
+  [spaces words] (split- separators template)
+  lookup (fn [keyword]
+    (? (at keyword definitions) keyword))
+  definitions (get-keyword-definitions (snd (split- "\\n" specification))))
+
+main (do
+  (set args cli-arguments!)
+  (match args
+    {template source output} (do
+      (set tmp (read-file! template))
+      (set src (read-file! source))
+      (write-file! output (expand tmp src)))
+    _ (print-line! "Pass in <template> <info> <output>")))
+'''
+,
   name: 'DoC-Quadratic'
   source: '''quad (fn [a b c x]
   (+ (+ (* a (^ 2 x)) (* b x)) c))
