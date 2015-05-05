@@ -2,5 +2,6 @@ exports.config =
   watch:
     compiledDir: 'dist'
   coffeescript:
+    sourceMapDynamic: no
     options:
-      sourceMaps: no
+      sourceMap: no
