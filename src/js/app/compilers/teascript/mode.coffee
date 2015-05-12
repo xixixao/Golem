@@ -336,7 +336,7 @@ exports.Mode = class extends TextMode
           typed = targetMode.editedAtom()
           editedSymbol = typed.symbol
         else
-          typed = targetMode.selectedTangible().out[0]
+          typed = toNode targetMode.selectedTangible()
 
         reference =
           type: typed.tea
