@@ -1051,34 +1051,46 @@ exports.Mode = class extends TextMode
               @mutate
                 tangibleSelection: hole
               @finishGroupMutation()
-          else if selected = @onlySelectedExpression()
-            # Find parent scope
-            # Add empty space and selected form
-            # put cursor to original place and the new space
-            # --- actually it's like adding an argument
-            top = ancestorAtDefinitonList selected
-            # Position after top
-            movedTo = nodeEdgeOfTangible LAST, toTangible top
-            moved = reindentTangible @selectedTangible(), top.parent
-            separator = if parentOf top then '\n' else '\n\n'
+          else if selected
+            if targetEditor isnt @editor
+              moved = reindentTangible (toTangible selected), @parentOfSelected()
+              @startGroupMutation()
+              originalHole = bookmarkBefore @selectedTangible()
+              @insertSpace FORWARD, " "
+              @mutate
+                changeInTree:
+                  added: moved
+                  at: @selectedTangible()
+                tangibleSelection: originalHole()
+              @finishGroupMutation()
+            else
+              # Find parent scope
+              # Add empty space and selected form
+              # put cursor to original place and the new space
+              # --- actually it's like adding an argument
+              top = ancestorAtDefinitonList selected
+              # Position after top
+              movedTo = nodeEdgeOfTangible LAST, toTangible top
+              moved = reindentTangible @selectedTangible(), top.parent
+              separator = if parentOf top then '\n' else '\n\n'
 
-            @startGroupMutation()
-            @mutate @removeSelectable @selectedTangible()
-            originalHole = bookmarkBefore @selectedTangible()
+              @startGroupMutation()
+              @mutate @removeSelectable @selectedTangible()
+              originalHole = bookmarkBefore @selectedTangible()
 
-            @insertSpaceAt FORWARD, separator, movedTo
-            newHole = bookmarkBefore @selectedTangible()
-            @insertSpaceAt FORWARD, " ", movedTo
+              @insertSpaceAt FORWARD, separator, movedTo
+              newHole = bookmarkBefore @selectedTangible()
+              @insertSpaceAt FORWARD, " ", movedTo
 
-            @mutate
-              changeInTree:
-                added: moved
-                at:
-                  in: []
-                  out: [movedTo]
-              tangibleSelection: originalHole()
-              newSelections: [newHole()]
-            @finishGroupMutation()
+              @mutate
+                changeInTree:
+                  added: moved
+                  at:
+                    in: []
+                    out: [movedTo]
+                tangibleSelection: originalHole()
+                newSelections: [newHole()]
+              @finishGroupMutation()
 
       'inline selected expression or replace name by its definition':
         bindKey: win: 'Ctrl-I', mac: 'Ctrl-I'
