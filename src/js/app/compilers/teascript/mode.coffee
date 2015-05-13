@@ -513,7 +513,6 @@ exports.Mode = class extends TextMode
         states)
       @groupMutationRegister = states: []
     undo: =>
-      console.log @undoStack
       @replay @undoStack, redo: yes
       # console.log "should have undone"
     redo: =>
@@ -526,8 +525,10 @@ exports.Mode = class extends TextMode
   replay: (stack, way) =>
     states = stack.pop()
     if states
+      @startGroupMutation()
       for state in states
         @mutate state, way
+      @finishGroupMutation()
 
   sameKindMutation: (previousStates, nextStates) ->
     if previousStates.length is 1 and nextStates.length is 1
