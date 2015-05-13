@@ -1020,6 +1020,7 @@ exports.Mode = class extends TextMode
           targetMode = targetEditor.session.getMode()
           selected = targetMode.onlySelectedExpression()
           if selected and (isAtom atom = selected) and atom.malformed
+            @startGroupMutation()
             if targetEditor isnt @editor
               # TODO: better location than just current insert position
               @insertString FORWARD, if isOperator atom
@@ -1035,7 +1036,6 @@ exports.Mode = class extends TextMode
               # Position after top
               movedTo = nodeEdgeOfTangible LAST, toTangible top
               separator = if parentOf top then '\n' else '\n\n'
-              @startGroupMutation()
               @insertSpaceAt FORWARD, separator, movedTo
               @insertString FORWARD, if isOperator atom
                 args = argumentNamesFromCall atom.parent
@@ -1045,12 +1045,12 @@ exports.Mode = class extends TextMode
               else
                 """
                 #{atom.symbol} """
-              hole = definition = @selectableEdge LAST
-              if isOperator atom
-                hole = tangibleInside LAST, toNode definition
-              @mutate
-                tangibleSelection: hole
-              @finishGroupMutation()
+            hole = definition = @selectableEdge LAST
+            if isOperator atom
+              hole = tangibleInside LAST, toNode definition
+            @mutate
+              tangibleSelection: hole
+            @finishGroupMutation()
           else if selected
             if targetEditor isnt @editor
               moved = reindentTangible (toTangible selected), @parentOfSelected()
