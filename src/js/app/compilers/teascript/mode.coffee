@@ -956,13 +956,21 @@ exports.Mode = class extends TextMode
           separator = if parentOf (toNode @selectedTangible()) then [' '] else ['\n', '  ']
           @wrap (concat [['(', 'fn', ' ', '[]'], separator, [{selected: yes, select: yes}, ')']])...
 
-      'wrap current in a match':
+      'wrap current to match':
         bindKey: win: 'Ctrl-M', mac: 'Ctrl-M'
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
+          @wrap '(', 'match', ' ', {selected: yes}, '\n',
+            '    ', {insert: yes}, ' ', ')'
+
+      'wrap current in a match':
+        bindKey: win: 'Ctrl-Shift-M', mac: 'Ctrl-Shift-M'
+        multiSelectAction: 'forEach'
+        autocomplete: yes
+        exec: =>
           @wrap '(', 'match', ' ', {insert: yes}, '\n',
-            '    ', ' ', {selected: yes}, ')'
+            '    ', {selected: yes}, ' ', ')'
 
       'replace expression by new function param':
         bindKey: win: 'Ctrl-Shift-A', mac: 'Ctrl-A'
