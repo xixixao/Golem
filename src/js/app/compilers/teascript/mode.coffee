@@ -1089,21 +1089,24 @@ exports.Mode = class extends TextMode
               separator = if parentOf top then '\n' else '\n\n'
 
               @startGroupMutation()
-              @mutate @removeSelectable @selectedTangible()
-              originalHole = bookmarkBefore @selectedTangible()
+              selections = @selectedTangiblesList()
+              originalHoles = for selection in selections
+                @mutate @removeSelectable selection
+                bookmarkBefore @selectedTangible()
 
               @insertSpaceAt FORWARD, separator, movedTo
               newHole = bookmarkBefore @selectedTangible()
               @insertSpaceAt FORWARD, " ", movedTo
 
+              rememberedHoles = pickupBookmarks originalHoles
               @mutate
                 changeInTree:
                   added: moved
                   at:
                     in: []
                     out: [movedTo]
-                tangibleSelection: originalHole()
-                newSelections: [newHole()]
+                tangibleSelection: rememberedHoles[0]
+                newSelections: join rememberedHoles[1...], [newHole()]
               @finishGroupMutation()
 
       'inline selected expression or replace name by its definition':
@@ -1715,6 +1718,13 @@ exports.Mode = class extends TextMode
   isMultiSelecting: ->
     @editor.multiSelect.inMultiSelectMode
 
+  selectedTangiblesList: ->
+    if @isMultiSelecting()
+      for selection in @editor.multiSelect.ranges by -1
+        selection.$nodes
+    else
+      [@selectedTangible()]
+
   selectedTangible: ->
     @editor.selection.$nodes
 
@@ -2131,6 +2141,9 @@ padding = (direction, tangible) ->
     tangible.out
   else
     precedingWhitespace sibling PREVIOUS, toNode tangible
+
+pickupBookmarks = (bookmarks) ->
+  map ((bookmark) -> bookmark()), bookmarks
 
 # Remembers the preceding token to given insert position, returns a function
 # which called will return a tangible at that same position, regardless
