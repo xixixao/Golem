@@ -32,6 +32,7 @@ log = (arg) ->
   join
   all
   __
+  _is
   _notEmpty
   _operator
   _arguments
@@ -1105,6 +1106,51 @@ exports.Mode = class extends TextMode
                   changeInTree:
                     added: (reindentTangible inlined, atom.parent)
                     at: @selectedTangible()
+          else if selected and (isBetaReducible reducible = selected) or
+              (parentOf selected) and (isBetaReducible reducible = parentOf selected)
+
+            fn = _operator reducible
+            params = _terms findParamList fn
+            args = _arguments reducible
+            @startGroupMutation()
+            for arg, i in args when i < params.length
+              uses = (findOtherReferences params[i]) reducible
+              for use in uses
+                indented = (reindentTangible (toTangible arg), use.parent)
+                @mutate
+                  changeInTree:
+                    added: indented
+                    at: toTangible use
+            if args.length is params.length
+              body = (_terms fn)[2] # TODO: improve the selection to be more robust
+              reindentedBody = reindentTangible (toTangible body), reducible.parent
+              @mutate
+                changeInTree:
+                  added: reindentedBody
+                  at: toTangible reducible
+                inSelections: reindentedBody
+            else
+              numInlined = Math.min args.length, params.length
+              @mutate
+                changeInTree:
+                  at: tangibleWithMargin tangibleBetween (toTangible params[0]),
+                    (toTangible params[numInlined - 1])
+              @mutate
+                changeInTree:
+                  at: tangibleWithMargin tangibleBetween (toTangible args[0]),
+                    (toTangible args[numInlined - 1])
+              if args.length < params.length
+                reindentedFn = reindentTangible (toTangible fn), reducible.parent
+                @mutate
+                  changeInTree:
+                    added: reindentedFn
+                    at: toTangible reducible
+                  inSelections: reindentedFn
+            @finishGroupMutation()
+
+            # Inline as many as params as there are arguments
+            # Remove the function wrapper if there are no params left
+            # Replace reducible with inlined
 
       'push definition up':
         bindKey: win: 'Ctrl-U', mac: 'Ctrl-U'
@@ -1446,12 +1492,7 @@ exports.Mode = class extends TextMode
   # direction surrounding current selections,
   # or nothing if there is no space in that direction.
   selectionMargin: (direction) ->
-    paddingNodes = padding direction, @selectedTangible()
-    paddingEdge = edgeOfList direction, paddingNodes
-    if isWhitespace paddingEdge
-      insToTangible paddingNodes
-    else
-      null
+    tangibleMargin direction, @selectedTangible()
 
   selectedNodeEdge: (direction) ->
     nodeEdgeOfTangible direction, @selectedTangible()
@@ -1772,6 +1813,9 @@ findParamList = (form) ->
   [params] = _arguments form
   params
 
+isBetaReducible = (expression) ->
+  (isCall expression) and isFunction (_operator expression)
+
 isFunction = (expression) ->
   (isForm expression) and (_operator expression).symbol is 'fn'
 
@@ -1868,6 +1912,24 @@ tangibleBetween = (tangible1, tangible2) ->
   in: parent[(childIndex fromNode)...(childIndexOfTangible to)]
   out: to.out
 
+tangibleWithMargin = (tangible) ->
+  rs = concatTangibles fs = filter _is, [
+    tangibleMargin PREVIOUS, tangible
+    tangible
+    tangibleMargin NEXT, tangible
+  ]
+  console.log fs
+  console.log rs
+  rs
+
+tangibleMargin = (direction, tangible) ->
+  paddingNodes = padding direction, tangible
+  paddingEdge = edgeOfList direction, paddingNodes
+  if isWhitespace paddingEdge
+    insToTangible paddingNodes
+  else
+    null
+
 sortSiblingTangibles = (tangible1, tangible2) ->
   if (childIndexOfTangible tangible1) > (childIndexOfTangible tangible2)
     [tangible2, tangible1]
@@ -1912,6 +1974,15 @@ outsToTangible = (outs) ->
   in: []
   out: validOut outs[0]
 
+# Precondition: the tangibles are contiguous and they explicitly include
+# whitespace
+concatTangibles = (tangibles) ->
+  [allIn..., last] = tangibles
+  in: join (concatMap tangibleToIns, allIn), last.in
+  out: last.out
+
+tangibleToIns = (tangible) ->
+  tangible.in
 
 # Used by navigation over atoms and insert positions
 followingTangibleAtomOrPosition = (direction, tangible) ->
