@@ -1149,9 +1149,31 @@ exports.Mode = class extends TextMode
                   inSelections: reindentedFn
             @finishGroupMutation()
 
-            # Inline as many as params as there are arguments
-            # Remove the function wrapper if there are no params left
-            # Replace reducible with inlined
+      'abstract with lambda':
+        bindKey: win: 'Ctrl-L', mac: 'Ctrl-L'
+        multiSelectAction: 'forEach'
+        exec: =>
+          try
+            # TODO: prevent variable capture inside the operator
+            if isOperator op = @onlySelectedExpression()
+              args = (argumentNamesFromCall op.parent).join ' '
+              wrapper = astize "(fn [#{args}] ( #{args}))", op.parent
+              @startGroupMutation()
+              @mutate
+                changeInTree:
+                  added: wrapper
+                  at: (toTangible op)
+                inSelections: wrapper
+              [fn, params, call] = _terms wrapper[0]
+              @mutate
+                changeInTree:
+                  added: reindentNodes [op], call
+                  at: outsToTangible [call[1]]
+              @finishGroupMutation()
+          catch e
+            console.log e.stack
+            console.log e
+
 
       'push definition up':
         bindKey: win: 'Ctrl-U', mac: 'Ctrl-U'
@@ -2387,17 +2409,21 @@ duplicateProperties = (newAst, oldAst) ->
 # of those in the preservedList (which is in order of nodes in the AST
 # and not overlapping for now).
 reindentTangiblePreserving = (tangible, to, preservedList) ->
-  [cloned, preserved] = cloneNodes tangible.in, preservedList
-  console.log "preantinas", cloned
-  for node in cloned
-    node.parent = to
-  console.log "preantinas", cloned
-  [(reindentNodes cloned, to), preserved]
+  reindentNodesPreserving tangible.in, to, preservedList
 
 # Fn Tangible Node Nodes
 reindentTangible = (tangible, to) ->
-  [reindented] = reindentTangiblePreserving tangible, to, []
+  reindentNodes tangible.in, to
+
+reindentNodes = (nodes, to) ->
+  [reindented] = reindentNodesPreserving nodes, to, []
   reindented
+
+reindentNodesPreserving = (nodes, to, preservedList) ->
+  [cloned, preserved] = cloneNodes nodes, preservedList
+  for node in cloned
+    node.parent = to
+  [(reindentMutateNodes cloned, to), preserved]
 
 # Astizes string and reindents it properly
 astize = (string, parent) ->
@@ -2428,7 +2454,7 @@ cloneNode = (preserving) -> (node) ->
     preserved = [clone] # not overlapping for now
   [clone, preserved]
 
-reindentNodes = (nodes, parent) ->
+reindentMutateNodes = (nodes, parent) ->
   reindent (depthOf parent), nodes
   nodes
 
