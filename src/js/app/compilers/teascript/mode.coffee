@@ -788,6 +788,20 @@ exports.Mode = class extends TextMode
         exec: =>
           @selectOccurenceInDirection BACKWARD
 
+      'select next reference':
+        bindKey: win: 'Ctrl-S', mac: 'Ctrl-S'
+        scrollIntoView: 'center'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @multiSelectReferenceInDirection FORWARD
+
+      'select previous reference':
+        bindKey: win: 'Ctrl-Shift-S', mac: 'Ctrl-Shift-S'
+        scrollIntoView: 'center'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @multiSelectReferenceInDirection BACKWARD
+
       'add char':
         bindKey: win: '\\', mac: '\\'
         multiSelectAction: 'forEach'
@@ -1240,6 +1254,25 @@ exports.Mode = class extends TextMode
               pushUp parentOf at
 
           pushUp toNode @selectedTangible()
+
+  multiSelectReferenceInDirection: (direction) ->
+    try
+      selected = @onlySelectedExpression()
+      if selected and (isAtom atom = selected) and atom.id?
+        references = (findAllReferences atom) @ast
+        @mutate
+          newSelections: [toTangible findAdjecentInList direction, atom, references]
+      else
+        @multiSelectOccurenceInDirection direction
+    catch e
+      console.log e
+
+  multiSelectOccurenceInDirection: (direction) ->
+    if not @isInserting()
+      selected = @selectedTangible().in
+      occurences = (findAllOccurences selected) @ast
+      @mutate
+        newSelections: [insToTangible findAdjecentInList direction, selected, occurences]
 
   selectReferenceInDirection: (direction) ->
     selected = @onlySelectedExpression()
