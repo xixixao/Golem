@@ -984,7 +984,7 @@ exports.Mode = class extends TextMode
         autocomplete: yes
         exec: =>
           @wrap '(', 'match', ' ', {insert: yes}, '\n',
-            '    ', {selected: yes}, ' ', ')'
+            '    ', ' ', {selected: yes}, ')'
 
       'replace expression by new function param':
         bindKey: win: 'Ctrl-Shift-A', mac: 'Ctrl-A'
