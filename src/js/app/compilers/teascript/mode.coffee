@@ -791,14 +791,12 @@ exports.Mode = class extends TextMode
       'select next reference':
         bindKey: win: 'Ctrl-S', mac: 'Ctrl-S'
         scrollIntoView: 'center'
-        multiSelectAction: 'forEach'
         exec: =>
           @multiSelectReferenceInDirection FORWARD
 
       'select previous reference':
         bindKey: win: 'Ctrl-Shift-S', mac: 'Ctrl-Shift-S'
         scrollIntoView: 'center'
-        multiSelectAction: 'forEach'
         exec: =>
           @multiSelectReferenceInDirection BACKWARD
 
@@ -1126,14 +1124,17 @@ exports.Mode = class extends TextMode
                 @mutate @removeSelectable tangibleBetween (toTangible atom), inlined
                 @mutate @remove BACKWARD
                 @mutate @remove BACKWARD if @isInserting()
-                for other in others
+                for other, i in others
                   indented = (reindentTangible inlined, other.parent)
                   @mutate
                     changeInTree:
                       added: indented
                       at: toTangible other
-                  @mutate
-                    newSelections: [(insToTangible indented)]
+                  @mutate(
+                    if i is 0
+                      inSelections: indented
+                    else
+                      newSelections: [(insToTangible indented)]) # this must be after insertion
                 @finishGroupMutation()
             else
               # Replace selection with definition
@@ -1262,7 +1263,6 @@ exports.Mode = class extends TextMode
     selected = @onlySelectedExpression()
     if selected and (isAtom atom = selected) and atom.id?
       references = (findAllReferences atom) @ast
-      console.log references
       @mutate
         newSelections: [toTangible findAdjecentInList direction, atom, references]
     else
