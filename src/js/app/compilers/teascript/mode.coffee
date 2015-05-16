@@ -1259,16 +1259,14 @@ exports.Mode = class extends TextMode
           pushUp toNode @selectedTangible()
 
   multiSelectReferenceInDirection: (direction) ->
-    try
-      selected = @onlySelectedExpression()
-      if selected and (isAtom atom = selected) and atom.id?
-        references = (findAllReferences atom) @ast
-        @mutate
-          newSelections: [toTangible findAdjecentInList direction, atom, references]
-      else
-        @multiSelectOccurenceInDirection direction
-    catch e
-      console.log e
+    selected = @onlySelectedExpression()
+    if selected and (isAtom atom = selected) and atom.id?
+      references = (findAllReferences atom) @ast
+      console.log references
+      @mutate
+        newSelections: [toTangible findAdjecentInList direction, atom, references]
+    else
+      @multiSelectOccurenceInDirection direction
 
   multiSelectOccurenceInDirection: (direction) ->
     if not @isInserting()
