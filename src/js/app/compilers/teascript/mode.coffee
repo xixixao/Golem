@@ -396,10 +396,10 @@ exports.Mode = class extends TextMode
       , 1500
 
   closeTooltip: =>
-    @activeTooltip?.hideAndRemoveMarker()
     @detach()
 
   detach: =>
+    @activeTooltip?.hideAndRemoveMarker()
     clearTimeout @docTooltipTimer
 
   createDocTooltipHtml: (info) ->
