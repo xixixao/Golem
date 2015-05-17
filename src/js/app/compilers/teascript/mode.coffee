@@ -507,10 +507,11 @@ exports.Mode = class extends TextMode
     packGroupMutation: =>
       {stack, states} = @groupMutationRegister
       states.reverse()
-      stack.push (#if @sameKindMutation stack[stack.length - 1] or [], states
-        #stack.pop().concat states
-      #else
-        states)
+      stack.push (
+        if @sameKindMutation states, stack[stack.length - 1] or []
+          res = states.concat stack.pop()
+        else
+          states)
       @groupMutationRegister = states: []
     undo: =>
       @replay @undoStack, redo: yes
@@ -531,10 +532,22 @@ exports.Mode = class extends TextMode
       @finishGroupMutation()
 
   sameKindMutation: (previousStates, nextStates) ->
-    if previousStates.length is 1 and nextStates.length is 1
+    if previousStates.length > 0 and nextStates.length > 0
       [p] = previousStates
       [n] = nextStates
-      p.changeWithinAtom and n.changeWithinAtom or p.changeInTree and n.changeInTree
+      # Renaming
+      (atom = p.changeInTree?.added[0]) and atom is n.changeWithinAtom?.atom or
+      # Inserting in atom
+      (atom = p.changeWithinAtom?.atom) and p.changeWithinAtom.string.length > 0 and
+        atom is n.changeWithinAtom?.atom and n.changeWithinAtom.string.length > 0 or
+      # Removing atom
+      (atom = p.changeWithinAtom?.atom) and p.changeWithinAtom.string.length is 0 and
+        atom is n.changeInTree?.at.in[0] or
+      # Deleting in atom
+      (atom = p.changeWithinAtom?.atom) and p.changeWithinAtom.string.length is 0 and
+        atom is n.changeWithinAtom?.atom and n.changeWithinAtom.string.length is 0
+    else
+      no
 
   addVerticalCommands: ->
     @editor.commands.addCommands
