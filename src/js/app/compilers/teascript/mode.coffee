@@ -894,6 +894,18 @@ exports.Mode = class extends TextMode
         exec: =>
           @closeParentOrInsert ']'
 
+      'increment a number':
+        bindKey: win: 'Ctrl-Shift-Up', mac: 'Alt-Shift-Up'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @changeNumerical 1
+
+      'decrement a number':
+        bindKey: win: 'Ctrl-Shift-Down', mac: 'Alt-Shift-Down'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @changeNumerical -1
+
       'jump to parent definition':
         bindKey: win: 'Ctrl-Shift-0', mac: 'Command-Shift-0'
         multiSelectAction: 'forEach'
@@ -1327,6 +1339,20 @@ exports.Mode = class extends TextMode
           withinAtomPos: editableEdgeWithin inAtom, expression
       else
         {})
+
+  changeNumerical: (difference) ->
+    if (atom = @onlySelectedExpression()) and isNumerical atom
+      offset = @offsetToCursor atom
+      changedSymbol = changeNumericalAt atom.symbol, offset, difference
+      [changed] = astize changedSymbol, atom.parent
+      editing =  @isEditing()
+      @mutate
+        changeInTree:
+          added: [changed]
+          at: @selectedTangible()
+        inSelection: changed if not editing
+        withinAtom: changed if editing
+        withinAtomPos: (changed.symbol.length - (atom.symbol.length - offset)) if editing
 
   closeParentOrInsert: (closingDelim) ->
     if @isEditingHalfDelimited()
@@ -2029,14 +2055,11 @@ tangibleBetween = (tangible1, tangible2) ->
   out: to.out
 
 tangibleWithMargin = (tangible) ->
-  rs = concatTangibles fs = filter _is, [
+  concatTangibles fs = filter _is, [
     tangibleMargin PREVIOUS, tangible
     tangible
     tangibleMargin NEXT, tangible
   ]
-  console.log fs
-  console.log rs
-  rs
 
 tangibleMargin = (direction, tangible) ->
   paddingNodes = padding direction, tangible
@@ -2276,6 +2299,21 @@ editableLength = (atom) ->
       1
     else
       0
+
+# Inspired by Ace
+changeNumericalAt = (symbol, offset, amount) ->
+  n = symbol.length
+
+  fp = if (at = symbol.indexOf(".")) >= 0 then at + 1 else n
+  decimals = n - fp
+
+  t = parseFloat symbol.replace /^~/, '-'
+  t *= Math.pow 10, decimals
+
+  amount *= Math.pow 10, n - offset - (if fp isnt n and offset < fp then 1 else 0)
+  t += amount
+  t /= Math.pow 10, decimals
+  (t.toFixed decimals).replace /^-/, '~'
 
 # Fn Node Bool
 isExpression = (node) ->
