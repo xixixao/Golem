@@ -857,7 +857,11 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach'
         exec: =>
           if @isEditingHalfDelimited()
-            @insertString FORWARD, '"'
+            if (atom = @editedAtom()).label is 'string' and @isAtLimit FORWARD, atom
+              @mutate
+                inSelection: atom
+            else
+              @insertString FORWARD, '"'
           else
             selected = escape '"', @selectedText()
             [atom] = astize '"' + selected + '"', @parentOfSelected()
@@ -872,16 +876,23 @@ exports.Mode = class extends TextMode
                 withinAtom: atom
                 withinAtomPos: selected.length + 1)
 
-      'close parent, same as up':
+      'close parent, same as up for )':
         bindKey: win: ')', mac: ')'
         multiSelectAction: 'forEach'
         exec: =>
-          if @isEditingHalfDelimited()
-            @insertString FORWARD, ')'
-          else
-            @mutate
-              inSelection:
-                @realParentOfSelected()
+          @closeParentOrInsert ')'
+
+      'close parent, same as up for }':
+        bindKey: win: '}', mac: '}'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @closeParentOrInsert '}'
+
+      'close parent, same as up for ]':
+        bindKey: win: ']', mac: ']'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @closeParentOrInsert ']'
 
       'jump to parent definition':
         bindKey: win: 'Ctrl-Shift-0', mac: 'Command-Shift-0'
@@ -1316,6 +1327,14 @@ exports.Mode = class extends TextMode
           withinAtomPos: editableEdgeWithin inAtom, expression
       else
         {})
+
+  closeParentOrInsert: (closingDelim) ->
+    if @isEditingHalfDelimited()
+      @insertString FORWARD, closingDelim
+    else
+      @mutate
+        inSelection:
+          @realParentOfSelected()
 
   insertOpeningDelim: (open, close) ->
     if @isEditingHalfDelimited()
