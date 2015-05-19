@@ -1228,27 +1228,29 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Ctrl-L', mac: 'Ctrl-L'
         multiSelectAction: 'forEach'
         exec: =>
-          try
-            # TODO: prevent variable capture inside the operator
-            if isOperator op = @onlySelectedExpression()
-              args = (argumentNamesFromCall op.parent).join ' '
-              wrapper = astize "(fn [#{args}] ( #{args}))", op.parent
-              @startGroupMutation()
-              @mutate
-                changeInTree:
-                  added: wrapper
-                  at: (toTangible op)
-                inSelections: wrapper
-              [fn, params, call] = _terms wrapper[0]
-              @mutate
-                changeInTree:
-                  added: reindentNodes [op], call
-                  at: outsToTangible [call[1]]
-              @finishGroupMutation()
-          catch e
-            console.log e.stack
-            console.log e
-
+          # TODO: prevent variable capture inside the operator
+          abstractToLambda = (op, args) =>
+            wrapper = astize "(fn [#{args}] ( #{args}))", op.parent
+            @startGroupMutation()
+            @mutate
+              changeInTree:
+                added: wrapper
+                at: (toTangible op)
+              inSelections: wrapper
+            [fn, params, call] = _terms wrapper[0]
+            @mutate
+              changeInTree:
+                added: reindentNodes [op], call
+                at: outsToTangible [call[1]]
+            @finishGroupMutation()
+          if isOperator op = @onlySelectedExpression()
+            args = (argumentNamesFromCall op.parent).join ' '
+            abstractToLambda op, args
+          else if (op = @onlySelectedExpression()) and isAtom op
+            @worker.call 'docsFor', [atomReference op], (info) =>
+              if info.arity
+                args = info.arity.join ' '
+                abstractToLambda op, args
 
       'push definition up':
         bindKey: win: 'Ctrl-U', mac: 'Ctrl-U'
@@ -1991,6 +1993,9 @@ nodesEqual = (a, b) ->
     (isForm b) and a.length is b.length and all zipWith nodesEqual, a, b
   else
     a.symbol is b.symbol
+
+atomReference = (atom) ->
+  name: atom.symbol, scope: atom.scope
 
 findAllReferences = (atom) -> (node) ->
   if isForm node
