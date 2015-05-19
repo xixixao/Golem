@@ -1,5 +1,13 @@
 {_div, _p, _table, _tbody, _tr, _th, _td, _code} = require 'hyper'
 
+# Autocompletion for first arguments, which is a file name
+fileAutocomplete = (args, state, editor, callback) ->
+  if args.length <= 1
+    callback null, (for key, {name, numLines} of editor.memory.getFileTable()
+      name: name
+      value: name
+      meta: "#{numLines}")
+
 class SaveCommand
   @defaultSymbols = ['save']
   @description = 'Save current code locally under name.'
@@ -13,12 +21,7 @@ class LoadCommand
   @defaultSymbols = ['load', 'l']
   @description = 'Load code from local storage under name.'
   @symbols = @defaultSymbols
-  @autocomplete = (args, state, editor, callback) ->
-    if args.length <= 1
-      callback null, (for key, {name, numLines} of editor.memory.getFileTable()
-        name: name
-        value: name
-        meta: "#{numLines}")
+  @autocomplete = fileAutocomplete
 
   @execute = ([name], state, editor) ->
     loaded = editor.load name, true
@@ -31,6 +34,7 @@ class RenameCommand
   @defaultSymbols = ['rename']
   @description = 'Rename code under some name to a different name.'
   @symbols = @defaultSymbols
+  @autocomplete = fileAutocomplete
 
   @execute = ([fromName, toName], state, editor) ->
     loaded = editor.load fromName, true
@@ -46,6 +50,7 @@ class DeleteCommand
   @defaultSymbols = ['delete']
   @description = 'Remove code from local storage'
   @symbols = @defaultSymbols
+  @autocomplete = fileAutocomplete
 
   @execute = ([name], state, editor) ->
     editor.displayMessage 'file', "#{name} deleted."
