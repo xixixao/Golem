@@ -10,9 +10,15 @@ class SaveCommand
     editor.save name
 
 class LoadCommand
-  @defaultSymbols = ['load']
+  @defaultSymbols = ['load', 'l']
   @description = 'Load code from local storage under name.'
   @symbols = @defaultSymbols
+  @autocomplete = (args, state, editor, callback) ->
+    if args.length <= 1
+      callback null, (for key, {name, numLines} of editor.memory.getFileTable()
+        name: name
+        value: name
+        meta: "#{numLines}")
 
   @execute = ([name], state, editor) ->
     loaded = editor.load name, true

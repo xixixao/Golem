@@ -77,7 +77,7 @@ exports.Mode = class extends TextMode
     # @$outdent = new Outdent
     # @foldingRules = new FoldMode
     @$behaviour = undefined
-    @completer = @createCompleter()
+    @completers = [@completer = @createCompleter()]
 
   tokensOnLine: (row, doc) =>
 
@@ -159,7 +159,7 @@ exports.Mode = class extends TextMode
     session = editor.session
     @editor = editor
 
-    @editor.completers = [@completer]
+    @editor.completers = @completers
 
     session.setUndoManager @undoManager()
 
@@ -309,18 +309,22 @@ exports.Mode = class extends TextMode
           (atom = @editedAtom()) and (not isHalfDelimitedAtom atom) and
           (not isNumerical atom) and
           (@offsetToCursor atom) is atom.symbol.length or
-          inserting = @isInserting())
-      if !@isAutocompleting() or inserting
-          if !editor.completer
-            # Create new autocompleter
-            editor.completer = new CustomAutocomplete()
-          # Disable autoInsert
-          #editor.completer.autoInsert = false;
-          @closeTooltip()
-          editor.completer.showPopup editor
+          @isInserting())
+      @openAutocomplete()
     else if editor.completer and ((not e?.command.name in ignoredCommands) or
         atom and isNumerical atom)
       editor.completer.detach()
+
+  openAutocomplete: ->
+    editor = @editor
+    if !@isAutocompleting() or @isInserting()
+      if !editor.completer
+        # Create new autocompleter
+        editor.completer = new CustomAutocomplete()
+      # Disable autoInsert
+      #editor.completer.autoInsert = false;
+      @closeTooltip()
+      editor.completer.showPopup editor
 
   updateAutocomplete: ->
     if @isAutocompleting()
@@ -359,7 +363,7 @@ exports.Mode = class extends TextMode
             docs: docs)
 
       getDocTooltip: (selected) =>
-        unless selected.docHTML
+        if selected.rawType and not selected.docHTML
           selected.docHTML = @createDocTooltipHtml selected
         return
 

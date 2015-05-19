@@ -7,9 +7,9 @@ EventEmitter = require("ace/lib/event_emitter").EventEmitter
 AdaptingWorkerClient = require './AdaptingWorkerClient'
 
 module.exports = class CommandMode extends Mode
-  constructor: (@id, completer) ->
+  constructor: (@id, completers) ->
     super yes
-    @completer = completer
+    @completers = completers
 
     @commandMode = no
 
@@ -57,16 +57,23 @@ module.exports = class CommandMode extends Mode
         exec: (editor, string) =>
           if @isInCommandMode() or @isEmpty()  and (string is ':')
             @editor.insert string
-            return
+            return yes
 
           @insertStringForward string
 
   doAutocomplete: ->
-    return if @isInCommandMode() or @isEmpty()
-    super
+    if @isInCommandMode()
+      if @getValue()[-1..] is ' ' and not @isAutocompleting()
+        @openAutocomplete()
+    else
+      return if @isInCommandMode() or @isEmpty()
+      super
 
   isInCommandMode: ->
-    @editor.getValue()[0] is ':'
+    @getValue()[0] is ':'
 
   isEmpty: ->
-    @editor.getValue() is ''
+    @getValue() is ''
+
+  getValue: ->
+    @editor.getValue()

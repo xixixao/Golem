@@ -357,6 +357,11 @@ module.exports = hyper class EditorMain
   #   @setState
   #     compiler: compiler
 
+  commandCompleter: ->
+    @_commandCompleter or @_commandCompleter = getCompletions: (editor, session, pos, prefix, callback) =>
+      [name, args] = CommandParser editor.getValue()[1...]
+      (@commandNamed name)?.autocomplete? args, @state, this, callback
+
   handleSourceCompiled: ({js}) ->
     @_hideMessage 'compiler', 'runtime'
 
@@ -392,12 +397,15 @@ module.exports = hyper class EditorMain
       commandMap: commandMap
 
   executeCommand: (name, args...) ->
-    command = @state.commandMap[name]
+    command = @commandNamed name
     if !command
       @displayMessage 'command',
         "Command Line: #{name} is not a command"
     else
       @_executeCommand command, args
+
+  commandNamed: (name) ->
+    @state.commandMap[name]
 
   handleCommandExecution: (source, moduleName, result, type) ->
     @_hideMessage 'command', 'runtime'
@@ -499,7 +507,7 @@ module.exports = hyper class EditorMain
         _CommandLine
           ref: 'commandLine'
           worker: @state.mode.worker
-          completer: @state.mode.completer
+          completers: [@state.mode.completer, @commandCompleter()]
           moduleName: @state.module.moduleName
           onCommandExecution: @handleCommandExecution
           onCommandCompiled: @handleCommandCompiled
@@ -530,7 +538,7 @@ module.exports = hyper class EditorMain
         logs: @state.logs
         updatedSource: @state.sourceUpdateId
         worker: @state.mode.worker
-        completer: @state.mode.completer
+        completers: [@state.mode.completer]
         onCommand: @handleExpressionCommand
         focus: @state.focused is @focus.output
         focusedOutputIndex: @state.focusedOutputIndex
