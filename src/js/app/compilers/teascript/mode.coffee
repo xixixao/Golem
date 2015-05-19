@@ -318,7 +318,8 @@ exports.Mode = class extends TextMode
           #editor.completer.autoInsert = false;
           @closeTooltip()
           editor.completer.showPopup editor
-    else if editor.completer and not e?.command.name in ignoredCommands
+    else if editor.completer and ((not e?.command.name in ignoredCommands) or
+        atom and isNumerical atom)
       editor.completer.detach()
 
   updateAutocomplete: ->
@@ -2323,7 +2324,7 @@ isAtom = (node) ->
   (isExpression node) and not isForm node
 
 isNumerical = (atom) ->
-  atom.label is 'numerical'
+  atom.symbol and /^~?\d/.test atom.symbol
 
 # Fn Node Bool
 isDelimitedAtom = (atom) ->
