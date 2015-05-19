@@ -1438,7 +1438,6 @@ exports.Mode = class extends TextMode
               [offset, offset]
       else
         added = astize string, @parentOfSelected()
-        console.log "adding", added
 
         extend
           changeInTree:
