@@ -69,6 +69,10 @@ module.exports = class CommandMode extends Mode
       return if @isEmpty()
       super
 
+  handleEnter: ->
+    if @isAutocompleting()
+      @editor.completer.insertMatch()
+
   isInCommandMode: ->
     @getValue()[0] is ':'
 

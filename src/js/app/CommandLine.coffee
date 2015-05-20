@@ -54,9 +54,8 @@ module.exports = hyper class CommandLine
       name: 'execute'
       bindKey: win: 'Enter', mac: 'Enter'
       exec: =>
-        # WARNING Another massive hack to get the prelude and source compiled with the expression
-        # editor.session.getMode().prefixWorker editor.session.getMode().loadPreludeNames() + @props.source
-        editor.session.getMode().updateWorker yes
+        mode.handleEnter()
+        mode.updateWorker yes
 
     timeline = @props.timeline
 
@@ -65,13 +64,13 @@ module.exports = hyper class CommandLine
       bindKey: win: 'Up', mac: 'Up'
       exec: ->
         timeline.temp editor.getValue() unless timeline.isInPast()
-        editor.session.getMode().setContent timeline.goBack()
+        mode.setContent timeline.goBack()
 
     editor.commands.addCommand
       name: 'following'
       bindKey: win: 'Down', mac: 'Down'
       exec: ->
-        editor.session.getMode().setContent timeline.goForward() if timeline.isInPast()
+        mode.setContent timeline.goForward() if timeline.isInPast()
 
     editor.commands.addCommand
       name: 'leave'
@@ -102,9 +101,9 @@ module.exports = hyper class CommandLine
             timeline.push source
             if type is 'command'
               editor.setValue ""
-              # editor.session.getMode().initAst ""
+              # mode.initAst ""
             else
-              editor.session.getMode().setContent ""
+              mode.setContent ""
             @props.onCommandExecution source, @props.moduleName, result, type
             @props.memory.saveCommands timeline
           else
