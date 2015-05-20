@@ -61,12 +61,12 @@ module.exports = class CommandMode extends Mode
 
           @insertStringForward string
 
-  doAutocomplete: ->
+  doAutocomplete: (e) ->
     if @isInCommandMode()
-      if @getValue()[-1..] is ' ' and not @isAutocompleting()
+      if e?.command.autocomplete and @getValue()[-1..] is ' ' and not @isAutocompleting()
         @openAutocomplete()
     else
-      return if @isInCommandMode() or @isEmpty()
+      return if @isEmpty()
       super
 
   isInCommandMode: ->
