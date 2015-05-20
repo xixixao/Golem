@@ -792,6 +792,12 @@ exports.Mode = class extends TextMode
         exec: =>
           @remove FORWARD
 
+      'flatten onto a single line':
+        bindKey: win: 'Ctrl-Space', mac: 'Ctrl-Space'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @removeNewLines()
+
       'jump to next occurence':
         bindKey: win: 'Ctrl-Tab', mac: 'Alt-Tab'
         scrollIntoView: 'center'
@@ -1419,6 +1425,24 @@ exports.Mode = class extends TextMode
           out: [wrapper[selections[0]]]
       newSelections: map ((i) -> in: [], out: [wrapper[i]]), selections[1...]
     @finishGroupMutation()
+
+  removeNewLines: ->
+    selected = @selectedTangible()
+    nodes = selected.in
+    flattenNodes = (nodes) ->
+      for node in nodes when not isIndent node
+        if isNewLine node
+          (astize ' ', node.parent)[0]
+        else if isForm node
+          listToForm flattenNodes node
+        else
+          cloneNode node
+    replacing = flattenNodes nodes
+    @mutate
+      changeInTree:
+        added: replacing
+        at: selected
+      inSelections: replacing
 
   insertStringForward: (string) ->
     @insertString FORWARD, string
@@ -2576,14 +2600,17 @@ astize = (string, parent) ->
   expressions
 
 cloneNodes = (nodes, preserving) ->
-  [clones, preservedLists] = unzip map (cloneNode preserving), nodes
+  [clones, preservedLists] = unzip map (cloneNodePreserving preserving), nodes
   [clones, concat preservedLists]
 
-cloneNode = (preserving) -> (node) ->
+cloneNode = (node) ->
+  [clone] = (cloneNodePreserving []) node
+  clone
+
+cloneNodePreserving = (preserving) -> (node) ->
   if isForm node
     [clone, preserved] = cloneNodes node, preserving
-    for child in clone
-      child.parent = clone
+    listToForm clone
   else
     preserved = []
     clone = symbol: node.symbol, label: node.label
@@ -2621,6 +2648,11 @@ reindent = (depth, ast, next, nextIndex) ->
       setIndentTo indentToken, indent
       insertChildNodeAt indentToken, next.parent, childIndex next
   return
+
+listToForm = (nodes) ->
+  for node in nodes
+    node.parent = nodes
+  nodes
 
 setIndentTo = (token, indent) ->
   token.symbol = indent
