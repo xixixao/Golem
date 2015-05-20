@@ -44,6 +44,7 @@ module.exports = class CommandMode extends Mode
     @worker
 
   updateWorker: (shouldExecute) ->
+    @worker.$sendDeltaQueue() # Flush pending changes so they don't overwrite the below
     @worker.call 'setValue', [@editor.session.getDocument().getValue()]
     @worker.call 'onUpdate', [shouldExecute]
 
@@ -55,7 +56,7 @@ module.exports = class CommandMode extends Mode
         scrollIntoView: 'cursor'
         autocomplete: yes
         exec: (editor, string) =>
-          if @isInCommandMode() or @isEmpty()  and (string is ':')
+          if @isInCommandMode() or @isEmpty() and (string is ':')
             @editor.insert string
             return yes
 

@@ -101,9 +101,7 @@ module.exports = hyper class CommandLine
             timeline.push source
             if type is 'command'
               editor.setValue ""
-              # mode.initAst ""
-            else
-              mode.setContent ""
+            mode.setContent ""
             @props.onCommandExecution source, @props.moduleName, result, type
             @props.memory.saveCommands timeline
           else
