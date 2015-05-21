@@ -824,6 +824,20 @@ exports.Mode = class extends TextMode
         exec: =>
           @multiSelectReferenceInDirection BACKWARD
 
+      'shift left':
+        bindKey: win: 'Alt-Left', mac: 'Alt-Left'
+        multiSelectAction: 'forEach'
+        autocomplete: yes
+        exec: =>
+          @moveSelection BACKWARD
+
+      'shift right':
+        bindKey: win: 'Alt-Right', mac: 'Alt-Right'
+        multiSelectAction: 'forEach'
+        autocomplete: yes
+        exec: =>
+          @moveSelection FORWARD
+
       'add char':
         bindKey: win: '\\', mac: '\\'
         multiSelectAction: 'forEach'
@@ -1443,6 +1457,36 @@ exports.Mode = class extends TextMode
         added: replacing
         at: selected
       inSelections: replacing
+
+  moveSelection: (direction) ->
+    selected = @selectedTangible()
+    movingSelected = cloneNodes selected.in
+    replaced = @selectedSibling direction
+    if replaced
+      movingReplaced = cloneNodes replaced.in
+      @startGroupMutation()
+      @mutate
+        changeInTree:
+          added: []
+          at: selected
+      @mutate
+        changeInTree:
+          added: movingReplaced
+          at:
+            in: []
+            out: selected.out
+      @mutate
+        changeInTree:
+          added: []
+          at: replaced
+      @mutate
+        changeInTree:
+          added: movingSelected
+          at:
+            in: []
+            out: replaced.out
+        inSelections: movingSelected
+      @finishGroupMutation()
 
   insertStringForward: (string) ->
     @insertString FORWARD, string
@@ -2587,7 +2631,7 @@ reindentNodes = (nodes, to) ->
   reindented
 
 reindentNodesPreserving = (nodes, to, preservedList) ->
-  [cloned, preserved] = cloneNodes nodes, preservedList
+  [cloned, preserved] = cloneNodesPreserving nodes, preservedList
   for node in cloned
     node.parent = to
   [(reindentMutateNodes cloned, to), preserved]
@@ -2599,7 +2643,11 @@ astize = (string, parent) ->
   [open, expressions..., close] = wrapped
   expressions
 
-cloneNodes = (nodes, preserving) ->
+cloneNodes = (nodes) ->
+  [clones] = cloneNodesPreserving nodes, []
+  clones
+
+cloneNodesPreserving = (nodes, preserving) ->
   [clones, preservedLists] = unzip map (cloneNodePreserving preserving), nodes
   [clones, concat preservedLists]
 
@@ -2609,7 +2657,7 @@ cloneNode = (node) ->
 
 cloneNodePreserving = (preserving) -> (node) ->
   if isForm node
-    [clone, preserved] = cloneNodes node, preserving
+    [clone, preserved] = cloneNodesPreserving node, preserving
     listToForm clone
   else
     preserved = []
