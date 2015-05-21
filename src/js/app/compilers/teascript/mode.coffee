@@ -34,6 +34,7 @@ log = (arg) ->
   __
   _is
   _notEmpty
+  _empty
   _operator
   _arguments
   _terms
@@ -838,6 +839,20 @@ exports.Mode = class extends TextMode
         exec: =>
           @moveSelection FORWARD
 
+      'shift by line up':
+        bindKey: win: 'Alt-Up', mac: 'Alt-Up'
+        multiSelectAction: 'forEach'
+        autocomplete: yes
+        exec: =>
+          @moveSelectionByLine BACKWARD
+
+      'shift by line down':
+        bindKey: win: 'Alt-Down', mac: 'Alt-Down'
+        multiSelectAction: 'forEach'
+        autocomplete: yes
+        exec: =>
+          @moveSelectionByLine FORWARD
+
       'add char':
         bindKey: win: '\\', mac: '\\'
         multiSelectAction: 'forEach'
@@ -1458,35 +1473,48 @@ exports.Mode = class extends TextMode
         at: selected
       inSelections: replacing
 
+  moveSelectionByLine: (direction) ->
+    # like moveSelection but swap all tokens on each line
+    selected = @selectedTangible()
+    selectedLine = insToTangible allOnLine toNode selected
+    if onSiblingLine = sibling direction, edgeOfList direction, padding direction, selectedLine
+      replacedLine = insToTangible allOnLine onSiblingLine
+      @swap direction, selectedLine, replacedLine
+
   moveSelection: (direction) ->
     selected = @selectedTangible()
-    movingSelected = cloneNodes selected.in
     replaced = @selectedSibling direction
     if replaced
-      movingReplaced = cloneNodes replaced.in
-      @startGroupMutation()
-      @mutate
-        changeInTree:
-          added: []
-          at: selected
-      @mutate
-        changeInTree:
-          added: movingReplaced
-          at:
-            in: []
-            out: selected.out
-      @mutate
-        changeInTree:
-          added: []
-          at: replaced
-      @mutate
-        changeInTree:
-          added: movingSelected
-          at:
-            in: []
-            out: replaced.out
-        inSelections: movingSelected
-      @finishGroupMutation()
+      @swap direction, selected, replaced
+
+  swap: (direction, selected, replaced) ->
+    movingSelected = cloneNodes selected.in
+    movingReplaced = cloneNodes replaced.in
+    @startGroupMutation()
+    @mutate
+      changeInTree:
+        added: []
+        at: selected
+    @mutate
+      changeInTree:
+        added: movingReplaced
+        at:
+          in: []
+          out: selected.out
+    @mutate
+      changeInTree:
+        added: []
+        at: replaced
+    targetHole =
+      in: []
+      out: replaced.out
+    @mutate
+      changeInTree:
+        added: movingSelected
+        at: targetHole
+      inSelections: movingSelected if _notEmpty movingSelected
+      tangibleSelection: targetHole if _empty movingSelected
+    @finishGroupMutation()
 
   insertStringForward: (string) ->
     @insertString FORWARD, string
@@ -2376,6 +2404,18 @@ editableLength = (atom) ->
       1
     else
       0
+
+allOnLine = (node) ->
+  isInline = (node) ->
+    (isExpression node) or (isSpace node)
+  towards = (dir) ->
+    n = node
+    while (prev = sibling dir, n) and isInline prev
+      n = prev
+  concat [
+    (towards FIRST).reverse()
+    (if isInline node then [node] else [])
+    (towards LAST)]
 
 # Inspired by Ace
 changeNumericalAt = (symbol, offset, amount) ->
