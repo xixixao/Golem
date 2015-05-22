@@ -1049,8 +1049,12 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
-          @wrap '(', 'match', ' ', {selected: yes}, '\n',
-            '    ', {insert: yes}, ' ', ')'
+          if @isInserting()
+            @wrap '(', 'match', ' ', {selected: yes, insert: yes}, '\n',
+              '    ', ' ', ')'
+          else
+            @wrap '(', 'match', ' ', {selected: yes}, '\n',
+              '    ', {insert: yes}, ' ', ')'
 
       'wrap current in a match':
         bindKey: win: 'Ctrl-Shift-M', mac: 'Ctrl-Shift-M'
