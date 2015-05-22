@@ -2534,12 +2534,13 @@ convertToAceLineTokens = (tokens) ->
     converted.pop()
   converted
 
+# Ace converts type: "a.b" to "ace_a ace_b" and rendered 'text' as plaintext
 convertToAceToken = (token) ->
   value: token.symbol
   scope: token.scope
   label: token.label
   type:
-    if (isDelim token) and token.parent.malformed or token.malformed
+    (if (isDelim token) and token.parent.malformed or token.malformed
       'token_malformed'
     else
       switch token.label
@@ -2548,7 +2549,7 @@ convertToAceToken = (token) ->
           if token.label
             'token_' + token.label
           else
-            'text'
+            'text') + (if token.fake then '.token_fake' else '')
 
 topList = (ast) ->
   inside = ast[1...-1]

@@ -172,6 +172,11 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
     color: #880000
   }
 
+  .ace-tea .ace_text.ace_token_fake {
+    background: transparent url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAEklEQVQImWNgYGBgYHCLSvkPAAP3AgSDTRd4AAAAAElFTkSuQmCC") no-repeat scroll left center / 0px auto;
+    background-size: 1px 3px;
+  }
+
   """
 
   dom = require("../lib/dom")
