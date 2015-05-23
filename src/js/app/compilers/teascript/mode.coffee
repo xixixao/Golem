@@ -364,11 +364,12 @@ exports.Mode = class extends TextMode
               arity: arity
               docs: docs)
         else if typed.inferredType
-          inferredType = compiler.plainPrettyPrint typed.inferredType
-          callback null, [
-            name: inferredType
-            value: inferredType
-            completer: completer]
+          @worker.call 'availableTypes', [typed.inferredType], (completions) ->
+            callback null, (for name, {type, docs} of completions
+              name: type
+              value: type
+              completer: completer
+              docs: docs)
         else
           callback "error", []
           return
@@ -382,7 +383,6 @@ exports.Mode = class extends TextMode
       insertMatch: (editor, {value}) =>
         mode = editor.session.getMode()
         mode.startGroupMutation()
-        selected = mode.selectedTangible().in
         mode.removeSelected()
         mode.insertString FORWARD, value
         if isForm selected = mode.onlySelectedExpression()

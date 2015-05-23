@@ -56,6 +56,10 @@ exports.Worker = class extends Mirror
     defs = compiler.findMatchingDefinitions @moduleName, reference
     @sender.callback defs, id
 
+  availableTypes: (inferredType, id) ->
+    types = compiler.findAvailableTypes @moduleName, inferredType
+    @sender.callback types, id
+
   docsFor: (reference, id) ->
     info = compiler.findDocsFor @moduleName, reference
     @sender.callback info, id
