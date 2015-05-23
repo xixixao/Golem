@@ -2683,7 +2683,7 @@ reindentNodesPreserving = (nodes, to, preservedList) ->
 
 # Astizes string and reindents it properly
 astize = (string, parent) ->
-  wrapped = compiler.astizeExpression "(#{string})"
+  wrapped = compiler.astizeList string
   reindent (depthOf parent), wrapped
   [open, expressions..., close] = wrapped
   expressions
