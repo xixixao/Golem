@@ -347,24 +347,32 @@ exports.Mode = class extends TextMode
           editedSymbol = typed.symbol
         else
           typed = toNode targetMode.selectedTangible()
-        reference =
-          type: typed.tea
-          scope: typed.scope
-          pattern: typed.assignable
-        # TODO: plain text for non-typed expressions
-        unless reference.type
+        if typed.tea
+          reference =
+            type: typed.tea
+            scope: typed.scope
+            pattern: typed.assignable
+          # TODO: plain text for non-typed expressions
+          @worker.call 'matchingDefinitions', [reference], (completions) =>
+            callback null, (for symbol, {type, score, rawType, arity, docs} of completions# when symbol isnt editedSymbol
+              name: symbol
+              value: symbol
+              completer: completer
+              score: score
+              meta: type
+              rawType: rawType
+              arity: arity
+              docs: docs)
+        else if typed.inferredType
+          inferredType = compiler.plainPrettyPrint typed.inferredType
+          callback null, [
+            name: inferredType
+            value: inferredType
+            completer: completer]
+        else
           callback "error", []
           return
-        @worker.call 'matchingDefinitions', [reference], (completions) =>
-          callback null, (for symbol, {type, score, rawType, arity, docs} of completions# when symbol isnt editedSymbol
-            name: symbol
-            value: symbol
-            completer: completer
-            score: score
-            meta: type
-            rawType: rawType
-            arity: arity
-            docs: docs)
+
 
       getDocTooltip: (selected) =>
         if selected.rawType and not selected.docHTML
@@ -2691,6 +2699,7 @@ duplicateProperties = (newAst, oldAst) ->
   oldAst.fake = newAst.fake
   oldAst.assignable = newAst.assignable
   oldAst.scope = newAst.scope
+  oldAst.inferredType = newAst.inferredType
   if isForm newAst
     for node, i in newAst
       duplicateProperties node, oldAst[i]
