@@ -328,10 +328,11 @@ exports.Mode = class extends TextMode
       editor.completer.showPopup editor
 
   updateAutocomplete: ->
-    if @isAutocompleting()
-      @editor.completer.updateCompletions()
-    else if @isInserting() or not @onlySelectedExpression()?.tea
-      @openAutocomplete()
+    if @editor.$isFocused
+      if @isAutocompleting()
+        @editor.completer.updateCompletions()
+      else if @isInserting() or not @onlySelectedExpression()?.tea
+        @openAutocomplete()
 
   isAutocompleting: ->
     @editor.completer and @editor.completer.activated
@@ -347,7 +348,7 @@ exports.Mode = class extends TextMode
           editedSymbol = typed.symbol
         else
           typed = toNode targetMode.selectedTangible()
-        if typed.tea
+        if typed.tea and not typed.tea.ForAll
           reference =
             type: typed.tea
             scope: typed.scope
