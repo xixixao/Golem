@@ -287,10 +287,10 @@ exports.Mode = class extends TextMode
       if message
         @errorMarkers = for origin in conflicts when origin
           range = @nodeRange origin
-          type = compiler.plainPrettyPrint origin.tea
+          type = compiler.plainPrettyPrint origin.tea if origin.tea
           @editor.session.addMarker range, 'clazz', (@showError range, type), yes
 
-  showError: (range, type) -> (stringBuilder, r, l, t, config, layer) ->
+  showError: (range, type = '') -> (stringBuilder, r, l, t, config, layer) ->
     clazz = 'golem_error-origin'
     if range.isMultiLine()
       layer.drawTextMarker stringBuilder, range,
