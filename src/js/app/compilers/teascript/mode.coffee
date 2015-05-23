@@ -291,7 +291,7 @@ exports.Mode = class extends TextMode
           @editor.session.addMarker range, 'clazz', (@showError range, type), yes
 
   showError: (range, type = '') -> (stringBuilder, r, l, t, config, layer) ->
-    clazz = 'golem_error-origin'
+    clazz = (if type then 'golem_error-origin-with-type' else 'golem_error-origin')
     if range.isMultiLine()
       layer.drawTextMarker stringBuilder, range,
         clazz, config, null, "data-type='#{type}'"
