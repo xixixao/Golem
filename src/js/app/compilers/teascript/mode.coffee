@@ -381,21 +381,14 @@ exports.Mode = class extends TextMode
 
       insertMatch: (editor, {value}) =>
         mode = editor.session.getMode()
-        atom = mode.editedAtom()
-        if atom
+        mode.startGroupMutation()
+        selected = mode.selectedTangible().in
+        mode.removeSelected()
+        mode.insertString FORWARD, value
+        if isForm selected = mode.onlySelectedExpression()
           mode.mutate
-            changeWithinAtom:
-              string: value
-              atom: atom
-              range:
-                [0, atom.symbol.length]
-        else
-          mode.startGroupMutation()
-          mode.insertString FORWARD, value
-          if isForm selected = mode.onlySelectedExpression()
-            mode.mutate
-              tangibleSelection: firstFakeInside FORWARD, selected
-          mode.finishGroupMutation()
+            tangibleSelection: firstFakeInside FORWARD, selected
+        mode.finishGroupMutation()
 
   docsTooltip: (token, tooltip) =>
     clearTimeout @docTooltipTimer
@@ -1710,12 +1703,16 @@ exports.Mode = class extends TextMode
           else
             {})
 
-  removeSelectable: (nodes) ->
+  removeSelected: ->
+    if not @isInserting()
+      @mutate @removeSelectable @selectedTangible()
+
+  removeSelectable: (tangible) ->
     changeInTree:
-      at: nodes
+      at: tangible
     tangibleSelection:
       in: []
-      out: nodes.out
+      out: tangible.out
 
   isAtLimit: (direction, atom) ->
     toLimit = @distance @cursorPosition(), @editableEdge direction, atom
