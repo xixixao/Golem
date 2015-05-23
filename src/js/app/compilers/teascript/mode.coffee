@@ -290,14 +290,18 @@ exports.Mode = class extends TextMode
           type = compiler.plainPrettyPrint origin.tea if origin.tea
           @editor.session.addMarker range, 'clazz', (@showError range, type), yes
 
-  showError: (range, type = '') -> (stringBuilder, r, l, t, config, layer) ->
+  showError: (range, type = '') -> (stringBuilder, r, l, t, config, layer) =>
     clazz = (if type then 'golem_error-origin-with-type' else 'golem_error-origin')
     if range.isMultiLine()
-      layer.drawTextMarker stringBuilder, range,
-        clazz, config, null, "data-type='#{type}'"
+      row = range.start.row
+      lineRange = new Range row, range.start.column,
+        row, @editor.session.getScreenLastRowColumn row
+      subclass = ' golem_error-origin-open'
     else
-      layer.drawSingleLineMarker stringBuilder, range,
-        clazz + ' golem_single-line', config, null, null, "data-type='#{type}'"
+      lineRange = range
+      subclass = ''
+    layer.drawSingleLineMarker stringBuilder, lineRange,
+      clazz + subclass, config, null, null, "data-type='#{type}'"
 
   doAutocomplete: (e) ->
     editor = @editor
