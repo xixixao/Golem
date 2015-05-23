@@ -1022,7 +1022,7 @@ exports.Mode = class extends TextMode
 
       # For debugging
       'remove all source':
-        bindKey: win: 'Ctrl-Shift-D', mac: 'Ctrl-Shift-D'
+        bindKey: win: 'Ctrl-Shift-Backspace', mac: 'Ctrl-Shift-Backspace'
         exec: =>
           @editor.setValue ''
           @initAst ''
