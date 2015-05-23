@@ -382,10 +382,15 @@ exports.Mode = class extends TextMode
               range:
                 [0, atom.symbol.length]
         else
-          if value is '{}'
-            mode.insertOpeningDelim '{', '}'
-          else
-            mode.insertString FORWARD, value
+          mode.startGroupMutation()
+          mode.insertString FORWARD, value
+          if isForm selected = mode.onlySelectedExpression()
+            inside = tangibleInside FIRST, selected
+            if isExpression toNode inside
+              inside = followingTangibleAtomOrPosition FORWARD, inside
+            mode.mutate
+              tangibleSelection: inside
+          mode.finishGroupMutation()
 
   docsTooltip: (token, tooltip) =>
     clearTimeout @docTooltipTimer
