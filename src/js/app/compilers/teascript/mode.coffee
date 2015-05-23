@@ -328,11 +328,10 @@ exports.Mode = class extends TextMode
       editor.completer.showPopup editor
 
   updateAutocomplete: ->
-    if @editor.$isFocused
-      if @isAutocompleting()
-        @editor.completer.updateCompletions()
-      else if @isInserting() or not @onlySelectedExpression()?.tea
-        @openAutocomplete()
+    if @isAutocompleting()
+      @editor.completer.updateCompletions()
+    else if @isInserting() or not @onlySelectedExpression()?.tea
+      @openAutocomplete()
 
   isAutocompleting: ->
     @editor.completer and @editor.completer.activated
@@ -1011,6 +1010,7 @@ exports.Mode = class extends TextMode
       'insert call-site type':
         bindKey: win: 'Ctrl-T', mac: 'Ctrl-T'
         indirect: yes
+        autocomplete: yes
         exec: (editor, {targetEditor} = {}) =>
           # TODO: for same editor, this should add explicit type to function
           # based on its definition or call site
