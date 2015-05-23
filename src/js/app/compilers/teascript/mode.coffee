@@ -318,7 +318,7 @@ exports.Mode = class extends TextMode
 
   openAutocomplete: ->
     editor = @editor
-    if !@isAutocompleting() or @isInserting()
+    if !@isAutocompleting()
       if !editor.completer
         # Create new autocompleter
         editor.completer = new CustomAutocomplete()
@@ -330,6 +330,8 @@ exports.Mode = class extends TextMode
   updateAutocomplete: ->
     if @isAutocompleting()
       @editor.completer.updateCompletions()
+    else if @isInserting() or not @onlySelectedExpression()?.type
+      @openAutocomplete()
 
   isAutocompleting: ->
     @editor.completer and @editor.completer.activated
@@ -337,6 +339,7 @@ exports.Mode = class extends TextMode
   createCompleter: =>
     completer =
       getCompletions: (editor, session, pos, prefix, callback) =>
+        return if editor.completer.completions?.filtered.length > 0
         # TODO: type directed and other
         targetMode = session.getMode()
         if targetMode.isEditing()
