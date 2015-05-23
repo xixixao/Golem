@@ -360,7 +360,11 @@ module.exports = hyper class EditorMain
   commandCompleter: ->
     @_commandCompleter or @_commandCompleter = getCompletions: (editor, session, pos, prefix, callback) =>
       [name, args] = CommandParser editor.getValue()[1...]
-      (@commandNamed name)?.autocomplete? args, @state, this, callback
+      autocomplete = (@commandNamed name)?.autocomplete
+      if autocomplete
+        autocomplete args, @state, this, callback
+      else
+        callback null, []
 
   handleSourceCompiled: ({js}) ->
     @_hideMessage 'compiler', 'runtime'

@@ -2,13 +2,16 @@
 
 # Autocompletion for first arguments, which is a file name
 fileAutocomplete = (includeCurrent) -> (args, state, editor, callback) ->
-  if args.length <= 1
-    current = editor.memory.getLastOpenFileName()
-    files = editor.memory.getFileTable()
-    callback null, (for key, {name, numLines} of files when includeCurrent or name isnt current
-      name: name
-      value: name
-      meta: "#{numLines}").reverse()
+  callback null,
+    if args.length <= 1
+      current = editor.memory.getLastOpenFileName()
+      files = editor.memory.getFileTable()
+      (for key, {name, numLines} of files when includeCurrent or name isnt current
+        name: name
+        value: name
+        meta: "#{numLines}").reverse()
+    else
+      []
 
 class SaveCommand
   @defaultSymbols = ['save']

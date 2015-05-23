@@ -350,7 +350,7 @@ exports.Mode = class extends TextMode
           pattern: typed.assignable
         # TODO: plain text for non-typed expressions
         unless reference.type
-          # callback "error", []
+          callback "error", []
           return
         @worker.call 'matchingDefinitions', [reference], (completions) =>
           callback null, (for symbol, {type, score, rawType, arity, docs} of completions# when symbol isnt editedSymbol
