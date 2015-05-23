@@ -2276,7 +2276,7 @@ firstFakeInside = (direction, form) ->
     inside
 
 isNodeInside = (child, ancestor) ->
-  child and child is ancestor or isNodeInside child.parent, ancestor
+  child and (child is ancestor or isNodeInside child.parent, ancestor)
 
 # Used by navigation over atoms and insert positions
 followingTangibleAtomOrPosition = (direction, tangible) ->
