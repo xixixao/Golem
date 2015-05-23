@@ -330,7 +330,7 @@ exports.Mode = class extends TextMode
   updateAutocomplete: ->
     if @isAutocompleting()
       @editor.completer.updateCompletions()
-    else if @isInserting() or not @onlySelectedExpression()?.type
+    else if @isInserting() or not @onlySelectedExpression()?.tea
       @openAutocomplete()
 
   isAutocompleting: ->
