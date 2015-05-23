@@ -1051,10 +1051,10 @@ exports.Mode = class extends TextMode
         exec: =>
           if @isInserting()
             @wrap '(', 'match', ' ', {selected: yes, insert: yes}, '\n',
-              '    ', ' ', ')'
+              '  ', ' ', ')'
           else
             @wrap '(', 'match', ' ', {selected: yes}, '\n',
-              '    ', {insert: yes}, ' ', ')'
+              '  ', {insert: yes}, ' ', ')'
 
       'wrap current in a match':
         bindKey: win: 'Ctrl-Shift-M', mac: 'Ctrl-Shift-M'
@@ -1062,7 +1062,7 @@ exports.Mode = class extends TextMode
         autocomplete: yes
         exec: =>
           @wrap '(', 'match', ' ', {insert: yes}, '\n',
-            '    ', ' ', {selected: yes}, ')'
+            '  ', ' ', {selected: yes}, ')'
 
       'replace expression by new function param':
         bindKey: win: 'Ctrl-Shift-A', mac: 'Ctrl-A'
