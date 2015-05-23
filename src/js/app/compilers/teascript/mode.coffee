@@ -254,7 +254,7 @@ exports.Mode = class extends TextMode
     # @dirty = false
     @$tokenizer._signal 'update', data: rows: first: 1
     @updateAutocomplete()
-    @showErrors errors
+    @addErrorMarkers errors
 
   # Traverses the AST in order, fixing positions
   repositionAst: ->
@@ -276,19 +276,28 @@ exports.Mode = class extends TextMode
         node.end += offset
         currentPosition = node.end
 
-  # TODO: THIS SUCKS, put the highlights on tokens directly instead, so they
-  # update before recompilation
-  showErrors: (errors) ->
-    @editor.session.removeMarker id for id in @errorMarkers or []
-    # for {message, conflicts} in errors when message
+  addErrorMarkers: (errors) ->
+    @removeErrorMarkers()
+    @errorMarkers = []
     [firstError] = errors
     if firstError
       {message, conflicts} = firstError
       if message
-        @errorMarkers = for origin in conflicts when origin
-          range = @nodeRange origin
-          type = compiler.plainPrettyPrint origin.tea if origin.tea
-          @editor.session.addMarker range, 'clazz', (@showError range, type), yes
+        @errorMarkers = for origin, i in conflicts when origin
+          [node] = findNodeWithPosition @ast, origin.start, origin.end
+          node: node
+        @updateErrorMarkers()
+
+  updateErrorMarkers: ->
+    @removeErrorMarkers()
+    for marker in @errorMarkers or []
+      {node} = marker
+      range = @nodeRange node
+      type = compiler.plainPrettyPrint node.tea if node.tea
+      marker.id = @editor.session.addMarker range, 'clazz', (@showError range, type), yes
+
+  removeErrorMarkers: ->
+    @editor.session.removeMarker id for {id} in @errorMarkers or [] when id
 
   showError: (range, type = '') -> (stringBuilder, r, l, t, config, layer) =>
     clazz = (if type then 'golem_error-origin-with-type' else 'golem_error-origin')
@@ -1878,7 +1887,9 @@ exports.Mode = class extends TextMode
   handleCommandExecution: (e) =>
     # 8. Highlight edited in editor
     @updateEditingMarkers()
-    # 9. Trigger autocompletion
+    # 9. Update error highlights
+    @updateErrorMarkers()
+    # 10. Trigger autocompletion
     @doAutocomplete e
 
   select: (selections, shouldEdit) ->
@@ -1900,6 +1911,7 @@ exports.Mode = class extends TextMode
         [@editor.selection]
     for range, i in editorSelections
       @updateEditingMarkerFor (@isEditingFor range), range
+    return
 
   updateEditingMarkerFor: (shouldEdit, editorSelection) ->
     if id = editorSelection.$editMarker
@@ -2559,6 +2571,16 @@ merge = (objects) ->
 
 extend = (a, b) ->
   merge [a, b]
+
+findNodeWithPosition = (node, start, end) ->
+  if start < node.end and node.start < end
+    if start is node.start and end is node.end
+      [node]
+    else
+      concat (for expr in node
+        findNodeWithPosition expr, start, end)
+  else
+    []
 
 findNodesBetween = (node, start, end) ->
   if start < node.end and node.start < end
