@@ -187,6 +187,9 @@ var jsDump;
         for( var key in map )
           ret.push( this.parse(key,'key') + ': ' + this.parse(map[key]) );
         this.down();
+        if (ret.length === 0 && map.constructor.name !== 'Object') {
+          return map.constructor.name;
+        }
         return join( '{', ret, '}' );
       },
       node:function( node ){
