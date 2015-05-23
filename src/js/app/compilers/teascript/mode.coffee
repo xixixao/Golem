@@ -344,10 +344,10 @@ exports.Mode = class extends TextMode
           editedSymbol = typed.symbol
         else
           typed = toNode targetMode.selectedTangible()
-
         reference =
           type: typed.tea
           scope: typed.scope
+          pattern: typed.assignable
         # TODO: plain text for non-typed expressions
         unless reference.type
           # callback "error", []
@@ -2653,6 +2653,7 @@ duplicateProperties = (newAst, oldAst) ->
   oldAst.tea = newAst.tea
   oldAst.id = newAst.id
   oldAst.fake = newAst.fake
+  oldAst.assignable = newAst.assignable
   oldAst.scope = newAst.scope
   if isForm newAst
     for node, i in newAst
