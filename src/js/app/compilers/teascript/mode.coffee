@@ -385,11 +385,8 @@ exports.Mode = class extends TextMode
           mode.startGroupMutation()
           mode.insertString FORWARD, value
           if isForm selected = mode.onlySelectedExpression()
-            inside = tangibleInside FIRST, selected
-            if isExpression toNode inside
-              inside = followingTangibleAtomOrPosition FORWARD, inside
             mode.mutate
-              tangibleSelection: inside
+              tangibleSelection: firstFakeInside FORWARD, selected
           mode.finishGroupMutation()
 
   docsTooltip: (token, tooltip) =>
@@ -1009,8 +1006,27 @@ exports.Mode = class extends TextMode
           @wrap '(', '#', ' ', {selected: yes, select: yes}, ')'
 
       # Temporary
-      'show type of expression':
+      'insert call-site type':
         bindKey: win: 'Ctrl-T', mac: 'Ctrl-T'
+        indirect: yes
+        exec: (editor, {targetEditor} = {}) =>
+          # TODO: for same editor, this should add explicit type to function
+          # based on its definition or call site
+          if targetEditor
+            targetMode = targetEditor.session.getMode()
+            selected = targetMode.onlySelectedExpression()
+            if selected and selected.tea
+              type = compiler.plainPrettyPrint selected.tea
+              withoutConcretes = type.replace /_\d+/, ''
+              @startGroupMutation()
+              @insertString FORWARD, "(: #{withoutConcretes})"
+              @mutate
+                tangibleSelection: firstFakeInside FORWARD, @onlySelectedExpression()
+              @finishGroupMutation()
+
+      # Temporary
+      'show type of expression':
+        bindKey: win: 'Ctrl-Shift-T', mac: 'Ctrl-Shift-T'
         multiSelectAction: 'forEach'
         exec: =>
           selected = @selectedTangible()
@@ -2239,6 +2255,18 @@ concatTangibles = (tangibles) ->
 
 tangibleToIns = (tangible) ->
   tangible.in
+
+firstFakeInside = (direction, form) ->
+  inside = tangibleInside (opposite direction), form
+  while (notFake = (isExpression child = toNode inside)) and isNodeInside child, form
+    inside = followingTangibleAtomOrPosition direction, inside
+  if notFake
+    form
+  else
+    inside
+
+isNodeInside = (child, ancestor) ->
+  child and child is ancestor or isNodeInside child.parent, ancestor
 
 # Used by navigation over atoms and insert positions
 followingTangibleAtomOrPosition = (direction, tangible) ->
