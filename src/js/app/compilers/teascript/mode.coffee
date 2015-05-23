@@ -312,7 +312,7 @@ exports.Mode = class extends TextMode
           (@offsetToCursor atom) is atom.symbol.length or
           @isInserting())
       @openAutocomplete()
-    else if editor.completer and ((not e?.command.name in ignoredCommands) or
+    else if editor.completer and (e?.command.name not in ignoredCommands or
         atom and isNumerical atom)
       editor.completer.detach()
 
