@@ -44,8 +44,6 @@ function TokenTooltip (editor) {
     editor.tokenTooltip = this;
     this.editor = editor;
 
-    this.displayDelay = 100;
-
     this.update = this.update.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseOut = this.onMouseOut.bind(this);
@@ -78,17 +76,21 @@ oop.inherits(TokenTooltip, Tooltip);
         var screenPos = {row: row, column: col, side: offset - col > 0 ? 1 : -1};
         var session = this.editor.session;
         var docPos = session.screenToDocumentPosition(screenPos.row, screenPos.column);
-        var token = session.getTokenAt(docPos.row, docPos.column);
 
-        if (!token && !session.getLine(docPos.row)) {
-            token = {
-                type: "",
-                value: "",
-                state: session.bgTokenizer.getState(0)
-            };
+        // Check that we are actually over the token, not to the right of it
+        if (session.documentToScreenPosition(docPos).column === col) {
+            var token = session.getTokenAt(docPos.row, docPos.column);
         }
+
         if (!token) {
             this.hideAndRemoveMarker();
+            return;
+        }
+
+        if (!this.lastToken || this.lastToken !== token) {
+            this.hideAndRemoveMarker();
+            this.lastToken = token;
+            this.$timer = setTimeout(this.update, 500);
             return;
         }
 
@@ -97,7 +99,7 @@ oop.inherits(TokenTooltip, Tooltip);
         this.token = token;
         this.docPos = docPos;
 
-        if (changed) {
+        if (changed || !this.isOpen) {
             if (this.setTooltipContentForToken) {
                 this.setTooltipContentForToken(token, this);
             } else {

@@ -407,28 +407,24 @@ exports.Mode = class extends TextMode
         mode.finishGroupMutation()
 
   docsTooltip: (token, tooltip) =>
-    clearTimeout @docTooltipTimer
     tooltip.hideAndRemoveMarker();
     if token.scope?
       reference = name: token.value, scope: token.scope
-      @docTooltipTimer = setTimeout =>
-        @worker.call 'docsFor', [reference], (info) =>
-          if info?.rawType
-            # TODO: until we insert the type directly into text
-            tooltip.setHtml if token.label is 'name'
-              @prettyPrintTypeForDoc info
-            else
-              @createDocTooltipHtml info
-            tooltip.open()
-            @activeTooltip = tooltip
-      , 1500
+      @worker.call 'docsFor', [reference], (info) =>
+        if info?.rawType
+          # TODO: until we insert the type directly into text
+          tooltip.setHtml if token.label is 'name'
+            @prettyPrintTypeForDoc info
+          else
+            @createDocTooltipHtml info
+          tooltip.open()
+          @activeTooltip = tooltip
 
   closeTooltip: =>
     @detach()
 
   detach: =>
     @activeTooltip?.hideAndRemoveMarker()
-    clearTimeout @docTooltipTimer
 
   createDocTooltipHtml: (info) ->
     paramNames = info.arity or []
