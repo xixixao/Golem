@@ -471,25 +471,14 @@ exports.Mode = class extends TextMode
         @editor.execCommand 'select by click'
 
   handlePaste: (string) =>
-    @editor.commands.exec "insertstring", @editor, string
-    # TODO: Figure out how to do multi-copy-paste, Ace does it based on lines
-    #       would be nice if we could do it based on actual selections
-    #       - might require memorizing the copy.
-    #
-    #   if @isMultiSelecting():
-    #
-    # var lines = text.split(/\r\n|\r|\n/);
-    # var ranges = this.selection.rangeList.ranges;
+    expressions = string.split /(?:\r\n|\r|\n)(?!\s)/
+    selections = @editor.selection.rangeList.ranges
 
-    # if (lines.length > ranges.length || lines.length < 2 || !lines[1])
-    #     return this.commands.exec("insertstring", this, text);
+    if expressions.length > selections.length || expressions.length < 2 || !expressions[1]
+      return @editor.commands.exec "insertstring", @editor, string
 
-    # for (var i = ranges.length; i--;) {
-    #     var range = ranges[i];
-    #     if (!range.isEmpty())
-    #         this.session.remove(range);
-
-    #     this.session.insert(range.start, lines[i]);
+    @editor.forEachSelection exec: =>
+      @insertString FORWARD, expressions[@editor.selection.index]
 
   undoManager: =>
     @undoStack or= []
