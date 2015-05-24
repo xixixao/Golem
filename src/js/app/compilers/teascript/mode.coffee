@@ -152,6 +152,7 @@ exports.Mode = class extends TextMode
     @editor.removeListener 'mouseup', @handleMouseUp
     @editor.tokenTooltip.destroy()
     @editor.onPaste = @__editorOnPaste
+    @editor.getCopyText = @__editorCopyText
     @editor.setOption 'dragEnabled', yes
     @editor.setOption 'enableBlockSelect', yes
     # session.getDocument().removeListener 'change', @selectInserted
@@ -175,6 +176,8 @@ exports.Mode = class extends TextMode
     @editor.tokenTooltip.setTooltipContentForToken = @docsTooltip
     @__editorOnPaste = @editor.onPaste
     @editor.onPaste = @handlePaste
+    @__editorCopyText = @editor.getCopyText
+    @editor.getCopyText = @handleCopy
     @editor.selection.on 'removeRange', @handleRangeDeselect
     @editor.commands.on 'afterExec', @handleCommandExecution
 
@@ -469,6 +472,17 @@ exports.Mode = class extends TextMode
       # select clicked word or its parent if whitespace selected
       if @ast
         @editor.execCommand 'select by click'
+
+  # Strips indent from copied expression so it can be correctly pasted
+  handleCopy: =>
+    range = @editor.getSelectionRange()
+    tokens = @tokensOnLine range.start.row, @editor.session.doc
+    selectedText = @editor.getSelectedText()
+    if tokens.length > 0 and isIndent indent = tokens[0]
+      indentSize = indent.symbol.length
+      selectedText.replace (new RegExp "\\n#{Array(indentSize + 1).join ' '}", 'g'), '\n'
+    else
+      selectedText
 
   handlePaste: (string) =>
     expressions = string.split /(?:\r\n|\r|\n)(?!\s)/
