@@ -363,7 +363,7 @@ exports.Mode = class extends TextMode
           editedSymbol = typed.symbol
         else
           typed = toNode targetMode.selectedTangible()
-        if typed.tea and not typed.tea.ForAll
+        if typed.tea and not typed.tea.ForAll and not typed.assignable?.top
           reference =
             type: typed.tea
             scope: typed.scope
