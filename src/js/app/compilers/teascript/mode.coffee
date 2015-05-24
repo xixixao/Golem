@@ -342,6 +342,8 @@ exports.Mode = class extends TextMode
       #editor.completer.autoInsert = false;
       @closeTooltip()
       editor.completer.showPopup editor
+    else if @isInserting()
+      @editor.completer.updateCompletions()
 
   updateAutocomplete: ->
     if @isAutocompleting()
@@ -355,7 +357,7 @@ exports.Mode = class extends TextMode
   createCompleter: =>
     completer =
       getCompletions: (editor, session, pos, prefix, callback) =>
-        return if editor.completer.completions?.filtered.length > 0
+        return if prefix and editor.completer.completions?.filtered.length > 0
         # TODO: type directed and other
         targetMode = session.getMode()
         if targetMode.isEditing()
