@@ -296,7 +296,7 @@ exports.Mode = class extends TextMode
     for marker in @errorMarkers or []
       {node} = marker
       range = @nodeRange node
-      type = compiler.plainPrettyPrint node.tea if node.tea
+      type = if node.tea then compiler.plainPrettyPrint node.tea else undefined
       marker.id = @editor.session.addMarker range, 'clazz', (@showError range, type), yes
 
   removeErrorMarkers: ->
