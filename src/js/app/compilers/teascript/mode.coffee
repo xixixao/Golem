@@ -2610,7 +2610,11 @@ convertToAceLineTokens = (tokens) ->
 
 # Ace converts type: "a.b" to "ace_a ace_b" and rendered 'text' as plaintext
 convertToAceToken = (token) ->
-  value: token.symbol
+  value:
+    if token.label is 'string'
+      "“#{token.symbol[1...-1]}”"
+    else
+       token.symbol
   scope: token.scope
   label: token.label
   type:
