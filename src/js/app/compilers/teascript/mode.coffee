@@ -287,13 +287,14 @@ exports.Mode = class extends TextMode
       {message, conflicts} = firstError
       if message
         @errorMarkers = for origin, i in conflicts when origin
-          [node] = findNodeWithPosition @ast, origin.start, origin.end
+          trueOrigin = _transformed origin
+          [node] = findNodeWithPosition @ast, trueOrigin.start, trueOrigin.end
           node: node
         @updateErrorMarkers()
 
   updateErrorMarkers: ->
     @removeErrorMarkers()
-    for marker in @errorMarkers or []
+    for marker in @errorMarkers or [] when marker.node
       {node} = marker
       range = @nodeRange node
       type = if node.tea then compiler.plainPrettyPrint node.tea else undefined
@@ -1889,7 +1890,7 @@ exports.Mode = class extends TextMode
     # 8. Highlight edited in editor
     @updateEditingMarkers()
     # 9. Update error highlights
-    @updateErrorMarkers()
+    @updateErrorMarkers() #TODO: better to remove if we changed source
     # 10. Trigger autocompletion
     @doAutocomplete e
 
@@ -2572,6 +2573,12 @@ merge = (objects) ->
 
 extend = (a, b) ->
   merge [a, b]
+
+_transformed = (origin) ->
+  if origin.transformed
+    _transformed origin.transformed
+  else
+    origin
 
 findNodeWithPosition = (node, start, end) ->
   if start < node.end and node.start < end
