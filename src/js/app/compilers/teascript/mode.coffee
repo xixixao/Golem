@@ -474,12 +474,10 @@ exports.Mode = class extends TextMode
 
   # Strips indent from copied expression so it can be correctly pasted
   handleCopy: =>
-    range = @editor.getSelectionRange()
-    tokens = @tokensOnLine range.start.row, @editor.session.doc
     selectedText = @editor.getSelectedText()
-    if tokens.length > 0 and isIndent indent = tokens[0]
-      indentSize = indent.symbol.length
-      selectedText.replace (new RegExp "\\n#{Array(indentSize + 1).join ' '}", 'g'), '\n'
+    indentSize = depthOf toNode @selectedTangible()
+    if indentSize > 0
+      selectedText.replace (new RegExp "\\n#{Array(indentSize * 2 + 1).join ' '}", 'g'), '\n'
     else
       selectedText
 
