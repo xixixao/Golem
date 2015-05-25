@@ -60,13 +60,16 @@ var jsDump;
       return pre + post;
     return inline ? pre + arr + post : [ pre, inner + arr, base + post ].join(s);
   }
-  function array( arr ){
+  function delim (arr, opening, closing) {
     var i = arr.length, ret = Array(i);
     this.up();
     while( i-- )
       ret[i] = this.parse( arr[i] );
     this.down();
-    return join( '[', ret, ']' );
+    return join( opening, ret, closing );
+  }
+  function array( arr ){
+    return delim.call(this, arr, '[', ']')
   }
 
   var reName = /^function (\w+)/;
@@ -225,7 +228,18 @@ var jsDump;
         return value ? 'True' : 'False';
       },
       'Immutable': function(value) {
-        return this.parse(value.toJS());
+        var jsRepresentation = this.parse(value.toJS());
+        var delims;
+        if (Immutable.Set.isSet(value)) {
+          delims = ['(Set ', ')'];
+        } else if (Immutable.List.isList(value)) {
+          delims = ['{', '}'];
+        } else if (Immutable.Map.isMap(value)) {
+          return this.parse(value.toObject());
+        } else if (Immutable.Stack.isStack(value)) {
+          delims = ['(List ', ')'];
+        }
+        return delim.call(this, value.toArray(), delims[0], delims[1]);
       }
     },
     DOMAttrs:{//attributes to dump from nodes, name=>realName
