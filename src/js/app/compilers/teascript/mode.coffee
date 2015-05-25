@@ -65,7 +65,7 @@ log = (arg) ->
 
 
 exports.Mode = class extends TextMode
-  constructor: (@isSingleLineInput, @memory) ->
+  constructor: (@isSingleLineInput) ->
     @$tokenizer =
       # TODO: passing of doc would require change in ACE, this MIGHT BREAK SOMETHING, check and remove todo
       getLineTokens: (line, state, row, doc = @editor.session.getDocument()) =>
@@ -1080,7 +1080,7 @@ exports.Mode = class extends TextMode
           # if @isInserting()
           #   @wrap '(', 'fn', ' ', '[', {insert: yes}, ']', ' ', {selected: yes, select: yes}, ')'
           # else
-          separator = if parentOf (toNode @selectedTangible()) then [' '] else ['\n', '  ']
+          separator = if (parentOf (toNode @selectedTangible())) or @isSingleLineInput then [' '] else ['\n', '  ']
           @wrap (concat [['(', 'fn', ' ', '[]'], separator, [{selected: yes, select: yes}, ')']])...
 
       'wrap current to match':
