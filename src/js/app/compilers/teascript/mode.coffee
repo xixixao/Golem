@@ -32,6 +32,7 @@ log = (arg) ->
   join
   all
   __
+  sortedArgs
   _is
   _notEmpty
   _empty
@@ -1238,13 +1239,30 @@ exports.Mode = class extends TextMode
             others = (findOtherReferences atom) @ast
             if isName atom
               # Replace all occurences
-              if isExpression definition = siblingTerm FORWARD, atom
-                inlined = (toTangible definition)
+              @startGroupMutation()
 
-                @startGroupMutation()
+              # Paramater in lambda call
+              if (paramList = parentOf atom) and (fun = parentOf paramList) and
+                  (isOperator fun) and (isFunction fun) and ((findParamList fun) is paramList)
+                args = sortedArgs (map _symbol, (_validTerms paramList)), fun.parent
+                paramIndex = ((_terms paramList).indexOf atom)
+                if paramIndex < args.length and args[paramIndex]
+                  inlined = toTangible args[paramIndex]
+                  # Remove the argument
+                  @mutate
+                    changeInTree:
+                      at: tangibleWithMargin inlined
+                  # Remove the paramater
+                  @mutate
+                    changeInTree:
+                      at: tangibleWithMargin toTangible atom
+              else if (definition = siblingTerm FORWARD, atom) and isExpression definition
+                # Definition name
+                inlined = (toTangible definition)
                 @mutate @removeSelectable tangibleBetween (toTangible atom), inlined
                 @mutate @remove BACKWARD
                 @mutate @remove BACKWARD if @isInserting()
+              if inlined
                 for other, i in others
                   indented = (reindentTangible inlined, other.parent)
                   @mutate
