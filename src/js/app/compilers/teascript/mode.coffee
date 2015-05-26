@@ -1325,14 +1325,44 @@ exports.Mode = class extends TextMode
                 added: reindentNodes [op], call
                 at: outsToTangible [call[1]]
             @finishGroupMutation()
-          if isOperator op = @onlySelectedExpression()
-            args = (argumentNamesFromCall op.parent).join ' '
-            abstractToLambda op, args
-          else if (op = @onlySelectedExpression()) and isAtom op
-            @worker.call 'docsFor', [atomReference op], (info) =>
-              if info.arity
-                args = info.arity.join ' '
-                abstractToLambda op, args
+          if op = @onlySelectedExpression()
+            if isOperator op
+              args = (argumentNamesFromCall op.parent).join ' '
+              abstractToLambda op, args
+            else if isAtom op
+              @worker.call 'docsFor', [atomReference op], (info) =>
+                if info.arity
+                  args = info.arity.join ' '
+                  abstractToLambda op, args
+
+      'push lambda to outer expression':
+        bindKey: win: 'Ctrl-O', mac: 'Ctrl-O'
+        multiSelectAction: 'forEach'
+        exec: =>
+          if (fun = @onlySelectedExpression()) and (isFunction fun) and
+              (isOperator fun) and (form = parentOf fun.parent)
+            # Replace grandparent form by fun
+            # Replace body of fun with grandparent form with the body replacing fun
+            @startGroupMutation()
+            pushedUpBody = reindentNodes [findFunctionBody fun], form
+            @mutate
+              changeInTree:
+                added: pushedUpBody
+                at: toTangible fun.parent
+            pushedUp = reindentNodes [fun.parent], form.parent
+            [newCall] = pushedUp
+            newFun = _operator newCall
+            @mutate
+              changeInTree:
+                added: pushedUp
+                at: toTangible form
+            pushedIn = reindentNodes [form], newCall
+            @mutate
+              changeInTree:
+                added: pushedIn
+                at: toTangible findFunctionBody newFun
+              inSelection: newFun
+            @finishGroupMutation()
 
       'push definition up':
         bindKey: win: 'Ctrl-U', mac: 'Ctrl-U'
@@ -2109,6 +2139,10 @@ findParamList = (form) ->
   [params] = _arguments form
   params
 
+findFunctionBody = (form) ->
+  [..., body] = _arguments form
+  body
+
 isBetaReducible = (expression) ->
   (isCall expression) and isFunction (_operator expression)
 
@@ -2531,9 +2565,9 @@ isClosingDelim = (node) ->
 isOpeningDelim = (node) ->
   /^[\(\[\{]$/.test node.symbol
 
-isOperator = (atom) ->
-  parent = parentOf atom
-  parent and (isCall parent) and (_fst _terms parent) is atom
+isOperator = (node) ->
+  parent = parentOf node
+  parent and (isCall parent) and (_fst _terms parent) is node
 
 isLabel = (expression) ->
   expression.label is 'label'
