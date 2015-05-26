@@ -1889,7 +1889,9 @@ exports.Mode = class extends TextMode
     @updateEditingMarkers()
     # 9. Update error highlights
     @updateErrorMarkers() #TODO: better to remove if we changed source
-    # 10. Trigger autocompletion
+    # 10. Hide tooltips
+    @closeTooltip()
+    # 11. Trigger autocompletion
     @doAutocomplete e
 
   select: (selections, shouldEdit) ->
