@@ -1314,28 +1314,30 @@ exports.Mode = class extends TextMode
         exec: =>
           # TODO: prevent variable capture inside the operator
           abstractToLambda = (op, args) =>
-            wrapper = astize "(fn [#{args}] ( #{args}))", op.parent
+            argList = args.join ' '
+            wrapper = astize "(fn [#{argList}] ( #{argList}))", op[0].parent
             @startGroupMutation()
             @mutate
               changeInTree:
                 added: wrapper
-                at: (toTangible op)
+                at: insToTangible op
               inSelections: wrapper
             [fn, params, call] = _terms wrapper[0]
             @mutate
               changeInTree:
-                added: reindentNodes [op], call
+                added: reindentNodes op, call
                 at: outsToTangible [call[1]]
             @finishGroupMutation()
-          if op = @onlySelectedExpression()
-            if isOperator op
-              args = (argumentNamesFromCall op.parent).join ' '
+          if isCall parent = @parentOfSelected()
+            if isOperator toNode selected = @selectedTangible()
+              op = selected.in
+              args = (argumentNamesFromCall parent)[(_validTerms op).length - 1...]
               abstractToLambda op, args
-            else if isAtom op
+            else if (op = @onlySelectedExpression()) and isAtom op
               @worker.call 'docsFor', [atomReference op], (info) =>
                 if info.arity
-                  args = info.arity.join ' '
-                  abstractToLambda op, args
+                  args = info.arity
+                  abstractToLambda [op], args
 
       'push lambda to outer expression':
         bindKey: win: 'Ctrl-O', mac: 'Ctrl-O'
@@ -2104,12 +2106,21 @@ argumentNamesFromCall = (call) ->
   defaultNames = "xyzwtuvmnopqrs"
   labeled = false
   i = 0
+  argNames = {}
   args = []
+  addArgName = (symbol) ->
+    args.push (if count = argNames[symbol]
+      argNames[symbol]++
+      symbol + count
+    else
+      argNames[symbol] = 2
+      symbol)
+
   for term in _arguments call
     if labeled
       labeled = false
       continue
-    args.push(
+    addArgName(
       if isLabel term
         labeled = true
         _labelName term
