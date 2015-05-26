@@ -38,6 +38,7 @@ log = (arg) ->
   _operator
   _arguments
   _terms
+  _validTerms
   _snd
   _fst
   _labelName
@@ -1269,7 +1270,7 @@ exports.Mode = class extends TextMode
               (parentOf selected) and (isBetaReducible reducible = parentOf selected)
 
             fn = _operator reducible
-            params = _terms findParamList fn
+            params = _validTerms findParamList fn
             args = _arguments reducible
             @startGroupMutation()
             for arg, i in args when i < params.length
