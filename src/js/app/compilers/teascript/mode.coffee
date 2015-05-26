@@ -349,7 +349,8 @@ exports.Mode = class extends TextMode
   updateAutocomplete: ->
     if @isAutocompleting()
       @editor.completer.updateCompletions()
-    else if @isInserting() or (selected = @onlySelectedExpression()) and not selected.tea
+    else if @editor.isFocused() and
+        (@isInserting() or (selected = @onlySelectedExpression()) and not selected.tea)
       @openAutocomplete()
 
   isAutocompleting: ->
