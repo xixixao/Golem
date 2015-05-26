@@ -254,9 +254,7 @@ exports.Mode = class extends TextMode
 
   # Called after worker compiles
   updateAst: (ast, errors = []) ->
-    # console.log ast, @ast
     duplicateProperties ast, @ast
-    # @dirty = false
     @$tokenizer._signal 'update', data: rows: first: 1
     @updateAutocomplete()
     @addErrorMarkers errors
@@ -406,7 +404,7 @@ exports.Mode = class extends TextMode
         mode = editor.session.getMode()
         mode.startGroupMutation()
         mode.removeSelected()
-        mode.insertString FORWARD, value
+        mode.insertStringForward value
         if isForm selected = mode.onlySelectedExpression()
           mode.mutate
             tangibleSelection: firstFakeInside FORWARD, selected
@@ -491,8 +489,11 @@ exports.Mode = class extends TextMode
     if expressions.length > selections.length || expressions.length < 2 || !expressions[1]
       return @editor.commands.exec "insertstring", @editor, string
 
+    @startGroupMutation()
     @editor.forEachSelection exec: =>
-      @insertString FORWARD, expressions[@editor.selection.index]
+      @insertStringForward expressions[@editor.selection.index]
+    @finishGroupMutation()
+    @handleCommandExecution command: name: 'paste'
 
   undoManager: =>
     @undoStack or= []
@@ -880,11 +881,11 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach'
         #autocomplete: yes # TODO: add char autocompletion for special chars
         exec: =>
-          @insertString FORWARD,
+          @insertStringForward(
             if @isEditingHalfDelimited()
               '\\'
             else
-              '\\_'
+              '\\_')
 
       'wrap in a call':
         bindKey: win: 'Ctrl-Shift-9', mac: 'Command-Shift-9'
@@ -923,7 +924,7 @@ exports.Mode = class extends TextMode
               @mutate
                 inSelection: atom
             else
-              @insertString FORWARD, '"'
+              @insertStringForward '"'
           else
             selected = escape '"', @selectedText()
             [atom] = astize '"' + selected + '"', @parentOfSelected()
@@ -998,7 +999,7 @@ exports.Mode = class extends TextMode
             return no
 
           if @isEditingHalfDelimited()
-            @insertString FORWARD, ':'
+            @insertStringForward ':'
           else
             atom = @onlySelectedExpression()
             @mutate(
@@ -1037,7 +1038,7 @@ exports.Mode = class extends TextMode
               type = compiler.plainPrettyPrint selected.tea
               withoutConcretes = type.replace /_\d+/, ''
               @startGroupMutation()
-              @insertString FORWARD, "(: #{withoutConcretes})"
+              @insertStringForward "(: #{withoutConcretes})"
               @mutate
                 tangibleSelection: firstFakeInside FORWARD, @onlySelectedExpression()
               @finishGroupMutation()
@@ -1157,7 +1158,7 @@ exports.Mode = class extends TextMode
             @startGroupMutation()
             if targetEditor isnt @editor
               # TODO: better location than just current insert position
-              @insertString FORWARD, if isOperator atom
+              @insertStringForward if isOperator atom
                 args = argumentNamesFromCall atom.parent
                 """
                 #{atom.symbol} (fn [#{args.join ' '}]
@@ -1171,7 +1172,7 @@ exports.Mode = class extends TextMode
               movedTo = nodeEdgeOfTangible LAST, toTangible top
               separator = if parentOf top then '\n' else '\n\n'
               @insertSpaceAt FORWARD, separator, movedTo
-              @insertString FORWARD, if isOperator atom
+              @insertStringForward if isOperator atom
                 args = argumentNamesFromCall atom.parent
                 """
                 #{atom.symbol} (fn [#{args.join ' '}]
@@ -1493,7 +1494,7 @@ exports.Mode = class extends TextMode
 
   closeParentOrInsert: (closingDelim) ->
     if @isEditingHalfDelimited()
-      @insertString FORWARD, closingDelim
+      @insertStringForward closingDelim
     else
       @mutate
         inSelection:
@@ -1501,7 +1502,7 @@ exports.Mode = class extends TextMode
 
   insertOpeningDelim: (open, close) ->
     if @isEditingHalfDelimited()
-      @insertString FORWARD, open,
+      @insertStringForward open,
     else
       @wrap open, {selected: yes, select: yes}, close
 
@@ -1924,6 +1925,7 @@ exports.Mode = class extends TextMode
       selectionRange = @rangeWithingAtom state.withinAtom, [state.withinAtomPos, state.withinAtomPos]
       editing = yes
     if selections
+      console.log selections
       # 5. set selection state
       @select selections, editing
       # 6. Perform selection in editor
