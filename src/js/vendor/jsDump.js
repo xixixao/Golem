@@ -235,7 +235,12 @@ var jsDump;
         } else if (Immutable.List.isList(value)) {
           delims = ['{', '}'];
         } else if (Immutable.Map.isMap(value)) {
-          return this.parse(value.toObject());
+          if (value.isEmpty() || typeof value.findKey(function(){return true;}) != 'string') {
+            delims = ['(Map ', ')'];
+            value = value.keySeq().interleave(value.valueSeq());
+          } else {
+            return this.parse(value.toObject());
+          }
         } else if (Immutable.Stack.isStack(value)) {
           delims = ['(List ', ')'];
         }
