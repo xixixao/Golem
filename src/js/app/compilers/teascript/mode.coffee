@@ -8,10 +8,10 @@ Selection    = require("ace/selection").Selection
 oop          = require("ace/lib/oop")
 EventEmitter = require("ace/lib/event_emitter").EventEmitter
 HashHandler  = require("ace/keyboard/hash_handler").HashHandler
-TokenTooltip = require("ace/token-tooltip").TokenTooltip
 
 CustomAutocomplete = require "./CustomAutocomplete"
 CustomSearchBox = require "./CustomSearchBox"
+CombinedTooltip = require "./CombinedTooltip"
 
 DistributingWorkerClient = require("app/DistributingWorkerClient")
 
@@ -174,7 +174,7 @@ exports.Mode = class extends TextMode
     # @editor.on 'click', @handleClick
     @editor.on 'mousedown', @handleMouseDown
     @editor.on 'mouseup', @handleMouseUp
-    @editor.tokenTooltip = new TokenTooltip @editor
+    @editor.tokenTooltip = new CombinedTooltip @editor
     @editor.tokenTooltip.setTooltipContentForToken = @docsTooltip
     @__editorOnPaste = @editor.onPaste
     @editor.onPaste = @handlePaste
@@ -297,24 +297,25 @@ exports.Mode = class extends TextMode
     for marker in @errorMarkers or [] when marker.node
       {node} = marker
       range = @nodeRange node
-      type = if node.tea then compiler.plainPrettyPrint node.tea else undefined
-      marker.id = @editor.session.addMarker range, 'clazz', (@showError range, type), yes
+      marker.id = @editor.session.addMarker range, 'clazz', (@showError range, node.tea), yes
 
   removeErrorMarkers: ->
     @editor.session.removeMarker id for {id} in @errorMarkers or [] when id
 
-  showError: (range, type = '') -> (stringBuilder, r, l, t, config, layer) =>
-    clazz = (if type then 'golem_error-origin-with-type' else 'golem_error-origin')
-    if range.isMultiLine()
-      row = range.start.row
-      lineRange = new Range row, range.start.column,
-        row, @editor.session.getScreenLastRowColumn row
-      subclass = ' golem_error-origin-open'
-    else
-      lineRange = range
-      subclass = ''
-    layer.drawSingleLineMarker stringBuilder, lineRange,
-      clazz + subclass, config, null, null, "data-type='#{type}'"
+  showError: (range, type) ->
+    draw = (stringBuilder, r, l, t, config, layer) =>
+      if range.isMultiLine()
+        row = range.start.row
+        lineRange = new Range row, range.start.column,
+          row, @editor.session.getScreenLastRowColumn row
+        subclass = ' golem_error-origin-open'
+      else
+        lineRange = range
+        subclass = ''
+      layer.drawSingleLineMarker stringBuilder, lineRange,
+        'golem_error-origin' + subclass, config
+    draw.type = type
+    draw
 
   doAutocomplete: (e) ->
     editor = @editor
@@ -411,6 +412,9 @@ exports.Mode = class extends TextMode
         mode.finishGroupMutation()
 
   docsTooltip: (token, tooltip) =>
+    activate = =>
+      tooltip.open()
+      @activeTooltip = tooltip
     tooltip.hideAndRemoveMarker();
     if token.scope?
       reference = name: token.value, scope: token.scope
@@ -421,8 +425,10 @@ exports.Mode = class extends TextMode
             @prettyPrintTypeForDoc info
           else
             @createDocTooltipHtml info
-          tooltip.open()
-          @activeTooltip = tooltip
+          activate()
+    else if type = token.type?.type
+      tooltip.setHtml @prettyPrintTypeForDoc rawType: type
+      activate()
 
   closeTooltip: =>
     @detach()
@@ -1925,7 +1931,6 @@ exports.Mode = class extends TextMode
       selectionRange = @rangeWithingAtom state.withinAtom, [state.withinAtomPos, state.withinAtomPos]
       editing = yes
     if selections
-      console.log selections
       # 5. set selection state
       @select selections, editing
       # 6. Perform selection in editor

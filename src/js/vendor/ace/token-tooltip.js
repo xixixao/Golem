@@ -79,7 +79,7 @@ oop.inherits(TokenTooltip, Tooltip);
 
         // Check that we are actually over the token, not to the right of it
         if (session.documentToScreenPosition(docPos).column === col) {
-            var token = session.getTokenAt(docPos.row, docPos.column);
+            var token = this.getTokenAt(docPos);
         }
 
         if (!token) {
@@ -120,15 +120,19 @@ oop.inherits(TokenTooltip, Tooltip);
         }
     };
 
+    this.getTokenAt = function(docPos) {
+        return this.editor.session.getTokenAt(docPos.row, docPos.column);
+    }
+
     this.open = function() {
         var session = this.editor.session;
         this.width = this.getWidth();
         this.height = this.getHeight();
         this.show(null, this.x, this.y);
         session.removeMarker(this.marker);
-        this.range = new Range(this.docPos.row, this.token.start,
-            this.docPos.row, this.token.start + this.token.value.length);
-        this.marker = session.addMarker(this.range, "ace_tooltip-bracket", "text");
+        // this.range = new Range(this.docPos.row, this.token.start,
+        //     this.docPos.row, this.token.start + this.token.value.length);
+        // this.marker = session.addMarker(this.range, "ace_tooltip-bracket", "text");
     }
 
     this.hideAndRemoveMarker = function() {

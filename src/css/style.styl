@@ -289,29 +289,12 @@ infoBar()
 
   /* Typer Error highlighting */
 
-  .ace_marker-layer .golem_error-origin,
-  .ace_marker-layer .golem_error-origin-with-type
+  .ace_marker-layer .golem_error-origin
     position: absolute
     pointer-events: auto
     border-radius: 2px
     box-shadow: -1px 0px 0px 0px rgb(136, 0, 0), 1px 0px 0px 0px rgb(136, 0, 0), 0px -1px 0px 1px rgb(136, 0, 0)
 
-  .ace_marker-layer .golem_error-origin.golem_error-origin-open,
-  .ace_marker-layer .golem_error-origin-with-type.golem_error-origin-open
+  .ace_marker-layer .golem_error-origin.golem_error-origin-open
     box-shadow: -1px 0px 0px 0px rgb(136, 0, 0), 1px 0px 0px 0px #222, 0px -1px 0px 1px rgb(136, 0, 0)
-
-  .ace_marker-layer .golem_error-origin-with-type:hover::after {
-    content: attr(data-type);
-    position: absolute;
-    color: #800;
-    left: 0;
-    top: 17px;
-    width: auto;
-    height: auto;
-    border-style: none;
-    background: #222;
-    padding: 0px 3px;
-    z-index: 500;
-  }
-
 
