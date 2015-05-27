@@ -275,7 +275,7 @@ module.exports = hyper class EditorMain
       console.log "error in source worker", text
       if inDependency or mode.editor.getValue() is source
         @handleSourceFailed text
-        mode.showErrors []
+        mode.removeErrorMarkers()
 
     worker.on 'request', ({data: {moduleName}}) =>
       console.log "source worker requesting", moduleName
