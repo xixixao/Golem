@@ -1252,11 +1252,11 @@ exports.Mode = class extends TextMode
                   # Remove the argument
                   @mutate
                     changeInTree:
-                      at: tangibleWithMargin inlined
+                      at: tangibleWithSomeMargin inlined
                   # Remove the paramater
                   @mutate
                     changeInTree:
-                      at: tangibleWithMargin toTangible atom
+                      at: tangibleWithSomeMargin toTangible atom
               else if (definition = siblingTerm FORWARD, atom) and isExpression definition
                 # Definition name
                 inlined = (toTangible definition)
@@ -2278,8 +2278,15 @@ tangibleBetween = (tangible1, tangible2) ->
   in: parent[(childIndex fromNode)...(childIndexOfTangible to)]
   out: to.out
 
+tangibleWithSomeMargin = (tangible) ->
+  concatTangibles filter _is, [
+    (before = tangibleMargin PREVIOUS, tangible)
+    tangible
+    tangibleMargin NEXT, tangible if not before
+  ]
+
 tangibleWithMargin = (tangible) ->
-  concatTangibles fs = filter _is, [
+  concatTangibles filter _is, [
     tangibleMargin PREVIOUS, tangible
     tangible
     tangibleMargin NEXT, tangible
