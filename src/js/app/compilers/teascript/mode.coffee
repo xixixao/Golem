@@ -33,6 +33,7 @@ log = (arg) ->
   all
   __
   sortedArgs
+  originOf
   _is
   _notEmpty
   _empty
@@ -287,7 +288,7 @@ exports.Mode = class extends TextMode
       {message, conflicts} = firstError
       if message
         @errorMarkers = for origin, i in conflicts when origin
-          trueOrigin = _transformed origin
+          trueOrigin = _transformed originOf origin
           [node] = findNodeWithPosition @ast, trueOrigin.start, trueOrigin.end
           node: node
         @updateErrorMarkers()
