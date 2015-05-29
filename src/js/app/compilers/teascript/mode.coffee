@@ -337,7 +337,7 @@ exports.Mode = class extends TextMode
 
   openAutocomplete: ->
     editor = @editor
-    if !@isAutocompleting()
+    if !@isAutocompleting() or @isInserting()
       if !editor.completer
         # Create new autocompleter
         editor.completer = new CustomAutocomplete()
@@ -345,8 +345,8 @@ exports.Mode = class extends TextMode
       #editor.completer.autoInsert = false;
       @closeTooltip()
       editor.completer.showPopup editor
-    else if @isInserting()
-      @editor.completer.updateCompletions()
+    # else if @isInserting()
+    #   @editor.completer.updateCompletions()
 
   updateAutocomplete: ->
     if @isAutocompleting()
