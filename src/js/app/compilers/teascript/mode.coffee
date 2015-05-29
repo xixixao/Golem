@@ -287,8 +287,8 @@ exports.Mode = class extends TextMode
     if firstError
       {message, conflicts} = firstError
       if message
-        @errorMarkers = for origin, i in conflicts when origin
-          trueOrigin = _transformed originOf origin
+        @errorMarkers = for type, i in conflicts when type and origin = originOf type
+          trueOrigin = _transformed origin
           [node] = findNodeWithPosition @ast, trueOrigin.start, trueOrigin.end
           node: node
         @updateErrorMarkers()
