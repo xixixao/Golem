@@ -587,13 +587,6 @@ exports.Mode = class extends TextMode
 
   addVerticalCommands: ->
     @editor.commands.addCommands
-      'add a new sibling expression on the next line':
-        bindKey: win: 'Enter', mac: 'Enter'
-        multiSelectAction: 'forEach'
-        exec: =>
-          @replaceSpace FORWARD, '\n'
-
-
       'up to atom or position':
         bindKey: win: 'Up', mac: 'Up'
         multiSelectAction: 'forEach'
@@ -605,6 +598,12 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach'
         exec: =>
           # noop
+
+      'add a new sibling expression on the next line':
+        bindKey: win: 'Enter', mac: 'Enter'
+        multiSelectAction: 'forEach'
+        exec: =>
+          @replaceSpace FORWARD, '\n'
 
       # TODO: this is very useful, should add on a new line inside of definition
       #       or something like that
