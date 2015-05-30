@@ -2257,7 +2257,7 @@ findAllOccurences = (nodes) -> (node) ->
       if nodesEqual nodes[0], node
         [[node]]
     else if (isForm node) and node.length >= numNodes
-      for i in [0..node.length - numNodes] when nodeListsEqual (terms = node[i...(i + numNodes)]), nodes
+      for i in [0..node.length - numNodes] when nodesEqual (terms = node[i...(i + numNodes)]), nodes
         terms
   child =
     if isForm node
