@@ -1584,10 +1584,27 @@ exports.Mode = class extends TextMode
   moveSelectionByLine: (direction) ->
     # like moveSelection but swap all tokens on each line
     selected = @selectedTangible()
-    selectedLine = insToTangible allOnLine toNode selected
+    selectedLine = insToTangible @allOnLine toNode selected
     if onSiblingLine = sibling direction, edgeOfList direction, padding direction, selectedLine
-      replacedLine = insToTangible allOnLine onSiblingLine
+      replacedLine = insToTangible @allOnLine onSiblingLine
       @swap direction, selectedLine, replacedLine
+
+  allOnLine: (node) ->
+    isOnLine = (node) =>
+      range = @rangeOfNodes [node]
+      range.start.row is range.end.row
+    isInline = (node) ->
+      (isExpression node) or (isSpace node)
+    towards = (dir) ->
+      n = node
+      while (prev = sibling dir, n) and isInline prev
+        n = prev
+    if (parent = parentOf node) and isOnLine parent
+      return @allOnLine parent
+    concat [
+      (towards FIRST).reverse()
+      (if isInline node then [node] else [])
+      (towards LAST)]
 
   moveSelection: (direction) ->
     selected = @selectedTangible()
@@ -2553,18 +2570,6 @@ editableLength = (atom) ->
       1
     else
       0
-
-allOnLine = (node) ->
-  isInline = (node) ->
-    (isExpression node) or (isSpace node)
-  towards = (dir) ->
-    n = node
-    while (prev = sibling dir, n) and isInline prev
-      n = prev
-  concat [
-    (towards FIRST).reverse()
-    (if isInline node then [node] else [])
-    (towards LAST)]
 
 # Inspired by Ace
 changeNumericalAt = (symbol, offset, amount) ->
