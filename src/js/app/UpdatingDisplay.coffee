@@ -101,13 +101,14 @@ module.exports = hyper class UpdatingDisplay
           result.ast.splice 1, result.ast.length - 3
         mode.updateAst result.ast, result.errors
 
-        @setState
-          compiled:
-            if result.errors
-              firstError = result.errors[0]
-              new Error firstError.message or firstError
-            else
-              result.js
+        if not result.malformed
+          @setState
+            compiled:
+              if result.errors
+                firstError = result.errors[0]
+                new Error firstError.message or firstError
+              else
+                result.js
 
     commandWorker.on 'error', ({data: {text}}) =>
       console.log "updaitng display error", text
