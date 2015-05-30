@@ -591,17 +591,17 @@ exports.Mode = class extends TextMode
 
   addVerticalCommands: ->
     @editor.commands.addCommands
-      'up to atom or position':
+      'move up to atom or position':
         bindKey: win: 'Up', mac: 'Up'
         multiSelectAction: 'forEach'
         exec: =>
-          # noop
+          @selectLineAdjecentAtomOrPosition PREVIOUS
 
-      'down to atom or position':
+      'move down to atom or position':
         bindKey: win: 'Down', mac: 'Down'
         multiSelectAction: 'forEach'
         exec: =>
-          # noop
+          @selectLineAdjecentAtomOrPosition NEXT
 
       'add a new sibling expression on the next line':
         bindKey: win: 'Enter', mac: 'Enter'
@@ -1710,6 +1710,28 @@ exports.Mode = class extends TextMode
         in: []
         out: if direction is FORWARD then [insertPos] else added
 
+  selectLineAdjecentAtomOrPosition: (direction) ->
+    pos = @startPos selected = toNode @selectedTangible()
+    column = @editor.selection.$desiredColumn ? pos.column
+    row = pos.row + direction
+    adjecent = @tangibleAtPos row: row, column: column + 1
+    toSelect =
+      if isForm form = toNode adjecent
+        formStart = @startPos form
+        formEdge = @edgeOfNode direction, form
+        insideDirection =
+          if formEdge.row is row and formStart.column > column
+            FIRST
+          else if isNodeInside selected, form
+            direction
+          else
+            (opposite direction)
+        termToTangible limitTerm insideDirection, toNode adjecent
+      else
+        adjecent
+    @mutate
+      tangibleSelection: toSelect
+      desiredColumn: column
 
   selectFollowingAtomOrPosition: (direction) ->
     if @isSelectingMultiple()
@@ -1739,7 +1761,7 @@ exports.Mode = class extends TextMode
       else
         inSelection: @realParentOfSelected())
 
-  # Returns node at cursor (only atoms, not forms)
+  # Tangible at pos, can be an atom or a form
   tangibleAtPos: (pos) ->
     # TODO: return selections object
     # console.log @posToIdx pos
@@ -1753,7 +1775,7 @@ exports.Mode = class extends TextMode
     after or before
 
   tokensSurroundingPos: (pos) ->
-    idx = @posToIdx pos
+    idx = @trimmedPosToIdx pos
     findNodesBetween @ast, idx - 1, idx + 1
 
   tangibleRange: (tangible) ->
@@ -1833,7 +1855,7 @@ exports.Mode = class extends TextMode
     if isDelimitedAtom atom
       @idxToPos (edgeIdxOfNode direction, atom) + (opposite direction)
     else
-      @edgeOfToken direction, atom
+      @edgeOfNode direction, atom
 
   realParentOfSelected: ->
     if isReal parent = @parentOfSelected()
@@ -1960,7 +1982,7 @@ exports.Mode = class extends TextMode
       # 5. set selection state
       @select selections, editing
       # 6. Perform selection in editor
-      @setSelectionRange selectionRange
+      @setSelectionRange selectionRange, state.desiredColumn
     # 7. Add new multi-select ranges
     if state.newSelections
       for tangible in state.newSelections
@@ -1987,8 +2009,9 @@ exports.Mode = class extends TextMode
     editorSelection.$nodes = selections
     editorSelection.$editing = shouldEdit
 
-  setSelectionRange: (range) ->
+  setSelectionRange: (range, desiredColumn) ->
     @editor.selection.setSelectionRange range
+    @editor.selection.$desiredColumn = desiredColumn
 
   updateEditingMarkers: ->
     editorSelections =
@@ -2088,7 +2111,7 @@ exports.Mode = class extends TextMode
   endOfLine: (pos) ->
     @idxToPos (@posToIdx row: pos.row + 1, column: 0) - 1
 
-  edgeOfToken: (direction, node) ->
+  edgeOfNode: (direction, node) ->
     @idxToPos edgeIdxOfNode direction, node
 
   nodeRange: (node) ->
@@ -2116,6 +2139,9 @@ exports.Mode = class extends TextMode
   # Proc Pos Idx
   posToIdx: (pos) ->
     @editor.session.doc.positionToIndex pos
+
+  trimmedPosToIdx: (pos) ->
+    @posToIdx @editor.session.$clipPositionToDocument pos.row, pos.column
 
   # Proc Pos Pos
   shiftPosBy: (pos, offset) ->
@@ -2489,6 +2515,13 @@ memorable = (tangible) ->
   else
     [tangible.in, insToTangible]
 
+termToTangible = (term) ->
+  if isExpression term
+    toTangible term
+  else
+    in: []
+    out: validOut term
+
 toTangible = (node) ->
   insToTangible [node]
 
@@ -2512,13 +2545,9 @@ validOut = (node) ->
 # followingToken = (direction, node) ->
 #   limitToken (opposite direction), (sibling direction, node)
 
-limitToken = (direction, node) ->
-  if (isForm node)
-    inside = node[1...-1]
-    if _notEmpty inside
-      limitToken direction, (edgeOfList direction, inside)
-    else
-      edgeOfList direction, node
+limitTerm = (direction, node) ->
+  if isForm node
+    limitTerm direction, edgeOfList direction, _terms node
   else
     node
 
