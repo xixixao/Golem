@@ -95,6 +95,9 @@ exports.Mode = class extends TextMode
       return undefined
     findNodesBetween (topList @ast), start, end
 
+  getTokenAt: (pos) ->
+    @tokenFollowingPos pos
+
   # onDocumentChange: (doc) =>
   #   # console.log "tokenizing document", @editor.getValue()
   #   if not @ast
@@ -413,23 +416,24 @@ exports.Mode = class extends TextMode
         mode.finishGroupMutation()
 
   docsTooltip: (token, tooltip) =>
-    activate = =>
+    activate = (html) =>
+      tooltip.setHtml html
       tooltip.open()
       @activeTooltip = tooltip
     tooltip.hideAndRemoveMarker();
     if token.scope?
-      reference = name: token.value, scope: token.scope
+      reference = name: token.symbol, scope: token.scope
       @worker.call 'docsFor', [reference], (info) =>
         if info?.rawType
           # TODO: until we insert the type directly into text
-          tooltip.setHtml if token.label is 'name'
+          activate if token.label is 'name'
             @prettyPrintTypeForDoc info
           else
             @createDocTooltipHtml info
-          activate()
     else if type = token.type?.type
-      tooltip.setHtml @prettyPrintTypeForDoc rawType: type
-      activate()
+      activate @prettyPrintTypeForDoc rawType: type
+    else if token.malformed
+      activate token.malformed
 
   closeTooltip: =>
     @detach()
@@ -2706,8 +2710,6 @@ convertToAceToken = (token) ->
       "“#{token.symbol[1...-1]}”"
     else
        token.symbol
-  scope: token.scope
-  label: token.label
   type:
     (if (isDelim token) and token.parent.malformed or token.malformed
       'token_malformed'

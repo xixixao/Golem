@@ -8,4 +8,4 @@ module.exports = class CombinedTooltip extends TokenTooltip
     for id, marker of markers
       if marker.range.contains row, column
         return marker
-    @editor.session.getTokenAt row, column
+    @editor.session.getMode().getTokenAt {row, column}
