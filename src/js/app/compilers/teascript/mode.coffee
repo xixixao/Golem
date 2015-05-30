@@ -430,10 +430,10 @@ exports.Mode = class extends TextMode
             @prettyPrintTypeForDoc info
           else
             @createDocTooltipHtml info
-    else if type = token.type?.type
-      activate @prettyPrintTypeForDoc rawType: type
     else if token.malformed
       activate token.malformed
+    else if type = token.type?.type
+      activate @prettyPrintTypeForDoc rawType: type
 
   closeTooltip: =>
     @detach()
