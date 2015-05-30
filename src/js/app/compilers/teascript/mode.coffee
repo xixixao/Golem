@@ -587,7 +587,7 @@ exports.Mode = class extends TextMode
 
   addVerticalCommands: ->
     @editor.commands.addCommands
-      'add new sibling expression on new line':
+      'add a new sibling expression on the next line':
         bindKey: win: 'Enter', mac: 'Enter'
         multiSelectAction: 'forEach'
         exec: =>
@@ -606,11 +606,13 @@ exports.Mode = class extends TextMode
         exec: =>
           # noop
 
-      'add node on the next line':
-        bindKey: win: 'Ctrl-Enter', mac: 'Ctrl-Enter'
-        exec: =>
-          @insertSpaceAt FORWARD, '\n',
-            @tokenFollowingPos @endOfLine @cursorPosition()
+      # TODO: this is very useful, should add on a new line inside of definition
+      #       or something like that
+      # 'add node on the next line':
+      #   bindKey: win: 'Ctrl-Enter', mac: 'Ctrl-Enter'
+      #   exec: =>
+      #     @insertSpaceAt FORWARD, '\n',
+      #       @tokenFollowingPos @endOfLine @cursorPosition()
 
           # if (token = @rightActiveToken()) and parent = token.parent
           #   @deselect()
@@ -618,20 +620,20 @@ exports.Mode = class extends TextMode
           #   @editor.moveCursorToPosition @tokenVisibleEnd parent
           #   @editor.insert '\n'
 
-      'add new sibling expression on previous line':
+      'add a new sibling expression on the previous line':
         bindKey: win: 'Shift-Enter', mac: 'Shift-Enter'
         multiSelectAction: 'forEach'
         exec: =>
           @replaceSpace BACKWARD, '\n'
 
-      'jump to next reference':
+      'select the next reference of selection':
         bindKey: win: 'Tab', mac: 'Tab'
         scrollIntoView: 'center'
         multiSelectAction: 'forEach'
         exec: =>
           @selectReferenceInDirection FORWARD
 
-      'jump to previous reference':
+      'select the previous reference of selection':
         bindKey: win: 'Shift-Tab', mac: 'Shift-Tab'
         scrollIntoView: 'center'
         multiSelectAction: 'forEach'
@@ -723,7 +725,7 @@ exports.Mode = class extends TextMode
           @mutate
             tangibleSelection: insideTangible @ast
 
-      'up the tree':
+      'select enclosing expression':
         bindKey: win: 'Ctrl-Up', mac: 'Command-Up'
         multiSelectAction: 'forEach'
         exec: =>
@@ -734,55 +736,55 @@ exports.Mode = class extends TextMode
               else
                 @realParentOfSelected()
 
-      'down the tree':
+      'select the first expression inside selection':
         bindKey: win: 'Ctrl-Down', mac: 'Command-Down'
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
           @moveDown FIRST, LAST
 
-      'down the tree to the last child':
+      'select the last expression inside selection':
         bindKey: win: 'Ctrl-Shift-Down', mac: 'Command-Shift-Down'
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
           @moveDown LAST, FIRST
 
-      'next atom or position':
+      'move to next atom or position':
         bindKey: win: 'Right', mac: 'Right'
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
           @selectFollowingAtomOrPosition NEXT
 
-      'previous atom or position':
+      'move to previous atom or position':
         bindKey: win: 'Left', mac: 'Left'
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
           @selectFollowingAtomOrPosition PREVIOUS
 
-      'next sibling':
+      'select next sibling expression':
         bindKey: win: 'Ctrl-Right', mac: 'Command-Right'
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
           @selectSibling NEXT
 
-      'previous sibling':
+      'select previous sibling expression':
         bindKey: win: 'Ctrl-Left', mac: 'Command-Left'
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
           @selectSibling PREVIOUS
 
-      'include next expression':
+      'include next expression in selection':
         bindKey: win: 'Shift-Right', mac: 'Shift-Right'
         multiSelectAction: 'forEach'
         exec: =>
           @expandSelection NEXT
 
-      'include previous expression':
+      'include previous expression in selection':
         bindKey: win: 'Shift-Left', mac: 'Shift-Left'
         multiSelectAction: 'forEach'
         exec: =>
@@ -809,7 +811,7 @@ exports.Mode = class extends TextMode
         exec: =>
           @remove BACKWARD
 
-      'remove ala delete':
+      'remove-ala-delete':
         bindKey: win: 'Delete', mac: 'Delete'
         multiSelectAction: 'forEach'
         autocomplete: yes
@@ -829,61 +831,61 @@ exports.Mode = class extends TextMode
         exec: =>
           @removeNewLines()
 
-      'jump to next occurence':
+      'jump to next occurence of the selection':
         bindKey: win: 'Ctrl-Tab', mac: 'Alt-Tab'
         scrollIntoView: 'center'
         multiSelectAction: 'forEach'
         exec: =>
           @selectOccurenceInDirection FORWARD
 
-      'jump to previous occurence':
+      'jump to previous occurence of the selection':
         bindKey: win: 'Ctrl-Shift-Tab', mac: 'Alt-Shift-Tab'
         scrollIntoView: 'center'
         multiSelectAction: 'forEach'
         exec: =>
           @selectOccurenceInDirection BACKWARD
 
-      'select next reference':
+      'multiselect next reference':
         bindKey: win: 'Ctrl-S', mac: 'Ctrl-S'
         scrollIntoView: 'center'
         exec: =>
           @multiSelectReferenceInDirection FORWARD
 
-      'select previous reference':
+      'multiselect previous reference':
         bindKey: win: 'Ctrl-Shift-S', mac: 'Ctrl-Shift-S'
         scrollIntoView: 'center'
         exec: =>
           @multiSelectReferenceInDirection BACKWARD
 
-      'shift left':
+      'shift expression backward':
         bindKey: win: 'Alt-Left', mac: 'Alt-Left'
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
           @moveSelection BACKWARD
 
-      'shift right':
+      'shift expression forward':
         bindKey: win: 'Alt-Right', mac: 'Alt-Right'
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
           @moveSelection FORWARD
 
-      'shift by line up':
+      'shift all expressions on a line up':
         bindKey: win: 'Alt-Up', mac: 'Alt-Up'
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
           @moveSelectionByLine BACKWARD
 
-      'shift by line down':
+      'shift all expressions on a line down':
         bindKey: win: 'Alt-Down', mac: 'Alt-Down'
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
           @moveSelectionByLine FORWARD
 
-      'add char':
+      'insert a character':
         bindKey: win: '\\', mac: '\\'
         multiSelectAction: 'forEach'
         #autocomplete: yes # TODO: add char autocompletion for special chars
@@ -901,7 +903,7 @@ exports.Mode = class extends TextMode
         exec: =>
           @wrap '(', {insert: yes}, ' ', {selected: yes}, ')'
 
-      'wrap in parens':
+      'wrap in parentheses':
         bindKey: win: '(', mac: '('
         multiSelectAction: 'forEach'
         autocomplete: yes
@@ -922,7 +924,7 @@ exports.Mode = class extends TextMode
         exec: =>
           @insertOpeningDelim '{', '}'
 
-      'add quotes':
+      'insert or surround by quotes':
         bindKey: win: '"', mac: '"'
         multiSelectAction: 'forEach'
         exec: =>
@@ -946,19 +948,19 @@ exports.Mode = class extends TextMode
                 withinAtom: atom
                 withinAtomPos: selected.length + 1)
 
-      'close parent, same as up for )':
+      'select enclosing form or insert )':
         bindKey: win: ')', mac: ')'
         multiSelectAction: 'forEach'
         exec: =>
           @closeParentOrInsert ')'
 
-      'close parent, same as up for }':
+      'select enclosing form or insert }':
         bindKey: win: '}', mac: '}'
         multiSelectAction: 'forEach'
         exec: =>
           @closeParentOrInsert '}'
 
-      'close parent, same as up for ]':
+      'select enclosing form or insert ]':
         bindKey: win: ']', mac: ']'
         multiSelectAction: 'forEach'
         exec: =>
@@ -976,7 +978,7 @@ exports.Mode = class extends TextMode
         exec: =>
           @changeNumerical -1
 
-      'jump to parent definition':
+      'select enclosing definition':
         bindKey: win: 'Ctrl-Shift-0', mac: 'Command-Shift-0'
         multiSelectAction: 'forEach'
         exec: =>
@@ -1024,7 +1026,7 @@ exports.Mode = class extends TextMode
                 withinAtom: label
                 withinAtomPos: 0)
 
-      'add comment':
+      'insert a comment':
         bindKey: win: '#', mac: '#'
         multiSelectAction: 'forEach'
         exec: =>
@@ -1051,7 +1053,7 @@ exports.Mode = class extends TextMode
               @finishGroupMutation()
 
       # Temporary
-      'show type of expression':
+      'show type of an expression':
         bindKey: win: 'Ctrl-Shift-T', mac: 'Ctrl-Shift-T'
         multiSelectAction: 'forEach'
         exec: =>
@@ -1065,11 +1067,12 @@ exports.Mode = class extends TextMode
       # For debugging
       'remove all source':
         bindKey: win: 'Ctrl-Shift-Backspace', mac: 'Ctrl-Shift-Backspace'
+        document: no
         exec: =>
           @editor.setValue ''
           @initAst ''
 
-      'replace parent with current selection':
+      'replace enclosing expression with current selection':
         bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
         multiSelectAction: 'forEach'
         exec: =>
@@ -1083,7 +1086,7 @@ exports.Mode = class extends TextMode
                 at: insToTangible [parent]
               inSelections: lifted
 
-      'wrap current in a function':
+      'wrap current selection in a Function':
         bindKey: win: 'Ctrl-F', mac: 'Ctrl-F'
         multiSelectAction: 'forEach'
         autocomplete: yes
@@ -1094,7 +1097,7 @@ exports.Mode = class extends TextMode
           separator = if (parentOf (toNode @selectedTangible())) or @isSingleLineInput then [' '] else ['\n', '  ']
           @wrap (concat [['(', 'fn', ' ', '[]'], separator, [{selected: yes, select: yes}, ')']])...
 
-      'wrap current to match':
+      'Match on current selection':
         bindKey: win: 'Ctrl-M', mac: 'Ctrl-M'
         multiSelectAction: 'forEach'
         autocomplete: yes
@@ -1106,7 +1109,7 @@ exports.Mode = class extends TextMode
             @wrap '(', 'match', ' ', {selected: yes}, '\n',
               '  ', {insert: yes}, ' ', ')'
 
-      'wrap current in a match':
+      'wrap in a Match to return current selection':
         bindKey: win: 'Ctrl-Shift-M', mac: 'Ctrl-Shift-M'
         multiSelectAction: 'forEach'
         autocomplete: yes
@@ -1114,7 +1117,7 @@ exports.Mode = class extends TextMode
           @wrap '(', 'match', ' ', {insert: yes}, '\n',
             '  ', ' ', {selected: yes}, ')'
 
-      'replace expression by new function param':
+      'replace selection with an Added function parameter':
         bindKey: win: 'Ctrl-Shift-A', mac: 'Ctrl-A'
         multiSelectAction: 'forEach'
         exec: =>
@@ -1141,7 +1144,7 @@ exports.Mode = class extends TextMode
               ]
             @finishGroupMutation()
 
-      'select all occurences':
+      'select all occurences of selection to Rename':
         bindKey: win: 'Ctrl-R', mac: 'Ctrl-R'
         multiSelectAction: 'forEach'
         exec: =>
@@ -1154,7 +1157,7 @@ exports.Mode = class extends TextMode
               inSelection: atom
               newSelections: tangibles
 
-      'define selected token':
+      'Define selected token':
         bindKey: win: 'Ctrl-D', mac: 'Ctrl-D'
         indirect: yes
         exec: (editor, {targetEditor} = {}) =>
@@ -1237,7 +1240,7 @@ exports.Mode = class extends TextMode
                 newSelections: join rememberedHoles[1...], [newHole()]
               @finishGroupMutation()
 
-      'inline selected expression or replace name by its definition':
+      'Inline selected expression or replace a name by its definition':
         bindKey: win: 'Ctrl-I', mac: 'Ctrl-I'
         multiSelectAction: 'forEach'
         exec: =>
@@ -1334,7 +1337,7 @@ exports.Mode = class extends TextMode
                   inSelections: reindentedFn
             @finishGroupMutation()
 
-      'abstract with lambda':
+      'abstract an operator with a Lambda':
         bindKey: win: 'Ctrl-L', mac: 'Ctrl-L'
         multiSelectAction: 'forEach'
         exec: =>
@@ -1365,7 +1368,7 @@ exports.Mode = class extends TextMode
                   args = info.arity
                   abstractToLambda [op], args
 
-      'push lambda to outer expression':
+      'push a lambda inside of a call to the Outer expression':
         bindKey: win: 'Ctrl-O', mac: 'Ctrl-O'
         multiSelectAction: 'forEach'
         exec: =>
@@ -1394,7 +1397,7 @@ exports.Mode = class extends TextMode
               inSelection: newFun
             @finishGroupMutation()
 
-      'push definition up':
+      'push definition Up':
         bindKey: win: 'Ctrl-U', mac: 'Ctrl-U'
         multiSelectAction: 'forEach'
         exec: =>
