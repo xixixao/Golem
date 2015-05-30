@@ -1324,6 +1324,7 @@ var Autocomplete = function() {
             var lineHeight = renderer.layerConfig.lineHeight;
 
             var pos = renderer.$cursorLayer.getPixelPosition(this.base, true);
+            pos.left -= renderer.$showGutter ? 0 : 35;
             pos.left -= this.popup.getTextLeftOffset();
 
             var rect = editor.container.getBoundingClientRect();
