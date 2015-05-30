@@ -1,4 +1,4 @@
-{_div, _p, _table, _tbody, _tr, _td, _code} = require 'hyper'
+{_div, _p, _table, _tbody, _tr, _td, _code, _b} = require 'hyper'
 
 _ModeBrowser = hyper class ModeBrowser
   render: ->
@@ -33,4 +33,37 @@ class ListModesCommand
       modes: state.modes.getAll()
       current: editor.refs.sourceEditor.mode
 
-module.exports = [SwitchModeCommand, ListModesCommand]
+
+_KeyboardShortcutsList = hyper class KeyboardShortcutsList
+  shouldList: (command, name) ->
+    command.bindKey and command.document isnt no and /\s/.test name
+
+  highlight: (name) ->
+    name.replace /([A-Z])/g, "<u>$1</u>"
+
+  shortcut: (command) ->
+    platform = @props.platform
+    command.logicalKey?[platform] or command.bindKey[platform]
+
+  render: ->
+    _table _tbody {},
+      for name, command of @props.commands when @shouldList command, name
+        _tr key: name,
+          _td
+            style: 'vertical-align': 'top',
+            "#{@shortcut command} "
+          _td
+            style: 'vertical-align': 'top'
+            dangerouslySetInnerHTML: __html: @highlight name
+
+class ListKeyboardShortcutsCommand
+  @defaultSymbols = ['keys']
+  @description = 'List editing keyboard shortcuts'
+  @symbols = @defaultSymbols
+
+  @execute = (args, state, editor) ->
+    editor.log _KeyboardShortcutsList
+      commands: state.mode.editor.commands.commands
+      platform: state.mode.editor.commands.platform
+
+module.exports = [ListKeyboardShortcutsCommand]

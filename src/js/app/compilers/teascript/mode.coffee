@@ -898,6 +898,7 @@ exports.Mode = class extends TextMode
 
       'wrap in a call':
         bindKey: win: 'Ctrl-Shift-9', mac: 'Command-Shift-9'
+        logicalKey: win: 'Ctrl-(', mac: 'Command-('
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
@@ -980,6 +981,7 @@ exports.Mode = class extends TextMode
 
       'select enclosing definition':
         bindKey: win: 'Ctrl-Shift-0', mac: 'Command-Shift-0'
+        logicalKey: win: 'Ctrl-)', mac: 'Command-)'
         multiSelectAction: 'forEach'
         exec: =>
           @mutate
@@ -1072,7 +1074,7 @@ exports.Mode = class extends TextMode
           @editor.setValue ''
           @initAst ''
 
-      'replace enclosing expression with current selection':
+      'replace enclosing Parent expression with current selection':
         bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
         multiSelectAction: 'forEach'
         exec: =>

@@ -12,7 +12,7 @@ _OutputDisplay = require './OutputDisplay'
 
 TimeLine = require './UniqueTimeLine'
 CommandParser = require './CommandParser'
-# Modes = require './Modes'
+Modes = require './Modes'
 History = require './History'
 Memory = require './Memory'
 
@@ -248,8 +248,8 @@ module.exports = hyper class EditorMain
       require './commands/builtin/Help'
       require './commands/builtin/Output'
       require './commands/builtin/Runtime'
-      # require './commands/builtin/Modes'
       require './commands/builtin/Files'
+      require './commands/builtin/Modes'
       require './commands/builtin/Download'
       require './commands/builtin/Demos'
     ].flatten()
