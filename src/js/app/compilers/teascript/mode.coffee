@@ -1421,7 +1421,7 @@ exports.Mode = class extends TextMode
               else
                 if isName name = siblingTerm BACKWARD, top
                   tangibleBetween (toTangible name), (toTangible top)
-            if definitionPair
+            if definitionPair and parentOf top
               parent = ancestorAtDefinitonList top.parent
               movedTo = nodeEdgeOfTangible LAST, toTangible parent
               [selectionNodes, recover] = memorable selection
@@ -2209,7 +2209,7 @@ argumentNamesFromCall = (call) ->
 
 ancestorAtDefinitonList = (node) ->
   if (parent = parentOf node)
-    if (isFunction parent) and isExpression node
+    if (isParentOfDefinitionList parent) and isExpression node
       node
     else
       ancestorAtDefinitonList parent
@@ -2236,8 +2236,11 @@ findFunctionBody = (form) ->
 isBetaReducible = (expression) ->
   (isCall expression) and isFunction (_operator expression)
 
+isParentOfDefinitionList = (expression) ->
+  (isFunction expression) or (isForm expression) and (_operator expression)?.symbol is 'syntax'
+
 isFunction = (expression) ->
-  (isForm expression) and (_operator expression).symbol is 'fn'
+  (isForm expression) and (_operator expression)?.symbol is 'fn'
 
 definitionAncestorOf = (node) ->
   if (parent = parentOf node)
