@@ -58,7 +58,8 @@ var jsDump;
       arr = arr.join( comma + s + inner);
     if( !arr )
       return pre + post;
-    return inline ? pre + arr + post : [ pre, inner + arr, base + post ].join(s);
+    var afterPre = /\w$/.test(pre) ? ' ' : ''
+    return inline ? pre + afterPre + arr + post : [ pre, inner + arr, base + post ].join(s);
   }
   function delim (arr, opening, closing) {
     var i = arr.length, ret = Array(i);
@@ -231,18 +232,18 @@ var jsDump;
         var jsRepresentation = this.parse(value.toJS());
         var delims;
         if (Immutable.Set.isSet(value)) {
-          delims = ['(Set ', ')'];
+          delims = ['(Set', ')'];
         } else if (Immutable.List.isList(value)) {
           delims = ['{', '}'];
         } else if (Immutable.Map.isMap(value)) {
           if (value.isEmpty() || typeof value.findKey(function(){return true;}) != 'string') {
-            delims = ['(Map ', ')'];
+            delims = ['(Map', ')'];
             value = value.keySeq().interleave(value.valueSeq());
           } else {
             return this.parse(value.toObject());
           }
         } else if (Immutable.Stack.isStack(value)) {
-          delims = ['(List ', ')'];
+          delims = ['(List', ')'];
         }
         return delim.call(this, value.toArray(), delims[0], delims[1]);
       }
