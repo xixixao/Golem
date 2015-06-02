@@ -17,9 +17,7 @@ require
   shim:
     'vendor/jquery/jquery.cookie': ['jquery']
     'vendor/jquery/jquery.total-storage': ['jquery']
-    'vendor/jquery/jquery.animate-colors': ['jquery']
     'vendor/jquery/jquery.select-text': ['jquery']
-    'vendor/jquery/jquery.repeat': ['jquery']
     'vendor/jquery/jquery-ui-draggable': ['jquery']
   , ['vendor/sugar/sugar', 'React', 'ace/ace'], ->
     require ['app/EditorMain']
