@@ -1,3 +1,5 @@
+beautify = (require 'beautify').js_beautify
+
 ifCompiled = (state, editor, fn) ->
     # TODO: compile if not autocompiling
     # compileCode() unless state.compiledJs
@@ -7,8 +9,8 @@ ifCompiled = (state, editor, fn) ->
       editor.displayMessage 'compiler', "Fix: '#{state.message.value}' first"
 
 stripImports = (js) ->
-  js.replace /^(.|\n)*var (\w+) = Shem\.\w+\.\2;\n/, ''
-    .replace /\nreturn \{[^\}]+\};\n\}\(\)\);$/, ''
+  beautify (js.replace /^(.|\n)*var (\w+) = Shem\.\w+\.\2;\n/, ''
+    .replace /\nreturn \{[^\}]+\};\n\}\(\)\);$/, '')
 
 class DumpCommand
   @defaultSymbols = ['dump', 'd']

@@ -1,5 +1,14 @@
 {_div, _p, _table, _tbody, _tr, _th, _td, _code} = require 'hyper'
 
+sortBy = (array, property) ->
+  array.slice().sort (a, b) ->
+    if (a[property] > b[property])
+      1
+    else if (a[property] < b[property])
+      -1
+    else
+      0
+
 # Autocompletion for first arguments, which is a file name
 fileAutocomplete = (includeCurrent) -> (args, state, editor, callback) ->
   callback null,
@@ -96,7 +105,7 @@ _FileBrowser = hyper class FileBrowser
     @props.memory.off 'lastOpen', @handleChange
 
   render: ->
-    data = Object.values(@state.data).sortBy 'name'
+    data = sortBy (file for _, file of @state.data), 'name'
     if data.length is 0
       _div "No files found"
     else

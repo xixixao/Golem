@@ -1,5 +1,11 @@
 Emitter = require 'tinyemitter'
 
+findAll = (object, filter) ->
+  found = {}
+  for k, v of object when filter k, v
+    found[k] = v
+  found
+
 module.exports = class Memory
   constructor: ->
     @unnamed = "@unnamed"
@@ -27,7 +33,7 @@ module.exports = class Memory
   fileTable: (fileName, fileData) ->
     oldTable = (@_fileTableStorage()) or {}
 
-    table = Object.findAll oldTable, (oldFileName) -> oldFileName isnt fileName
+    table = findAll oldTable, (oldFileName) -> oldFileName isnt fileName
     if fileData
       table[fileName] = fileData
 
@@ -38,7 +44,7 @@ module.exports = class Memory
     $.totalStorage "fileTableCOOKIEv4", table
 
   getFileTable: ->
-    Object.findAll @_fileTableStorage(), (name) =>
+    findAll @_fileTableStorage(), (name) =>
       name isnt @unnamed
 
   _fileStorage: (name, value) ->

@@ -1,5 +1,12 @@
 {_span} = hyper = require 'hyper'
 
+merge = (a, b) ->
+  merged = {}
+  for k, v of a
+    merged[k] = v
+  for k, v of b
+    merged[k] = v
+  merged
 
 module.exports = hyper class TransitionContainer
 
@@ -13,7 +20,7 @@ module.exports = hyper class TransitionContainer
       if @props.children
         @props.on
       else
-        Object.merge @savedStyle, @props.off
+        merge @savedStyle, @props.off
 
     component = @props.component || _span
 

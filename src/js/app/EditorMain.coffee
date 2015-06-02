@@ -244,7 +244,7 @@ module.exports = hyper class EditorMain
     sourceEditorHeight: 300
     # modes: Modes
     autosaveDelay: 6000
-    commands: [
+    commands: [].concat [
       require './commands/builtin/Help'
       require './commands/builtin/Output'
       require './commands/builtin/Runtime'
@@ -253,7 +253,7 @@ module.exports = hyper class EditorMain
       require './commands/builtin/Download'
       require './commands/builtin/Demos'
       require './commands/builtin/Intro'
-    ].flatten()
+    ]...
 
   mixins: [
     SetIntervalMixin

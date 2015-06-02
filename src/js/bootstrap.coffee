@@ -14,10 +14,11 @@ require
     'coffee-script': 'vendor/coffee-script/coffee-script'
     'tinyemitter': 'vendor/tiny-emitter/tinyemitter'
     'file-saver': 'vendor/file-saver/FileSaver'
+    'beautify': 'vendor/js-beautify/beautify'
   shim:
     'vendor/jquery/jquery.cookie': ['jquery']
     'vendor/jquery/jquery.total-storage': ['jquery']
     'vendor/jquery/jquery.select-text': ['jquery']
     'vendor/jquery/jquery-ui-draggable': ['jquery']
-  , ['vendor/sugar/sugar', 'React', 'ace/ace'], ->
+  , ['React', 'ace/ace'], ->
     require ['app/EditorMain']
