@@ -15,6 +15,7 @@ require
     'tinyemitter': 'vendor/tiny-emitter/tinyemitter'
     'file-saver': 'vendor/file-saver/FileSaver'
     'beautify': 'vendor/js-beautify/beautify'
+    'hljs': 'vendor/highlight/highlight'
   shim:
     'vendor/jquery/jquery.cookie': ['jquery']
     'vendor/jquery/jquery.total-storage': ['jquery']

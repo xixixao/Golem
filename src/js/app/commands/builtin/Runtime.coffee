@@ -1,4 +1,5 @@
 beautify = (require 'beautify').js_beautify
+{highlight} = hljs = (require 'hljs')
 
 ifCompiled = (state, editor, fn) ->
     # TODO: compile if not autocompiling
@@ -9,8 +10,12 @@ ifCompiled = (state, editor, fn) ->
       editor.displayMessage 'compiler', "Fix: '#{state.message.value}' first"
 
 stripImports = (js) ->
-  beautify (js.replace /^(.|\n)*var (\w+) = Shem\.\w+\.\2;\n/, ''
-    .replace /\nreturn \{[^\}]+\};\n\}\(\)\);$/, '')
+  stripped =
+    js.replace /^(.|\n)*var (\w+) = Shem\.\w+\.\2;\n/, ''
+      .replace /^(.|\n)*'use strict'\n/, '' # for Prelude
+      .replace /\nreturn \{[^\}]+\};\n\}\(\)\);$/, ''
+  {value} = ret = highlight 'javascript', beautify stripped, indent_size: 2
+  value
 
 class DumpCommand
   @defaultSymbols = ['dump', 'd']
@@ -21,10 +26,10 @@ class DumpCommand
     # TODO: add full output and line numbers
     # ("#{i} #{line}" for line, i in state.compiledJs.split('\n')).join '\n'
     ifCompiled state, editor, ->
-      editor.logResult (stripImports state.compiledJs
-        .replace /&/g,'&amp;'
-        .replace /</g,'&lt;'
-        .replace />/g,'&gt;')
+      editor.logResult stripImports state.compiledJs
+        # .replace /&/g,'&amp;'
+        # .replace /</g,'&lt;'
+        # .replace />/g,'&gt;')
 
 # TODO: support toggling auto compile
 # class RunCommand
