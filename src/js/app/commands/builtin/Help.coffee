@@ -9,7 +9,7 @@ class HelpCommand
     header = _p {},
       "Issue commands by typing"
       _code ' : '
-      "followed by space separated commands"
+      "followed by command name and space separated arguments"
 
     table = _table {},
       for command in state.commands

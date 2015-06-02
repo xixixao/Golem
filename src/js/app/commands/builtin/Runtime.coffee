@@ -20,13 +20,14 @@ class DumpCommand
         .replace /</g,'&lt;'
         .replace />/g,'&gt;')
 
-class RunCommand
-  @defaultSymbols = ['run', 'r']
-  @description = 'Run just the source code'
-  @symbols = @defaultSymbols
+# TODO: support toggling auto compile
+# class RunCommand
+#   @defaultSymbols = ['run', 'r']
+#   @description = 'Run just the source code'
+#   @symbols = @defaultSymbols
 
-  @execute = (args, state, editor) ->
-    ifCompiled state, editor, ->
-      editor.logResult editor.execute state.compiledJs
+#   @execute = (args, state, editor) ->
+#     ifCompiled state, editor, ->
+#       editor.logResult editor.execute state.compiledJs
 
-module.exports = [DumpCommand, RunCommand]
+module.exports = [DumpCommand]
