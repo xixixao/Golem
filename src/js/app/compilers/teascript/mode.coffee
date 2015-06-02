@@ -96,7 +96,11 @@ exports.Mode = class extends TextMode
     findNodesBetween (topList @ast), start, end
 
   getTokenAt: (pos) ->
-    @tokenFollowingPos pos
+    [before, after] = @tokensSurroundingPos pos
+    if isExpression after
+      after
+    else
+      before
 
   # onDocumentChange: (doc) =>
   #   # console.log "tokenizing document", @editor.getValue()
