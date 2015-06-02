@@ -6,6 +6,10 @@ ifCompiled = (state, editor, fn) ->
     else
       editor.displayMessage 'compiler', "Fix: '#{state.message.value}' first"
 
+stripImports = (js) ->
+  js.replace /^(.|\n)*var (\w+) = Shem\.\w+\.\2;\n/, ''
+    .replace /\nreturn \{[^\}]+\};\n\}\(\)\);$/, ''
+
 class DumpCommand
   @defaultSymbols = ['dump', 'd']
   @description = 'Log generated JavaScript'
@@ -15,7 +19,7 @@ class DumpCommand
     # TODO: add full output and line numbers
     # ("#{i} #{line}" for line, i in state.compiledJs.split('\n')).join '\n'
     ifCompiled state, editor, ->
-      editor.logResult (state.compiledJs
+      editor.logResult (stripImports state.compiledJs
         .replace /&/g,'&amp;'
         .replace /</g,'&lt;'
         .replace />/g,'&gt;')
