@@ -1077,7 +1077,8 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Ctrl-Shift-Backspace', mac: 'Ctrl-Shift-Backspace'
         document: no
         exec: =>
-          @setContent ""
+          @editor.setValue ''
+          @initAst ''
 
       'replace enclosing Parent expression with current selection':
         bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
