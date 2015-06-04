@@ -1088,11 +1088,13 @@ exports.Mode = class extends TextMode
           if parent
             added = @selectedTangible()
             lifted = reindentTangible added, parent.parent
+            at = insToTangible [parent]
             @mutate
               changeInTree:
                 added: lifted
-                at: insToTangible [parent]
-              inSelections: lifted
+                at: at
+              inSelections: lifted if _notEmpty lifted
+              tangibleSelection: outsToTangible at.out if _empty lifted
 
       'wrap current selection in a Function':
         bindKey: win: 'Ctrl-F', mac: 'Ctrl-F'
