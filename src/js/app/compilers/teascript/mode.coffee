@@ -236,9 +236,6 @@ exports.Mode = class extends TextMode
       console.error string
       @editor.insert string
 
-  removeContent: ->
-    @mutate @removeSelectable insideTangible @ast
-
   tangibleSelectionFromRange: (range) ->
     start = @tangibleAtPos range.start
     end = @tangibleAtPos range.end
@@ -1080,9 +1077,7 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Ctrl-Shift-Backspace', mac: 'Ctrl-Shift-Backspace'
         document: no
         exec: =>
-          @removeContent()
-          @editor.setValue ''
-          @initAst ''
+          @setContent ""
 
       'replace enclosing Parent expression with current selection':
         bindKey: win: 'Ctrl-P', mac: 'Ctrl-P'
