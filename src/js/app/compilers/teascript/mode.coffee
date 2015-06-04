@@ -97,10 +97,10 @@ exports.Mode = class extends TextMode
 
   getTokenAt: (pos) ->
     [before, after] = @tokensSurroundingPos pos
-    if isExpression after
+    if after and isExpression after
       after
     else
-      before
+      before or after
 
   # onDocumentChange: (doc) =>
   #   # console.log "tokenizing document", @editor.getValue()
