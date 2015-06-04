@@ -1617,10 +1617,17 @@ exports.Mode = class extends TextMode
       (towards LAST)]
 
   moveSelection: (direction) ->
-    selected = @selectedTangible()
-    replaced = @selectedSibling direction
-    if replaced
-      @swap direction, selected, replaced
+    if @isEditing()
+      atom = @editedAtom()
+      if not @isAtLimit direction, atom
+        @mutate
+          withinAtom: atom
+          withinAtomPos: (@offsetToCursor atom) + direction
+    else
+      selected = @selectedTangible()
+      replaced = @selectedSibling direction
+      if replaced
+        @swap direction, selected, replaced
 
   swap: (direction, selected, replaced) ->
     movingSelected = cloneNodes selected.in
