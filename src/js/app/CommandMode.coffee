@@ -6,6 +6,8 @@ EventEmitter = require("ace/lib/event_emitter").EventEmitter
 
 AdaptingWorkerClient = require './AdaptingWorkerClient'
 
+# The default "mode" must be the super mode, so that normal editing commands
+# work if the command line is empty
 module.exports = class CommandMode extends Mode
   constructor: (@id, completers) ->
     super yes
@@ -31,8 +33,13 @@ module.exports = class CommandMode extends Mode
     @commandMode = yes
 
   enableSuper: ->
-    @editor.commands.addCommands @commands
+    @addCommands()
     @commandMode = no
+
+  resetEditing: ->
+    if @commandMode
+      @editor.setValue ""
+      @enableSuper()
 
   # Overrides source mode to not create another worker
   createWorker: (session) ->
@@ -61,6 +68,13 @@ module.exports = class CommandMode extends Mode
             return yes
 
           @insertStringForward string
+      'initial space inserts colon':
+        bindKey: win: 'Space', mac: 'Space'
+        exec: =>
+          if @isEmpty()
+            @editor.commands.exec "insertstring", @editor, ':'
+          else
+            @editor.commands.exec 'add new sibling expression', @editor
 
   doAutocomplete: (e) ->
     if @isInCommandMode()

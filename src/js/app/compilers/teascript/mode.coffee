@@ -236,6 +236,9 @@ exports.Mode = class extends TextMode
       console.error string
       @editor.insert string
 
+  removeContent: ->
+    @mutate @removeSelectable insideTangible @ast
+
   tangibleSelectionFromRange: (range) ->
     start = @tangibleAtPos range.start
     end = @tangibleAtPos range.end
@@ -255,10 +258,9 @@ exports.Mode = class extends TextMode
         compiler.astizeExpressionWithWrapper value
       else
         compiler.astizeList value
-
-    # Set up selection
-    # if @ast
-    #   @handleClick {}
+    if value is ''
+      @mutate
+        tangibleSelection: insideTangible @ast
 
   # Called after worker compiles
   updateAst: (ast, errors = []) ->
@@ -1078,6 +1080,7 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Ctrl-Shift-Backspace', mac: 'Ctrl-Shift-Backspace'
         document: no
         exec: =>
+          @removeContent()
           @editor.setValue ''
           @initAst ''
 

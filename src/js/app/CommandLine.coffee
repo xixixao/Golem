@@ -99,9 +99,9 @@ module.exports = hyper class CommandLine
         if type in ['execute', 'command']
           if source.length > 0
             timeline.push source
-            if type is 'command'
-              editor.setValue ""
-            mode.setContent ""
+            if type isnt 'command'
+              mode.removeContent ""
+            mode.resetEditing()
             @props.onCommandExecution source, @props.moduleName, result, type
             @props.memory.saveCommands timeline
           else

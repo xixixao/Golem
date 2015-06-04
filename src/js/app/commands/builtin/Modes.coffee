@@ -36,7 +36,7 @@ class ListModesCommand
 
 _KeyboardShortcutsList = hyper class KeyboardShortcutsList
   shouldList: (command, name) ->
-    command.bindKey and command.document isnt no and /\s/.test name
+    command.bindKey# and command.document isnt no and /\s/.test name
 
   highlight: (name) ->
     name.replace /([A-Z])/g, "<u>$1</u>"
