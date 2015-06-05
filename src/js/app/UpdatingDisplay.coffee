@@ -1,4 +1,4 @@
-{_div, _pre, _span} = hyper = require 'hyper'
+{_div, _pre, _span, _table, _tbody, _tr, _th, _td} = hyper = require 'hyper'
 
 React = require 'React'
 cx = React.addons.classSet
@@ -12,50 +12,65 @@ compiler = require 'compilers/teascript/compiler'
 module.exports = hyper class UpdatingDisplay
 
   getInitialState: ->
-    compiled: undefined
     source: @props.value.source
 
   parseValue: (value) ->
-    _pre dangerouslySetInnerHTML: __html:
-      if not value?
-        "Nothing"
-      else if typeof value is 'function'
-        value.toString()
-      else
-        dumped = jsDump.parse value
-        if dumped.html
-          dumped.html
-        else
-          compiler.syntaxedExpHtml dumped
 
-  runSource: (compiled = @props.value.compiled) ->
-    if @shouldRun
+  runSource: (compiled) ->
+    if compiled isnt @compiled
+      @compiled = compiled
       @cached =
-        if compiled instanceof Error
-          @displayError compiled
-        else
-          try
-            # result = eval @props.compiledSource + @props.compiledExpression
-            # console.log compiled
-            debugLog = (expression, value) =>
-              window.log _div {},
-                _div dangerouslySetInnerHTML: __html: expression
-                _div @parseValue value
-              value
+        try
+          # result = eval @props.compiledSource + @props.compiledExpression
+          # console.log compiled
+          debugLog = (args...) =>
+            expressions = args[0...args.length / 2]
+            values = args[args.length / 2...]
+            rightPadding =
+            window.log _table _tbody {},
+              _tr ((_td
+                style: 'padding-right': '15px'
+                dangerouslySetInnerHTML: __html: e) for e in expressions)
+              _tr ((_td style: 'padding-right': '5px', @displayValue v) for v in values)
+            [..., value] = values
+            value
 
-            result = eval compiled
-            @parseValue result
-          catch error
-            @displayError error, compiled
+          result = eval compiled
+        catch error
+          error.compiled = compiled
+          error
     else
       @cached
 
-  displayError: (error, compiled) ->
+  displayExecuted: (value) ->
+    if not value
+      return null
+    if value instanceof Error
+      @displayError value
+    else
+      @displayValue value
+
+  displayValue: (value) ->
+    _pre
+      style: float: 'left'
+      dangerouslySetInnerHTML: __html:
+        if not value?
+          "Nothing"
+        else if typeof value is 'function'
+          value.toString()
+        else
+          dumped = jsDump.parse value
+          if dumped.html
+            dumped.html
+          else
+            compiler.syntaxedExpHtml dumped
+
+  displayError: (error) ->
     _div style: color: '#cc0000',
       _div "#{error}"
       _div "#{
         if error instanceof SyntaxError
-          compiled
+          error.compiled
         else
           @formatStackTrace error.stack}"
 
@@ -108,21 +123,30 @@ module.exports = hyper class UpdatingDisplay
         mode.updateAst result.ast, result.errors
 
         if not result.malformed
+          executed =
+            if result.errors
+              firstError = result.errors[0]
+              new Error firstError.message or firstError
+            else
+              @runSource result.js
           @setState
-            compiled:
-              if result.errors
-                firstError = result.errors[0]
-                new Error firstError.message or firstError
-              else
-                result.js
+            executed: executed
 
     commandWorker.on 'error', ({data: {text}}) =>
-      console.log "updaitng display error", text
       @setState
-        compiled: new Error text
+        executed: new Error text
 
     for name, command of mode.commands when command.indirect
       command.exec = @handleCommand name
+
+    # initialCompiled = @props.value.compiled
+    # executed =
+    #   if initialCompiled instanceof Error
+    #     initialCompiled
+    #   else
+    #     @runSource initialCompiled
+    # @setState
+    #   executed: executed
 
   componentWillReceiveProps: ({updatedSource}) ->
     if updatedSource isnt @props.updatedSource
@@ -131,15 +155,16 @@ module.exports = hyper class UpdatingDisplay
   componentDidUpdate: ->
     @editor.resize()
 
-  shouldComponentUpdate: (nextProps, {source, compiled}) ->
-    compiled isnt @state.compiled or source isnt @state.source
+  # shouldComponentUpdate: (nextProps, {source, compiled}) ->
+  #   compiled isnt @state.compiled or source isnt @state.source
 
-  componentWillUpdate: (nextProps, {compiled}) ->
-    @shouldRun = compiled isnt @state.compiled
+  # componentWillUpdate: (nextProps, {compiled}) ->
+  #   @shouldRun = compiled isnt @state.compiled
 
   componentWillUnmount: ->
     @editor.completer?.detach()
     @editor.session.getMode().detach()
+    @editor.destroy()
 
   render: ->
     # @i ?= 0
@@ -147,5 +172,5 @@ module.exports = hyper class UpdatingDisplay
       _div ref: 'ace', style: width: '100%', height: 22
       # Hidden div for stretching width
       _div style: height: 0, margin: '0 4px', overflow: 'hidden', @state.source
-      _div style: padding: '0 4px', @runSource @state.compiled
+      _div style: padding: '0 4px', @displayExecuted @state.executed
       # _div {}, @i++
