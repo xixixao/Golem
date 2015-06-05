@@ -703,8 +703,9 @@ exports.Mode = class extends TextMode
           #    of the current selections
           #    of the clicked tangible
           # 2. select between the ancestors
-          [from, to] = siblingTangibleAncestors @selectedTangible(),
-            (@tangibleAtPos @cursorPosition())
+          [from, to] = siblingTangibleAncestors [
+            @selectedTangible()
+            (@tangibleAtPos @cursorPosition())]
           @mutate
             tangibleSelection: tangibleBetween from, to
 
@@ -1132,30 +1133,20 @@ exports.Mode = class extends TextMode
 
       'replace selection with an Added function parameter':
         bindKey: win: 'Ctrl-Shift-A', mac: 'Ctrl-A'
-        multiSelectAction: 'forEach'
         exec: =>
-          parent = @realParentOfSelected()
-          fun = findParentFunction parent if parent
+          [parent] = siblingTangibleAncestors @selectedTangiblesList()
+          fun = findParentFunction toNode parent if parent
           params = findParamList fun if fun
           if params
-            @startGroupMutation()
-            # insert space for new param if necessary and put cursors at both places
-            @mutate @removeSelectable @selectedTangible()
-            hole = @selectedTangible()
-
-            inParams = tangibleInside LAST, params
-            if isExpression toNode inParams
-              @insertSpaceAt FORWARD, ' ', nodeEdgeOfTangible LAST, inParams
-            else
-              @mutate
-                tangibleSelection: inParams
-
-            @mutate
-              tangibleSelection: outsToTangible hole.out
-              newSelections: [
-                @selectedTangible()
-              ]
-            @finishGroupMutation()
+            endOfParams = outsToTangible params[-1...]
+            @mutate extend(
+              (if _notEmpty _terms params
+                changeInTree:
+                  added: astize ' ', params
+                  at: endOfParams
+              else
+                {}),
+              newSelections: [endOfParams])
 
       'select all occurences of selection to Rename':
         bindKey: win: 'Ctrl-R', mac: 'Ctrl-R'
@@ -2326,18 +2317,19 @@ fakeAtInsertion = (tangible) ->
   if fake.fake
     fake
 
-siblingTangibleAncestors = (tangible1, tangible2) ->
-  d1 = depthOf (parentOfTangible tangible1)
-  d2 = depthOf (parentOfTangible tangible2)
-  p1 = tangibleAncestor tangible1, Math.max 0, d1 - d2
-  p2 = tangibleAncestor tangible2, Math.max 0, d2 - d1
-  siblingAncestorsFrom p1, p2
+siblingTangibleAncestors = (tangibles) ->
+  depths = map (__ depthOf, parentOfTangible), tangibles
+  minDepth = Math.min depths...
+  parents = for t in tangibles
+    tangibleAncestor t, (depthOf (parentOfTangible t)) - minDepth
+  siblingAncestorsFrom parents
 
-siblingAncestorsFrom = (tangible1, tangible2) ->
-  if (parentOfTangible tangible1) is (parentOfTangible tangible2)
-    [tangible1, tangible2]
-  else
-    siblingAncestorsFrom (tangibleParent tangible1), (tangibleParent tangible2)
+siblingAncestorsFrom = (tangibles) ->
+  first = parentOfTangible tangibles[0]
+  for t in tangibles
+    if (parentOfTangible t) isnt first
+      return siblingAncestorsFrom map tangibleParent, tangibles
+  tangibles
 
 tangibleAncestor = (tangible, levels) ->
   if levels is 0
