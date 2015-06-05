@@ -37,6 +37,12 @@ module.exports = hyper class UpdatingDisplay
           try
             # result = eval @props.compiledSource + @props.compiledExpression
             # console.log compiled
+            debugLog = (expression, value) =>
+              window.log _div {},
+                _div dangerouslySetInnerHTML: __html: expression
+                _div @parseValue value
+              value
+
             result = eval compiled
             @parseValue result
           catch error
