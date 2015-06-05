@@ -1038,7 +1038,10 @@ exports.Mode = class extends TextMode
         bindKey: win: '#', mac: '#'
         multiSelectAction: 'forEach'
         exec: =>
-          @wrap '(', '#', ' ', {selected: yes, select: yes}, ')'
+          if @isEditingHalfDelimited()
+            @insertStringForward '#'
+          else
+            @wrap '(', '#', ' ', {selected: yes, select: yes}, ')'
 
       # Temporary
       'insert call-site type':
@@ -1522,7 +1525,7 @@ exports.Mode = class extends TextMode
 
   insertOpeningDelim: (open, close) ->
     if @isEditingHalfDelimited()
-      @insertStringForward open,
+      @insertStringForward open
     else
       @wrap open, {selected: yes, select: yes}, close
 
