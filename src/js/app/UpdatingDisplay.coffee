@@ -23,18 +23,34 @@ module.exports = hyper class UpdatingDisplay
         try
           # result = eval @props.compiledSource + @props.compiledExpression
           # console.log compiled
-          debugLog = (args...) =>
+          debugLog = (id, args...) =>
             expressions = args[0...args.length / 2]
             values = args[args.length / 2...]
-            rightPadding =
-            window.log _table _tbody {},
-              _tr ((_td
-                style: 'padding-right': '15px'
-                dangerouslySetInnerHTML: __html: e) for e in expressions)
-              _tr ((_td style: 'padding-right': '5px', @displayValue v) for v in values)
+            domId = "debug-log-#{id}"
+            valueRow = ((_td style: 'padding-right': '5px', @displayValue v) for v in values)
+
+            newTable = =>
+              _table
+                id: domId
+                'data-source-id': @timesExecuted
+                _tbody {},
+                  _tr ((_td
+                    style: 'padding-right': '15px'
+                    dangerouslySetInnerHTML: __html: e) for e in expressions)
+                  _tr valueRow
+
+            if table = window.document.getElementById domId
+              if (table.getAttribute 'data-source-id') isnt "#{@timesExecuted}"
+                table.parentNode.innerHTML = React.renderComponentToString newTable()
+              else
+                placeholder = window.document.createElement "div"
+                React.renderComponent (_table _tbody _tr valueRow), placeholder
+                table.firstChild.appendChild placeholder.firstChild.firstChild.firstChild
+            else
+              window.log newTable()
             [..., value] = values
             value
-
+          @timesExecuted++
           result = eval compiled
         catch error
           error.compiled = compiled
@@ -109,6 +125,8 @@ module.exports = hyper class UpdatingDisplay
     editor.session.on 'change', =>
         @setState
           source: editor.getValue()
+
+    @timesExecuted = 0
 
     # CommandWorker compiles either on change or on enter
     commandWorker.on 'ok', ({data: {result, type, commandSource}}) =>
