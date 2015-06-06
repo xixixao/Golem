@@ -82,16 +82,17 @@ module.exports = hyper class UpdatingDisplay
             compiler.syntaxedExpHtml dumped
 
   displayError: (error) ->
+    formatted = "#{
+      if error instanceof SyntaxError
+        error.compiled
+      else
+        @formatStackTrace error.stack}"
     _div
       className: 'messageDisplay'
       style:
         color: '#880000'
       _div dangerouslySetInnerHTML: __html: "#{error}"
-      _div "#{
-        if error instanceof SyntaxError
-          error.compiled
-        else
-          @formatStackTrace error.stack}"
+      (_div formatted if not /^\s*$/.test formatted)
 
   formatStackTrace: (trace = '') ->
     cutoff = compiler.builtInLibraryNumLines
