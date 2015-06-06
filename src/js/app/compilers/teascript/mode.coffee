@@ -435,7 +435,7 @@ exports.Mode = class extends TextMode
             @createDocTooltipHtml info
     else if (malformed = token.malformed) or (isDelim token) and (malformed = token.parent.malformed)
       activate malformed
-    else if type = token.type?.type
+    else if type = (token.type?.type or token.tea)
       activate @prettyPrintTypeForDoc rawType: type
 
   closeTooltip: =>
