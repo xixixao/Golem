@@ -29,4 +29,6 @@ module.exports = hyper class MessageDisplay
         off:
           opacity: 0
           transition: 'opacity .2s ease-in'
-        @props.message.value
+        _span
+          className: 'messageDisplay'
+          dangerouslySetInnerHTML: __html: @props.message.value
