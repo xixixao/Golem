@@ -82,8 +82,11 @@ module.exports = hyper class UpdatingDisplay
             compiler.syntaxedExpHtml dumped
 
   displayError: (error) ->
-    _div style: color: '#cc0000',
-      _div "#{error}"
+    _div
+      className: 'messageDisplay'
+      style:
+        color: '#880000'
+      _div dangerouslySetInnerHTML: __html: "#{error}"
       _div "#{
         if error instanceof SyntaxError
           error.compiled
