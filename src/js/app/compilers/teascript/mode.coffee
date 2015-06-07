@@ -304,25 +304,27 @@ exports.Mode = class extends TextMode
     for marker in @errorMarkers or [] when marker.node
       {node} = marker
       range = @nodeRange node
-      marker.id = @editor.session.addMarker range, 'clazz', (@showError range, node.tea), yes
+      lineRange = @errorMarkerRange range
+      marker.id = @editor.session.addMarker lineRange, 'clazz', (@showError range, lineRange, node.tea), yes
 
   removeErrorMarkers: ->
     @editor.session.removeMarker id for {id} in @errorMarkers or [] when id
 
-  showError: (range, type) ->
+  showError: (range, lineRange, type) ->
     draw = (stringBuilder, r, l, t, config, layer) =>
-      if range.isMultiLine()
-        row = range.start.row
-        lineRange = new Range row, range.start.column,
-          row, @editor.session.getScreenLastRowColumn row
-        subclass = ' golem_error-origin-open'
-      else
-        lineRange = range
-        subclass = ''
+      subclass = if range.isMultiLine() then ' golem_error-origin-open' else ''
       layer.drawSingleLineMarker stringBuilder, lineRange,
         'golem_error-origin' + subclass, config
     draw.type = type
     draw
+
+  errorMarkerRange: (range) ->
+    if range.isMultiLine()
+      row = range.start.row
+      new Range row, range.start.column,
+        row, @editor.session.getScreenLastRowColumn row
+    else
+      range
 
   doAutocomplete: (e) ->
     editor = @editor

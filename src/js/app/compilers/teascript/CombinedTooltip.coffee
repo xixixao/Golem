@@ -5,7 +5,7 @@ TokenTooltip = require("ace/token-tooltip").TokenTooltip
 module.exports = class CombinedTooltip extends TokenTooltip
   getTokenAt: ({row, column}) ->
     markers = @editor.session.getMarkers yes#front
-    for id, marker of markers
+    for marker in (marker for id, marker of markers) by -1
       if marker.range.contains row, column
         return marker
     @editor.session.getMode().getTokenAt {row, column}
