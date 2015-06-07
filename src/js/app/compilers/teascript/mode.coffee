@@ -382,6 +382,7 @@ exports.Mode = class extends TextMode
             type: typed.tea
             scope: typed.scope
             pattern: typed.assignable
+            emptyCall: isEmptyCall typed.parent
           # TODO: plain text for non-typed expressions
           @worker.call 'matchingDefinitions', [reference], (completions) =>
             callback null, (for symbol, {type, score, rawType, arity, docs} of completions# when symbol isnt editedSymbol
@@ -2668,6 +2669,9 @@ isOpeningDelim = (node) ->
 isOperator = (node) ->
   parent = parentOf node
   parent and (isCall parent) and (_fst _terms parent) is node
+
+isEmptyCall = (expression) ->
+  expression.length is 2 and expression[0].symbol is '('
 
 isLabel = (expression) ->
   expression.label is 'label'
