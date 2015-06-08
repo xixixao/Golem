@@ -9,6 +9,10 @@ CommandMode = require './CommandMode'
 {Mode} = require 'compilers/teascript/mode'
 compiler = require 'compilers/teascript/compiler'
 
+isStrictSuffix = (suffix, string) ->
+  suffix.length < string.length and
+    (string.indexOf suffix, string.length - suffix.length) isnt -1
+
 module.exports = hyper class UpdatingDisplay
 
   getInitialState: ->
@@ -21,13 +25,19 @@ module.exports = hyper class UpdatingDisplay
       @compiled = compiled
       @cached =
         try
+          doLog = yes
+          savedStacks = {}
           # result = eval @props.compiledSource + @props.compiledExpression
           # console.log compiled
           debugLog = (id, args...) =>
             expressions = args[0...args.length / 2]
             values = args[args.length / 2...]
             domId = "debug-log-#{id}"
-            valueRow = ((_td style: 'padding-right': '5px', @displayValue v) for v in values)
+            stack = ->
+              try throw new Error "stack" catch e then ((e.stack.split '\n')[5...]).join('')
+
+            valueRow = =>
+              ((_td style: 'padding-right': '5px', @displayValue v) for v in values)
 
             newTable = =>
               _table
@@ -37,20 +47,29 @@ module.exports = hyper class UpdatingDisplay
                   _tr ((_td
                     style: 'padding-right': '15px'
                     dangerouslySetInnerHTML: __html: e) for e in expressions)
-                  _tr valueRow
+                  _tr valueRow()
 
-            if table = window.document.getElementById domId
-              if (table.getAttribute 'data-source-id') isnt "#{@timesExecuted}"
-                table.parentNode.innerHTML = React.renderComponentToString newTable()
+            if doLog
+              newStack = stack()
+              if table = window.document.getElementById domId
+                if (table.getAttribute 'data-source-id') isnt "#{@timesExecuted}" or
+                    not isStrictSuffix savedStacks[id], newStack
+                  table.parentNode.innerHTML = React.renderComponentToString newTable()
+                else
+                  @timesLogged++
+                  placeholder = window.document.createElement "div"
+                  React.renderComponent (_table _tbody _tr valueRow()), placeholder
+                  if table.firstChild.lastChild.textContent isnt placeholder.firstChild.firstChild.firstChild.textContent
+                    table.firstChild.appendChild placeholder.firstChild.firstChild.firstChild
+                if @timesLogged > 1000
+                  doLog = no
               else
-                placeholder = window.document.createElement "div"
-                React.renderComponent (_table _tbody _tr valueRow), placeholder
-                table.firstChild.appendChild placeholder.firstChild.firstChild.firstChild
-            else
-              window.log newTable()
+                window.log newTable()
+            savedStacks[id] = newStack
             [..., value] = values
             value
           @timesExecuted++
+          @timesLogged = 0
           result = eval compiled
         catch error
           error.compiled = compiled
