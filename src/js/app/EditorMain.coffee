@@ -14,7 +14,10 @@ TimeLine = require './UniqueTimeLine'
 CommandParser = require './CommandParser'
 Modes = require './Modes'
 History = require './History'
-Memory = require './Memory'
+if window.requireNode and window.GolemOpenFilePath
+  Memory = require './FileSystemMemory'
+else
+  Memory = require './Memory'
 
 {Mode} = require 'compilers/teascript/mode'
 

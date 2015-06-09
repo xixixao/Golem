@@ -9,19 +9,24 @@ createProjectMenu = ->
   mainMenu.createMacBuiltin "Golem"
 
   # Create Projects Menu and Item to point to it
-  projectMenu = new gui.Menu()
-  projectsItem = new gui.MenuItem label: 'Project'
-  # projectMenu.append new gui.MenuItem label: 'New Project'
-  projectMenu.append new gui.MenuItem
-    label: 'Open Project...'
-    click: ->
-      # TODO: support opening files via a fake input field
-  # projectMenu.append new gui.MenuItem type: 'separator'
-  # projectMenu.append new gui.MenuItem label: 'Item C'
-  projectsItem.submenu = projectMenu
-  mainMenu.insert projectsItem, 1
+  # projectMenu = new gui.Menu()
+  # projectsItem = new gui.MenuItem label: 'Project'
+  # # projectMenu.append new gui.MenuItem label: 'New Project'
+  # projectMenu.append new gui.MenuItem
+  #   label: 'Open Project...'
+  #   click: ->
+  #     # TODO: support opening files via a fake input field
+  # # projectMenu.append new gui.MenuItem type: 'separator'
+  # # projectMenu.append new gui.MenuItem label: 'Item C'
+  # projectsItem.submenu = projectMenu
+  # mainMenu.insert projectsItem, 1
   gui.Window.get().menu = mainMenu
+
+setFilePath = ->
+  gui = require 'nw.gui'
+  window.GolemOpenFilePath = gui.App.argv[0]
 
 if window.require
   maximizeWindow()
-  # createProjectMenu()
+  createProjectMenu()
+  setFilePath()
