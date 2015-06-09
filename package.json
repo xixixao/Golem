@@ -1,0 +1,10 @@
+{
+  "name": "Golem",
+  "version": "0.0.1",
+  "main": "dist/index.html",
+  "window": {
+    "title": "Golem",
+    "toolbar": false,
+    "position": "center"
+  }
+}

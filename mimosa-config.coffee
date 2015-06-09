@@ -19,7 +19,7 @@ exports.config = {
   modules: ['jshint', 'csslint', 'server', 'require', 'minify-js', 'minify-css', 'live-reload', 'bower', 'require-commonjs', 'server-template-compile', 'coffeescript', 'jade', 'stylus', 'copy']
 
   requireCommonjs:
-    exclude: [/[/\\]vendor[/\\]/, /[/\\]js[/\\]bootstrap\./]
+    exclude: [/[/\\]vendor[/\\]/, /[/\\]js[/\\]bootstrap\./, /[/\\]js[/\\]native\./]
 
   watch:
     sourceDir: "src"                     # directory location of web assets, can be relative to

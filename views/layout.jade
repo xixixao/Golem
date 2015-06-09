@@ -1,11 +1,19 @@
 doctype html
 html
   head
-    title TeaTable - Deploy your Coffee here!
+    title Golem
     link(rel='stylesheet', href='css/style.css' + cachebust)
+
 
     script(type='text/javascript').
       if (!window.console) console = {log: function() {}};
+
+    script(src='js/native.js')
+
+    script(type='text/javascript').
+      // Prevent clash with requirejs
+      window.requireNode = window.require;
+      window.require = undefined;
 
     if reload
       script(src='/socket.io/socket.io.js')
