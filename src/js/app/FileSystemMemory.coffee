@@ -30,8 +30,11 @@ module.exports = class FileSystemMemory extends Memory
     if not table
       stats = {}
       srcPath = @_directory()
-      for name in fs.readdirSync srcPath
-        stats[name] = name: name, numLines: @_countLines srcPath, name
+      for fileName in fs.readdirSync srcPath
+        ext = path.extname fileName
+        if ext[1...] is 'shem'
+          name = path.basename fileName, ext
+          stats[name] = name: name, numLines: @_countLines srcPath, name
       stats
     else
       # dont delete files for now
@@ -43,7 +46,7 @@ module.exports = class FileSystemMemory extends Memory
     if value
       fileContent = value.value
       delete value.value
-      fs.writeFileSync filePath, fileContent
+      @_writeFile filePath, fileContent
       $.totalStorage "GolemFile_" + filePath, value
     else
       info = $.totalStorage "GolemFile_" + filePath
@@ -52,5 +55,12 @@ module.exports = class FileSystemMemory extends Memory
           info.value = @_readFile filePath
       info
 
+  _writeFile: (path, content) ->
+    fs.writeFileSync "#{path}.shem", content
+
   _readFile: (path) ->
-    fs.readFileSync path, encoding: 'utf8'
+    fs.readFileSync "#{path}.shem", encoding: 'utf8'
+
+  writeBuilt: (js) ->
+    srcPath = @_directory()
+    fs.writeFileSync (path.join srcPath, '..', 'index.js'), js

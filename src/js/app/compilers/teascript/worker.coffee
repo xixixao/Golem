@@ -64,6 +64,10 @@ exports.Worker = class extends Mirror
     info = compiler.findDocsFor @moduleName, reference
     @sender.callback info, id
 
+  compileBuild: (moduleName, id) ->
+    compiled = compiler.compileModule moduleName
+    @sender.callback compiled, id
+
 # Returns a function which runs given function maximally once during given
 # duration.
 delay = (duration) ->
@@ -114,7 +118,7 @@ class ExpressionWorker extends exports.Worker
 cache = {}
 
 cacheModule = (fn, source, moduleName) ->
-  if (old = cache[moduleName])?.source is source
+  if (old = cache[moduleName])?.source is source and old
     console.log "#{moduleName} was cached."
     old.result
   else

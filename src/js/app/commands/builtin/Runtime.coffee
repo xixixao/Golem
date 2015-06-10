@@ -9,13 +9,16 @@ ifCompiled = (state, editor, fn) ->
     else
       editor.displayMessage 'compiler', "Fix: '#{state.message.value}' first"
 
+format = (js) ->
+  beautify js, indent_size: 2
+
+highlight = (js) ->
+  (hljs.highlight 'javascript', js).value
+
 stripImports = (js) ->
-  stripped =
-    js.replace /^(.|\n)*var (\w+) = Shem\.\w+\.\2;\n/, ''
-      .replace /^(.|\n)*'use strict'\n/, '' # for Prelude
-      .replace /\nreturn \{[^\}]+\};\n\}\(\)\);$/, ''
-  {value} = ret = highlight 'javascript', beautify stripped, indent_size: 2
-  value
+  js.replace /^(.|\n)*var (\w+) = Shem\.\w+\.\2;\n/, ''
+    .replace /^(.|\n)*'use strict'\n/, '' # for Prelude
+    .replace /\nreturn \{[^\}]+\};\n\}\(\)\);$/, ''
 
 class DumpCommand
   @defaultSymbols = ['dump', 'd']
@@ -26,10 +29,26 @@ class DumpCommand
     # TODO: add full output and line numbers
     # ("#{i} #{line}" for line, i in state.compiledJs.split('\n')).join '\n'
     ifCompiled state, editor, ->
-      editor.logResult stripImports state.compiledJs
+      editor.logResult highlight format stripImports state.compiledJs
         # .replace /&/g,'&amp;'
         # .replace /</g,'&lt;'
         # .replace />/g,'&gt;')
+
+class BuildCommand
+  @defaultSymbols = ['build']
+  @description = 'Build the project and JavaScript'
+  @symbols = @defaultSymbols
+
+  @execute = (args, state, editor) ->
+    # TODO: add full output and line numbers
+    # ("#{i} #{line}" for line, i in state.compiledJs.split('\n')).join '\n'
+    ifCompiled state, editor, ->
+      state.mode.worker.call 'compileBuild', [state.module.moduleName], (compiled) ->
+        if editor.memory.writeBuilt
+          editor.memory.writeBuilt compiled.js
+          editor.displayMessage 'file', "Build saved to index.js"
+        else
+          editor.logResult highlight format compiled.js
 
 # TODO: support toggling auto compile
 # class RunCommand
@@ -41,4 +60,4 @@ class DumpCommand
 #     ifCompiled state, editor, ->
 #       editor.logResult editor.execute state.compiledJs
 
-module.exports = [DumpCommand]
+module.exports = [DumpCommand, BuildCommand]
