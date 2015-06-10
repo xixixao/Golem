@@ -427,7 +427,9 @@ exports.Mode = class extends TextMode
       tooltip.open()
       @activeTooltip = tooltip
     tooltip.hideAndRemoveMarker();
-    if token.scope?
+    if (malformed = token.malformed) or (isDelim token) and (malformed = token.parent.malformed)
+      activate malformed
+    else if token.scope?
       reference = name: token.symbol, scope: token.scope
       @worker.call 'docsFor', [reference], (info) =>
         if info?.rawType
@@ -436,8 +438,6 @@ exports.Mode = class extends TextMode
             @prettyPrintTypeForDoc info
           else
             @createDocTooltipHtml info
-    else if (malformed = token.malformed) or (isDelim token) and (malformed = token.parent.malformed)
-      activate malformed
     else if type = (token.type?.type or token.tea)
       activate @prettyPrintTypeForDoc rawType: type
 
