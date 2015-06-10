@@ -78,7 +78,7 @@ module.exports = hyper class UpdatingDisplay
       @cached
 
   displayExecuted: (value) ->
-    if not value
+    if not value?
       return null
     if value instanceof Error
       @displayError value
