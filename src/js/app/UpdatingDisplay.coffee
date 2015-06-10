@@ -45,7 +45,9 @@ module.exports = hyper class UpdatingDisplay
                 'data-source-id': @timesExecuted
                 _tbody {},
                   _tr ((_td
-                    style: 'padding-right': '15px'
+                    style:
+                      'padding-right': '15px'
+                      'white-space': 'pre-wrap'
                     dangerouslySetInnerHTML: __html: e) for e in expressions)
                   _tr valueRow()
 
@@ -53,7 +55,8 @@ module.exports = hyper class UpdatingDisplay
               newStack = stack()
               if table = window.document.getElementById domId
                 if (table.getAttribute 'data-source-id') isnt "#{@timesExecuted}" or
-                    not isStrictSuffix savedStacks[id], newStack
+                    not ((isStrictSuffix savedStacks[id], newStack) or
+                      (isStrictSuffix newStack, savedStacks[id]))
                   table.parentNode.innerHTML = React.renderComponentToString newTable()
                 else
                   @timesLogged++
