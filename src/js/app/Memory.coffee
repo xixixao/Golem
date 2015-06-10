@@ -52,7 +52,8 @@ module.exports = class Memory
     $.totalStorage "GolemFile_" + name, value
 
   getLastOpenFileName: ->
-    @_lastOpenFileStorage() || @unnamed
+    lastOpen = @_lastOpenFileStorage()
+    (@loadSource lastOpen) and lastOpen or @unnamed
 
   setLastOpenFileName: (fileName) ->
     @_lastOpenFileStorage fileName

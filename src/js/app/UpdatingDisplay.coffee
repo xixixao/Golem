@@ -86,19 +86,25 @@ module.exports = hyper class UpdatingDisplay
       @displayValue value
 
   displayValue: (value) ->
-    _pre
-      style: float: 'left'
-      dangerouslySetInnerHTML: __html:
-        if not value?
-          "Nothing"
-        else if typeof value is 'function'
-          value.toString()
-        else
-          dumped = jsDump.parse value
-          if dumped.html
-            dumped.html
+    try
+      _pre
+        style: float: 'left'
+        dangerouslySetInnerHTML: __html:
+          if not value?
+            "Nothing"
+          else if typeof value is 'function'
+            value.toString()
           else
-            compiler.syntaxedExpHtml dumped
+            dumped = jsDump.parse value
+            if dumped.html
+              dumped.html
+            else
+              try
+                compiler.syntaxedExpHtml dumped
+              catch
+                dumped
+    catch e
+      @displayError e
 
   displayError: (error) ->
     formatted = "#{
