@@ -459,22 +459,25 @@ examples (fn []
     For example (/ 2 5) equals 2.5 .)
   (Js.binary "/" what by))
 
-div (macro [by what]
+div (fn [by what]
   (: (Fn Num Num Num))
   (# The integer result of dividing by what rounded towards 0 .
-    For example (/ 2 ~5) equals ~2 .)
-  (Js.unary "~" (Js.unary "~" (Js.binary "/" what by))))
+    For example (/ 2 -5) equals -2 .)
+  ((if (> 0 divided)
+      floor
+      ceil) divided)
+  divided (/ by what))
 
 mod (macro [by of]
   (: (Fn Num Num Num))
   (# The C-like remainder, modulo, after dividing by of .
     The result sign is the same as the of sign.
-    For example (/ 2 ~5) equals ~2 .)
+    For example (/ 2 -5) equals -2 .)
   (Js.binary "%" of by))
 
 rem (fn [by of]
   (# The remainder after dividing by of .
-    For example (/ ~2 5) equals ~1 .)
+    For example (/ -2 5) equals -1 .)
   (mod by (+ (mod by of) by)))
 
 ~ (macro [x]
@@ -512,6 +515,21 @@ round (macro [x]
   (# Rounds x to the closest integer.)
   (Js.call "Math.round" {x}))
 
+floor (macro [x]
+  (: (Fn Num Num))
+  (# Rounds x to a smaller integer.)
+  (Js.call "Math.floor" {x}))
+
+ceil (macro [x]
+  (: (Fn Num Num))
+  (# Rounds x to a larger integer.)
+  (Js.call "Math.ceil" {x}))
+
+abs (macro [x]
+  (: (Fn Num Num))
+  (# Absolute value of x .)
+  (Js.call "Math.abs" {x}))
+
 and (macro [first then]
   (: (Fn Bool Bool Bool))
   (# Whether both first and then are True .
@@ -533,8 +551,8 @@ if (syntax [what then else]
   (: (Fn Bool a a a))
   (# If what is True returns then otherwise returns else .)
   (` cond
-    (, what) (, then)
-    True (, else)))
+    ,what ,then
+    True ,else))
 
 Eq (class [a]
   = (fn [x y] (: (Fn a a Bool))
@@ -585,9 +603,40 @@ Ord (class [a]
   (# Whether what is greater or equal to than .)
   (or (= than what) (> than what)))
 
+between? (fn [minimum max-exclusive what]
+  (# Wheter what is greater or equal to minimum and smaller than max-exclusive .)
+  (and (>= minimum what) (< max-exclusive what)))
+
+max (fn [x y]
+  (# The largest of values x and y .)
+  (if (< y x)
+    y
+    x))
+
+min (fn [x y]
+  (# The smallest of values x and y .)
+  (if (> y x)
+    y
+    x))
+
+bounded (fn [minimum max-exclusive what]
+  (# Trims what to be between minimum inclusive and max-exclusive .)
+  (max minimum (min max-exclusive what)))
+
+Ordering (data LT GT EQ)
+
+compare (fn [x y]
+  (cond
+    (< y x) LT
+    (> y x) GT
+    else EQ))
+
 num-ord (instance (Ord Num)
   <= (macro [than what]
-    (: (Fn Num Num Bool))
+    (Js.binary "<=" what than)))
+
+string-ord (instance (Ord String)
+  <= (macro [than what]
     (Js.binary "<=" what than)))
 
 Show (class [a]
@@ -598,9 +647,8 @@ show-boolean (instance (Show Bool)
   show (fn [b] (if b "True" "False")))
 
 show-num (instance (Show Num)
-  show (macro [n]
-    (: (Fn Num String))
-    (Js.binary "+" n "\\"\\"")))
+  show (fn [n]
+    (format "%n" n)))
 
 show-string (instance (Show String)
   show (fn [s]
@@ -608,7 +656,7 @@ show-string (instance (Show String)
 
 show-char (instance (Show Char)
   show (fn [c]
-    (format "\\%c" c)))
+    (format "\\\\%c" c)))
 
 show-pair (instance (Show [a b])
   {(Show a) (Show b)}
@@ -722,19 +770,26 @@ tuplize (fn [x]
 
 math-pi (:: Num
   (# The ratio of a circle's circumference to its diameter.)
-  Math.PI)
+  global.Math.PI)
 
-radians (fn [degrees]
-  (# Converts from degrees of angle to radians.)
-  (* math-pi (/ 180 degrees)))
+degrees (fn [n]
+  (# n degrees of angle in radians.)
+  (* math-pi (/ 180 n)))
 
-degrees (fn [radians]
+to-degrees (fn [radians]
   (# Converts from radians of angle to degrees.)
   (* 180 (/ math-pi radians)))
 
 ? (data [a]
   None
   Some [value: a])
+
+?-eq (instance (Eq (? a))
+  {(Eq a)}
+  = (fn [x y]
+    (match [x y]
+      [None None] True
+      [(Some a) (Some b)] (= a b))))
 
 from-? (fn [default of]
   (# If of is Some then its value otherwise default .)
@@ -805,8 +860,8 @@ Appendable (class [collection item]
   & (fn [what to]
     (: (Fn item collection collection))
     (# Adds item what to collection.
-      If the collection is a Bag then the last item added with & is the
-      first one passed to fold .)))
+      If the collection is a Bag then the last item
+      added with & is the first one passed to fold .)))
 
 Set (class [set item]
   {(Bag set item) (Appendable set item)}
@@ -852,9 +907,9 @@ Deq (class [seq item]
     (# Some last item of in if in is not empty.)))
 
 Mappable (class [wrapper]
-  map (fn [what onto]
+  map (fn [what over]
     (: (Fn (Fn a b) (wrapper a) (wrapper b)))
-    (# Apply what to every value inside onto .)))
+    (# Apply what to every value inside over .)))
 
 Zippable (class [wrapper]
   zip (fn [with first second]
@@ -961,8 +1016,8 @@ map-map (instance (Map (Map k v) k v)
       (with key folded))))
 
 map-mappable (instance (Mappable (Map k))
-  map (fn [what onto]
-    (reduce-map helper (Map) onto)
+  map (fn [what over]
+    (reduce-map helper (Map) over)
     helper (fn [acc value key]
       (put key (what value) acc))))
 
@@ -1029,7 +1084,6 @@ array-seq (instance (Seq (Array a) a)
     (from-nullable (.first list)))
 
   rest (macro [list]
-    (: (Fn (Array a) a))
     (Js.method list "rest" {}))
 
   take (macro [n from]
@@ -1051,6 +1105,11 @@ array-deq (instance (Deq (Array a) a)
 
   last (fn [list]
     (from-nullable (.last list))))
+
+array-eq (instance (Eq (Array a))
+  {(Eq a)}
+  = (macro [x y]
+    (.is global.Immutable x y)))
 
 list-bag (instance (Bag (List a) a)
   size (macro [list]
@@ -1188,23 +1247,13 @@ string-map (instance (Map String Num Char)
     (from-nullable (.charAt in index)))
 
   key? (fn [what in]
-    (and (>= 0 what) (< (size in) what)))
+    (between? 0 (size in) what))
 
-  put (macro [at what in]
-    (: (Fn Num Char String String))
-    (Js.method
-      (Js.method
-        (Js.method in "toList" {})
-        "set" {at what})
-      "toStack" {}))
+  put (fn [at what in]
+    (concat {(take at in) (singleton what) (drop (+ 1 at) in)}))
 
-  delete (macro [key from]
-    (: (Fn Num String String))
-    (Js.method
-      (Js.method
-        (Js.method from "toList" {})
-        "remove" {key})
-      "toStack" {}))
+  delete (fn [key from]
+    (concat {(take key from) (drop (+ 1 key) from)}))
 
   fold-keys (fn [with initial over]
     (fold with initial (range 0 (size over)))))
@@ -1216,13 +1265,11 @@ string-seq (instance (Seq String Char)
   rest (fn [list]
     (drop 1 list))
 
-  take (macro [n from]
-    (: (Fn Num String String))
-    (Js.method from "slice" {0 n}))
+  take (fn [n from]
+    (.slice from 0 (max 0 n)))
 
-  drop (macro [n from]
-    (: (Fn Num String String))
-    (Js.method from "slice" {n})))
+  drop (fn [n from]
+    (.slice from (max 0 n))))
 
 string-deq (instance (Deq String Char)
   && (macro [what to]
@@ -1249,7 +1296,12 @@ sub-seq (fn [from n of]
   (take n (drop from of)))
 
 concat (fn [bag-of-bags]
-  (fold (flip join) empty bag-of-bags))
+  (: (Fn bba ba) (Bag bba ba) (Bag ba a))
+  (# (fold (flip join) empty bag-of-bags))
+  (if (and (:: Bool (.-first bag-of-bags))
+      (:: Bool (.Iterable.isIterable global.Immutable (.first bag-of-bags))))
+    (:: bba (.apply (.-concat (.first bag-of-bags)) (.first bag-of-bags) (.toArray (.rest bag-of-bags))))
+    (fold (flip join) empty bag-of-bags)))
 
 empty? (fn [collection]
   (= 0 (size collection)))
@@ -1277,6 +1329,9 @@ concat-map (fn [what over]
 repeat (fn [times what]
   (map (const what) (range 0 times)))
 
+concat-repeat (fn [times what]
+  (concat (repeat times what)))
+
 concat-with (fn [with what]
   (from-? empty (fold join-with None what))
   join-with (fn [x maybe-joined]
@@ -1285,7 +1340,7 @@ concat-with (fn [with what]
         (Some joined) (concat {joined with x})))))
 
 map-into (fn [what into over]
-  (fold append into (reverse over))
+  (fold-right append into over)
   append (fn [x to]
     (& (what x) to)))
 
@@ -1298,6 +1353,9 @@ zip-into (fn [with into left right]
 parse-int (fn [string]
   (: (Fn String Num))
   (.parseInt (global) string))
+
+num-to-string (fn [n]
+  (format "%n" n))
 
 combine (fn [first second]
   (concat-map (zip tuple first) (map (repeat (size first)) second)))
@@ -1316,6 +1374,19 @@ split (fn [bag]
   wrap (fn [x all]
     (&& (singleton x) all)))
 
+break-on (fn [on seq]
+  (: (Fn (Fn a Bool) seq [seq seq]) (Seq seq a))
+  (# Not implemented!
+    (if (empty? seq)
+      [seq seq]
+      (if (on x)
+        [empty seq]
+        [(& x fails) rest]))
+    [fails rest] (break-on on xs)
+    x (!! (first seq))
+    xs (rest seq))
+  [seq seq])
+
 split-on (macro [separator string]
   (: (Fn String String (Array String)))
   (Js.call "Immutable.List" {(Js.method string "split" {separator})}))
@@ -1324,6 +1395,13 @@ fold-right (fn [with initial over]
   ((fold wrap id over) initial)
   wrap (fn [x r acc]
     (r (with x acc))))
+
+reduce (fn [with over]
+  (fold helper None over)
+  helper (fn [x acc]
+    (match acc
+      None (Some x)
+      (Some val) (Some (with x val)))))
 
 show-array (instance (Show (Array a))
   {(Show a)}
@@ -1351,6 +1429,10 @@ show-map (instance (Show (Map k v))
 sum (fold + 0)
 
 product (fold * 1)
+
+maximum (reduce max)
+
+minimum (reduce min)
 
 all (fold and True)
 
@@ -1395,10 +1477,35 @@ scan-into (fn [what initial into over]
     next (what x folded)
     [folded scanned] acc))
 
+reapply (fn [what initial times]
+  (# Applies what times starting with initial returning the last result.)
+  (match times
+    0 initial
+    else (reapply what (what initial) (- 1 times))))
+
 iterate (fn [what initial times]
+  (# Applies what times starting with initial returning a list of the results.)
   (take times (scan (const what) initial (range 0 (- 1 times)))))
 
+until (fn [what next initial]
+  (# Applies next until what returns True , starting with initial .)
+  (if (what initial)
+    initial
+    (until what next (next initial))))
+
 else True
+
+?-mappable (instance (Mappable ?)
+  map (fn [what over]
+    (match over
+      (Some value) (Some (what value))
+      None None)))
+
+?-zippable (instance (Zippable ?)
+  zip (fn [what x y]
+    (match [x y]
+      [(Some a) (Some b)] (Some (what a b))
+      _ None)))
 
 Liftable (class [c]
   {(Mappable c)}
@@ -1413,14 +1520,14 @@ follow (fn [first-wrapped second-wrapped]
   (chain first-wrapped (fn [_]
       second-wrapped)))
 
-do (syntax [..es]
-  (create-chain es)
-  create-chain (fn [statements]
-    (match statements
-      {x} x
-      {x ..xs} (match x
-        (` set ,to ,what) (` chain ,what (fn [,to] (, create-chain xs)))
-        action (` follow action (, create-chain xs))))))
+do (syntax [..actions]
+  (match actions
+    {x} x
+    {x ..xs} (match x
+      (` set ,to ,what) (` chain ,what (fn [_do_pattern]
+          (match _do_pattern
+            ,to (do ,..xs))))
+      _ (` follow ,x (do ,..xs)))))
 
 Void (data Void)
 
@@ -1428,12 +1535,15 @@ Io (data [a] Io [content: (Fn a)])
 
 run-io (fn [wrapped] ((Io-content wrapped)))
 
+exec-io (fn [wrapped]
+  (const Void (run-io wrapped)))
+
 chain-io (fn [wrapped through]
   (Io (fn [] (run-io (through (run-io wrapped))))))
 
 io-mappable (instance (Mappable Io)
-  map (fn [what onto]
-    (chain-io onto
+  map (fn [what over]
+    (chain-io over
       (fn [x] (Io (fn [] (what x)))))))
 
 io-liftable (instance (Liftable Io)
@@ -1444,5 +1554,22 @@ io-liftable (instance (Liftable Io)
             (Io (fn [] (unwrapped-what unwrapped-to)))))))))
 
 io-chainable (instance (Chainable Io)
-  chain chain-io)'''
+  chain chain-io)
+
+io (syntax [expression]
+  (` Io (fn [] ,expression)))
+
+random (io (:: Num (.random global.Math)))
+
+random-int (fn [from exclude-to]
+  (do
+    (set p random)
+    (lift (floor (+ from (* (- from exclude-to) p))))))
+
+-> (syntax [..args]
+  (match args
+    {x} x
+    {x f ..fs} (` -> (,f ,x) ,..fs)))
+
+'''
 ]
