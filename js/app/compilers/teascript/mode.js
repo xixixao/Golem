@@ -869,6 +869,15 @@ exports.Mode = (function(_super) {
       }
     });
     return this.editor.commands.addCommands(this.commands = {
+      'ignoretheseshortcuts': {
+        bindKey: {
+          win: "Ctrl-E",
+          mac: "Ctrl-E|Ctrl-Shift-E|Command-G|Command-Shift-G|Ctrl-G|Ctrl-Shift-G|Command-Shift-Up|Shift-Up|Shift-Down|Ctrl-N|Option-Shift-Left|Option-Shift-Right|Command-Shift-Left|Command-Shift-Right|Ctrl-B|Ctrl-V|Command-Option-E|Command-Shift-E|Command-D|Command-Shift-D duplicateSelection|Command-Alt-S|Command-/|Command-Shift-/|Command-Option-Up|Command-Option-Down|Command-Delete|Ctrl-H|Alt-Delete|Alt-Backspace|Ctrl-Alt-Backspace|Ctrl-[|Ctrl-]|Ctrl-Shift-U|Command-Shift-L|Ctrl-Alt-Up|Ctrl-Alt-Down|Ctrl-Alt-Shift-Up|Ctrl-Alt-Shift-Down|Ctrl-Alt-Left|Ctrl-Alt-Right|Ctrl-Alt-Shift-Left|Ctrl-Alt-Shift-Right|Ctrl-Alt-L|Ctrl-Alt-A|Ctrl-Alt-G"
+        },
+        exec: (function(_this) {
+          return function() {};
+        })(this)
+      },
       'select by click': {
         autocomplete: true,
         exec: (function(_this) {
@@ -1091,7 +1100,7 @@ exports.Mode = (function(_super) {
           };
         })(this)
       },
-      'removeback': {
+      'backspace': {
         bindKey: {
           win: 'Backspace',
           mac: 'Backspace'
@@ -1104,23 +1113,10 @@ exports.Mode = (function(_super) {
           };
         })(this)
       },
-      'remove-ala-delete': {
+      'del': {
         bindKey: {
           win: 'Delete',
-          mac: 'Delete'
-        },
-        multiSelectAction: 'forEach',
-        autocomplete: true,
-        exec: (function(_this) {
-          return function() {
-            return _this.remove(FORWARD);
-          };
-        })(this)
-      },
-      'removeforward': {
-        bindKey: {
-          win: 'Ctrl-Backspace',
-          mac: 'Ctrl-Backspace'
+          mac: 'Delete|Shift-Delete|Ctrl-Backspace|Shift-Backspace'
         },
         multiSelectAction: 'forEach',
         autocomplete: true,
@@ -3492,12 +3488,12 @@ changeNumericalAt = function(symbol, offset, amount) {
   n = symbol.length;
   fp = (at = symbol.indexOf(".")) >= 0 ? at + 1 : n;
   decimals = n - fp;
-  t = parseFloat(symbol.replace(/^~/, '-'));
+  t = parseFloat(symbol);
   t *= Math.pow(10, decimals);
   amount *= Math.pow(10, n - offset - (fp !== n && offset < fp ? 1 : 0));
   t += amount;
   t /= Math.pow(10, decimals);
-  return (t.toFixed(decimals)).replace(/^-/, '~');
+  return t.toFixed(decimals);
 };
 
 isExpression = function(node) {
@@ -3509,7 +3505,7 @@ isAtom = function(node) {
 };
 
 isNumerical = function(atom) {
-  return atom.symbol && /^~?\d/.test(atom.symbol);
+  return atom.symbol && /^-?\d/.test(atom.symbol);
 };
 
 isDelimitedAtom = function(atom) {
