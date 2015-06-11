@@ -822,14 +822,14 @@ exports.Mode = class extends TextMode
         exec: =>
           @insertSpace BACKWARD, ' '
 
-      'backspace':
+      'removeback':
         bindKey: win: 'Backspace', mac: 'Backspace'
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
           @remove BACKWARD
 
-      'del':
+      'removeforward':
         bindKey: win: 'Delete', mac: 'Delete|Shift-Delete|Ctrl-Backspace|Shift-Backspace'
         multiSelectAction: 'forEach'
         autocomplete: yes
