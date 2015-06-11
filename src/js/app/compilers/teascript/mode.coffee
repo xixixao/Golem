@@ -680,6 +680,10 @@ exports.Mode = class extends TextMode
           @insertStringForward string
 
     @editor.commands.addCommands @commands =
+      'ignoretheseshortcuts':
+        bindKey: win: "Ctrl-E", mac: "Ctrl-E|Ctrl-Shift-E|Command-G|Command-Shift-G|Ctrl-G|Ctrl-Shift-G|Command-Shift-Up|Shift-Up|Shift-Down|Ctrl-N|Option-Shift-Left|Option-Shift-Right|Command-Shift-Left|Command-Shift-Right|Ctrl-B|Ctrl-V|Command-Option-E|Command-Shift-E|Command-D|Command-Shift-D duplicateSelection|Command-Alt-S|Command-/|Command-Shift-/|Command-Option-Up|Command-Option-Down|Command-Delete|Ctrl-H|Alt-Delete|Alt-Backspace|Ctrl-Alt-Backspace|Ctrl-[|Ctrl-]|Ctrl-Shift-U|Command-Shift-L|Ctrl-Alt-Up|Ctrl-Alt-Down|Ctrl-Alt-Shift-Up|Ctrl-Alt-Shift-Down|Ctrl-Alt-Left|Ctrl-Alt-Right|Ctrl-Alt-Shift-Left|Ctrl-Alt-Shift-Right|Ctrl-Alt-L|Ctrl-Alt-A|Ctrl-Alt-G"
+        exec: =>
+
       'select by click':
         autocomplete: yes
         exec: =>
@@ -814,22 +818,15 @@ exports.Mode = class extends TextMode
         exec: =>
           @insertSpace BACKWARD, ' '
 
-      'removeback':
+      'backspace':
         bindKey: win: 'Backspace', mac: 'Backspace'
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
           @remove BACKWARD
 
-      'remove-ala-delete':
-        bindKey: win: 'Delete', mac: 'Delete'
-        multiSelectAction: 'forEach'
-        autocomplete: yes
-        exec: =>
-          @remove FORWARD
-
-      'removeforward':
-        bindKey: win: 'Ctrl-Backspace', mac: 'Ctrl-Backspace'
+      'del':
+        bindKey: win: 'Delete', mac: 'Delete|Shift-Delete|Ctrl-Backspace|Shift-Backspace'
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
