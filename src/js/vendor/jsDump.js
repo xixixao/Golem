@@ -193,6 +193,8 @@ var jsDump;
         this.down();
         if (ret.length === 0 && map.constructor.name !== 'Object') {
           return map.constructor.name;
+        } else if (map.constructor.name !== 'Object' && ret.length < 10) {
+          return join('(' + map.constructor.name, ret, ')');
         }
         return join( '{', ret, '}' );
       },
