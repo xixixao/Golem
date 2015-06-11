@@ -155,6 +155,12 @@ textarea {
 .messageDisplay code {
   font-family: Monaco, Consolas, "Lucida Console", monospace;
 }
+.intro {
+  color: #ccc;
+}
+.intro code {
+  color: #67b3dd;
+}
 #compilationIndicator {
   display: inline-block;
   padding-top: 7px;
