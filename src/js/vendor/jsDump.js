@@ -225,7 +225,7 @@ var jsDump;
       date:quote,
       regexp:literal, //regex
       number:function(value) {
-        return value < 0 ? '~' + (- value) : value + '';
+        return value + '';//value < 0 ? '~' + (- value) : value + '';
       },
       'boolean':function(value) {
         return value ? 'True' : 'False';

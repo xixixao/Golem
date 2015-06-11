@@ -2620,13 +2620,13 @@ changeNumericalAt = (symbol, offset, amount) ->
   fp = if (at = symbol.indexOf(".")) >= 0 then at + 1 else n
   decimals = n - fp
 
-  t = parseFloat symbol.replace /^~/, '-'
+  t = parseFloat symbol#.replace /^~/, '-'
   t *= Math.pow 10, decimals
 
   amount *= Math.pow 10, n - offset - (if fp isnt n and offset < fp then 1 else 0)
   t += amount
   t /= Math.pow 10, decimals
-  (t.toFixed decimals).replace /^-/, '~'
+  (t.toFixed decimals)#.replace /^-/, '~'
 
 # Fn Node Bool
 isExpression = (node) ->
@@ -2637,7 +2637,7 @@ isAtom = (node) ->
   (isExpression node) and not isForm node
 
 isNumerical = (atom) ->
-  atom.symbol and /^~?\d/.test atom.symbol
+  atom.symbol and /^-?\d/.test atom.symbol
 
 # Fn Node Bool
 isDelimitedAtom = (atom) ->
