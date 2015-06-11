@@ -349,7 +349,7 @@ exports.Mode = class extends TextMode
     if !@isAutocompleting() or @isInserting()
       if !editor.completer
         # Create new autocompleter
-        editor.completer = new CustomAutocomplete()
+        editor.completer = new CustomAutocomplete (not @isSingleLineInput)
       # Disable autoInsert
       #editor.completer.autoInsert = false;
       @closeTooltip()

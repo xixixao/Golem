@@ -2,8 +2,8 @@ ace          = require("ace/ace")
 Autocomplete = require("ace/autocomplete").Autocomplete
 
 module.exports = class CustomAutocomplete extends Autocomplete
-  constructor: ->
-    # delete @commands['Return']
+  constructor: (enableReturn) ->
+    delete @commands['Return'] if not enableReturn
     delete @commands['Shift-Return']
     delete @commands['Space']
     super
