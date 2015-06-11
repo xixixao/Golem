@@ -3,7 +3,12 @@ Autocomplete = require("ace/autocomplete").Autocomplete
 
 module.exports = class CustomAutocomplete extends Autocomplete
   constructor: ->
-    delete @commands['Return']
+    # delete @commands['Return']
     delete @commands['Shift-Return']
     delete @commands['Space']
     super
+
+  detach: ->
+    super
+    if this.popup
+      this.popup.renderer.scrollBarV.setScrollTop 0
