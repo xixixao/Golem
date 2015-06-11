@@ -263,7 +263,7 @@ exports.Mode = class extends TextMode
   updateAst: (ast, errors = []) ->
     duplicateProperties ast, @ast
     @$tokenizer._signal 'update', data: rows: first: 1
-    if _empty errors
+    if (_empty errors) or not @isAutocompleting()
       @updateAutocomplete()
     @addErrorMarkers errors
 
@@ -601,18 +601,21 @@ exports.Mode = class extends TextMode
       'move up to atom or position':
         bindKey: win: 'Up', mac: 'Up'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @selectLineAdjecentAtomOrPosition PREVIOUS
 
       'move down to atom or position':
         bindKey: win: 'Down', mac: 'Down'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @selectLineAdjecentAtomOrPosition NEXT
 
       'add a new sibling expression on the next line':
         bindKey: win: 'Enter', mac: 'Enter'
         multiSelectAction: 'forEach'
+        autocomplete: yes
         exec: =>
           @replaceSpace FORWARD, '\n'
 
