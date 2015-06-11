@@ -263,7 +263,8 @@ exports.Mode = class extends TextMode
   updateAst: (ast, errors = []) ->
     duplicateProperties ast, @ast
     @$tokenizer._signal 'update', data: rows: first: 1
-    @updateAutocomplete()
+    if _empty errors
+      @updateAutocomplete()
     @addErrorMarkers errors
 
   # Traverses the AST in order, fixing positions
