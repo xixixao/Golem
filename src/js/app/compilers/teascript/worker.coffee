@@ -64,6 +64,10 @@ exports.Worker = class extends Mirror
     info = compiler.findDocsFor @moduleName, reference
     @sender.callback info, id
 
+  expand: (expression, id) ->
+    compiled = compiler.expand @moduleName, expression
+    @sender.callback compiled, id
+
   compileBuild: (moduleName, id) ->
     compiled = compiler.compileModule moduleName
     @sender.callback compiled, id

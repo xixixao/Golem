@@ -1305,6 +1305,15 @@ exports.Mode = class extends TextMode
                     else
                       newSelections: [(insToTangible indented)]) # this must be after insertion
                 @finishGroupMutation()
+            else if isMacro atom
+              @worker.call 'expand', [atom.parent], (result) =>
+                if result
+                  replacing = spacedInline result
+                  @mutate
+                    changeInTree:
+                      added: [replacing]
+                      at: toTangible atom.parent
+                    inSelection: replacing
             else
               # Replace selection with definition
               # name = _fst (other for other in others when isName other)
@@ -2287,6 +2296,9 @@ definitionAncestorOf = (node) ->
 
 isName = (expression) ->
   expression?.label is 'name'
+
+isMacro = (expression) ->
+  expression?.label is 'keyword'
 
 findAllOccurences = (nodes) -> (node) ->
   numNodes = nodes.length
