@@ -45,6 +45,8 @@ log = (arg) ->
   _fst
   _labelName
   _symbol
+  call_
+  token_
 } = compiler = require './compiler'
 
 # Extend selection to preserve state when multiselecting
@@ -441,6 +443,15 @@ exports.Mode = class extends TextMode
             @createDocTooltipHtml info
     else if type = (token.type?.type or token.tea)
       activate @prettyPrintTypeForDoc rawType: type
+
+  lookupSource: (token, whenFound) ->
+    reference = name: token.symbol, scope: token.scope
+    @worker.call 'docsFor', [reference], (info) =>
+      {source} = info
+      if isFunction source
+        [fn, params, rest...] = _terms source
+        source = call_ fn, (join [params], (filter isFunctionBody, rest))
+      whenFound spacedInline source
 
   closeTooltip: =>
     @detach()
@@ -1255,8 +1266,8 @@ exports.Mode = class extends TextMode
           # For now assume name is selected
           selected = @onlySelectedExpression()
           if selected and (isAtom atom = selected)
-            others = (findOtherReferences atom) @ast
             if isName atom
+              others = (findOtherReferences atom) @ast
               # Replace all occurences
               @startGroupMutation()
 
@@ -1296,13 +1307,14 @@ exports.Mode = class extends TextMode
                 @finishGroupMutation()
             else
               # Replace selection with definition
-              name = _fst (other for other in others when isName other)
-              if isExpression definition = siblingTerm FORWARD, name
-                inlined = (toTangible definition)
+              # name = _fst (other for other in others when isName other)
+              @lookupSource atom, (definition) =>
+                replacing = (reindentNodes [definition], atom.parent)
                 @mutate
                   changeInTree:
-                    added: (reindentTangible inlined, atom.parent)
+                    added: replacing
                     at: @selectedTangible()
+                  inSelections: replacing
           else if selected and (isBetaReducible reducible = selected) or
               (parentOf selected) and (isBetaReducible reducible = parentOf selected)
 
@@ -2251,6 +2263,20 @@ isParentOfDefinitionList = (expression) ->
 
 isFunction = (expression) ->
   (isForm expression) and (_operator expression)?.symbol is 'fn'
+
+isFunctionBody = (expression) ->
+  not ((isForm expression) and (_operator expression)?.symbol in ['#', ':'])
+
+# Takes a form with terms and adds spaces between them, recursively
+spacedInline = (expression) ->
+  if isForm form = expression
+    spacedForm = form[0...2]
+    for term in form[2...-1] when not isWhitespace term
+      spacedForm.push (token_ ' '), spacedInline term
+    spacedForm.push form[form.length - 1]
+    listToForm spacedForm
+  else
+    expression
 
 definitionAncestorOf = (node) ->
   if (parent = parentOf node)

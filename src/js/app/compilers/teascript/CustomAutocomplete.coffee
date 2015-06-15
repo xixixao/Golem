@@ -8,7 +8,7 @@ module.exports = class CustomAutocomplete extends Autocomplete
     delete @commands['Space']
     super
 
-  detach: ->
-    super
-    if this.popup
-      this.popup.renderer.scrollBarV.setScrollTop 0
+  # detach: ->
+  #   super
+  #   if this.popup
+  #     this.popup.renderer.scrollBarV.setScrollTop 0
