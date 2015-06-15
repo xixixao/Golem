@@ -451,7 +451,7 @@ exports.Mode = class extends TextMode
       if isFunction source
         [fn, params, rest...] = _terms source
         source = call_ fn, (join [params], (filter isFunctionBody, rest))
-      whenFound spacedInline source
+      whenFound enforceSpacing source
 
   closeTooltip: =>
     @detach()
@@ -1308,12 +1308,12 @@ exports.Mode = class extends TextMode
             else if isMacro atom
               @worker.call 'expand', [atom.parent], (result) =>
                 if result
-                  replacing = spacedInline result
+                  replacing = reindentNodes [enforceSpacing result], atom.parent.parent
                   @mutate
                     changeInTree:
-                      added: [replacing]
+                      added: replacing
                       at: toTangible atom.parent
-                    inSelection: replacing
+                    inSelections: replacing
             else
               # Replace selection with definition
               # name = _fst (other for other in others when isName other)
@@ -2277,11 +2277,19 @@ isFunctionBody = (expression) ->
   not ((isForm expression) and (_operator expression)?.symbol in ['#', ':'])
 
 # Takes a form with terms and adds spaces between them, recursively
-spacedInline = (expression) ->
+# If there already are spaces, leaves them
+enforceSpacing = (expression) ->
   if isForm form = expression
     spacedForm = form[0...2]
-    for term in form[2...-1] when not isWhitespace term
-      spacedForm.push (token_ ' '), spacedInline term
+    for term, i in form[2...-1] when not isWhitespace term
+      prev = form[i - 1 + 2]
+      space = if isIndent prev
+        form[i - 2 + 2...i + 2]
+      else if isWhitespace prev
+        [prev]
+      else
+        [(token_ ' ')] # default space
+      spacedForm.push space..., enforceSpacing term
     spacedForm.push form[form.length - 1]
     listToForm spacedForm
   else
