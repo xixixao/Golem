@@ -1120,11 +1120,11 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
-          # if @isInserting()
-          #   @wrap '(', 'fn', ' ', '[', {insert: yes}, ']', ' ', {selected: yes, select: yes}, ')'
-          # else
           separator = if (isAtDefinitionList (toNode @selectedTangible())) or @isSingleLineInput then [' '] else ['\n', '  ']
-          @wrap ['(', 'fn', ' ', ['[', {insert: yes}, ']'], separator..., {selected: yes}, ')']...
+          if @isInserting()
+            @wrap ['(', 'fn', ' ', ['[', {insert: yes}, ']'], separator..., {selected: yes}, ')']...
+          else
+            @wrap '(', 'fn', ' ', '[]', ' ', {selected: yes, select: yes}, ')'
 
       'Match on current selection':
         bindKey: win: 'Ctrl-M', mac: 'Ctrl-M'
