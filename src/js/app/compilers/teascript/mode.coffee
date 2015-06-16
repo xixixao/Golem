@@ -1114,7 +1114,7 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
-          separator = if (isAtDefinitionList (toNode @selectedTangible())) or @isSingleLineInput then [' '] else ['\n', '  ']
+          separator = if not (isTangibleAtDefinitionList @selectedTangible()) or @isSingleLineInput then [' '] else ['\n', '  ']
           if @isInserting()
             @wrap ['(', 'fn', ' ', ['[', {insert: yes}, ']'], separator..., {selected: yes}, ')']...
           else
@@ -2250,8 +2250,11 @@ argumentNamesFromCall = (call) ->
         defaultNames[i++])
   args
 
-isAtDefinitionList = (node) ->
-  (ancestorAtDefinitonList node) is node
+isTangibleAtDefinitionList = (tangible) ->
+  if isReal parent = parentOfTangible tangible
+    isParentOfDefinitionList parent
+  else
+    yes
 
 ancestorAtDefinitonList = (node) ->
   if (parent = parentOf node)
