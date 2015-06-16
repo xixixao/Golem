@@ -1123,8 +1123,8 @@ exports.Mode = class extends TextMode
           # if @isInserting()
           #   @wrap '(', 'fn', ' ', '[', {insert: yes}, ']', ' ', {selected: yes, select: yes}, ')'
           # else
-          separator = if (parentOf (toNode @selectedTangible())) or @isSingleLineInput then [' '] else ['\n', '  ']
-          @wrap (concat [['(', 'fn', ' ', '[]'], separator, [{selected: yes, select: yes}, ')']])...
+          separator = if (isAtDefinitionList (toNode @selectedTangible())) or @isSingleLineInput then [' '] else ['\n', '  ']
+          @wrap ['(', 'fn', ' ', ['[', {insert: yes}, ']'], separator..., {selected: yes}, ')']...
 
       'Match on current selection':
         bindKey: win: 'Ctrl-M', mac: 'Ctrl-M'
@@ -1551,29 +1551,47 @@ exports.Mode = class extends TextMode
       tags = {}
       offset = 0
       for tagged, i in tokens when not isString tagged
-        for key of tagged
-          (tags[key] ?= []).push i - offset
-        offset++
+        if Array.isArray tagged
+          nestedTags = findTags tagged
+          for key, ats of nestedTags
+            for at in ats
+              path = {}
+              (tags[key] ?= []).push parent: i - offset, child: at
+        else
+          for key of tagged
+            (tags[key] ?= []).push i - offset
+          offset++
       tags
 
     tags = findTags tokens
     # i = tokens.indexOf yes
     # throw new Error "missing yes in wrap" if i is -1
 
-    string = (filter isString, tokens).join ''
-    @wrapIn string, @selectedTangible(), tags
+    flatten = (list) ->
+      if Array.isArray list
+        (for node in list when flattened = flatten node
+          flattened).join ''
+      else if isString list
+        list
+    @wrapIn (flatten tokens), @selectedTangible(), tags
 
   wrapIn: (wrapperString, tangible, {selected, select, insert}) ->
     throw new Error "missing selected in wrapIn" unless selected?
     [wrapper] = astize wrapperString, parentOfTangible tangible
     empty = tangible.in.length is 0
 
+    atPath = (path, node) ->
+      if path.parent
+        atPath path.child, node[path.parent]
+      else
+        node[path]
+
     # First replace, then reinsert
     @startGroupMutation()
     @mutate
       changeInTree:
-        at: tangible
         added: [wrapper]
+        at: tangible
     wrapped = reindentTangible tangible, wrapper
     selections = join (select || []), (insert || [])
     @mutate
@@ -1581,13 +1599,13 @@ exports.Mode = class extends TextMode
         added: wrapped
         at:
           in: []
-          out: [wrapper[selected[0]]]
+          out: [atPath selected[0], wrapper]
       inSelections: wrapped if select and not empty
       tangibleSelection:
         if not select or empty
           in: []
-          out: [wrapper[selections[0]]]
-      newSelections: map ((i) -> in: [], out: [wrapper[i]]), selections[1...]
+          out: [atPath selections[0], wrapper]
+      newSelections: map ((i) -> in: [], out: [atPath i, wrapper]), selections[1...]
     @finishGroupMutation()
 
   removeNewLines: ->
@@ -2237,6 +2255,9 @@ argumentNamesFromCall = (call) ->
       else
         defaultNames[i++])
   args
+
+isAtDefinitionList = (node) ->
+  (ancestorAtDefinitonList node) is node
 
 ancestorAtDefinitonList = (node) ->
   if (parent = parentOf node)
