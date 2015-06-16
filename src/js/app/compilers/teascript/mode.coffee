@@ -435,9 +435,9 @@ exports.Mode = class extends TextMode
     else if token.scope?
       reference = name: token.symbol, scope: token.scope
       @worker.call 'docsFor', [reference], (info) =>
-        if info?.rawType
+        if info?
           # TODO: until we insert the type directly into text
-          activate if token.label is 'name'
+          activate if (token.label is 'name') and info.rawType
             @prettyPrintTypeForDoc info
           else
             @createDocTooltipHtml info
@@ -460,21 +460,15 @@ exports.Mode = class extends TextMode
     @activeTooltip?.hideAndRemoveMarker()
 
   createDocTooltipHtml: (info) ->
-    paramNames = info.arity or []
-    params = paramNames.join ' '
-    """
-    <span style='color: #9EE062'>#{info.name}</span> \
-    <span style='color: #9C49B6'>#{params}</span>
-    #{@prettyPrintTypeForDoc info}
-    """ +
-    if info.docs
-      docs = compiler.labelDocs info.docs, paramNames
-      """
-
-      #{docs}
-      """
-    else
-      ''
+    "<span style='color: #9EE062'>#{info.name}</span>" +
+    (if !info.arity then '' else
+      paramNames = info.arity or []
+      " <span style='color: #9C49B6'>#{paramNames.join ' '}</span>"
+      ) + '\n' +
+    (if !info.rawType then '' else
+      "#{@prettyPrintTypeForDoc info}\n") +
+    if !info.docs then '' else
+      compiler.labelDocs info.docs, paramNames
 
   prettyPrintTypeForDoc: ({rawType}) ->
     compiler.prettyPrint rawType
