@@ -2803,7 +2803,7 @@ convertToAceToken = (token) ->
     else
        token.symbol
   type:
-    (if (isDelim token) and token.parent.malformed or token.malformed
+    (if (isDelim token) and token.parent.malformed# or token.malformed
       'token_malformed'
     else
       switch token.label
