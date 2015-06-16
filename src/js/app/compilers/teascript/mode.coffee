@@ -2818,13 +2818,14 @@ convertToAceLineTokens = (tokens) ->
 
 # Ace converts type: "a.b" to "ace_a ace_b" and rendered 'text' as plaintext
 convertToAceToken = (token) ->
+  delim = isDelim token
   value:
     if token.label is 'string'
       "“#{token.symbol[1...-1]}”"
     else
        token.symbol
   type:
-    (if (isDelim token) and token.parent.malformed# or token.malformed
+    (if delim and token.parent.malformed or not delim and token.malformed
       'token_malformed'
     else
       switch token.label
