@@ -690,7 +690,7 @@ exports.Mode = class extends TextMode
 
     @editor.commands.addCommands @commands =
       'ignoretheseshortcuts':
-        bindKey: win: "Ctrl-E", mac: "Ctrl-E|Ctrl-Shift-E|Command-G|Command-Shift-G|Ctrl-G|Ctrl-Shift-G|Command-Shift-Up|Shift-Up|Shift-Down|Ctrl-N|Option-Shift-Left|Option-Shift-Right|Command-Shift-Left|Command-Shift-Right|Ctrl-B|Ctrl-V|Command-Option-E|Command-Shift-E|Command-D|Command-Shift-D duplicateSelection|Command-Alt-S|Command-/|Command-Shift-/|Command-Option-Up|Command-Option-Down|Command-Delete|Ctrl-H|Alt-Delete|Alt-Backspace|Ctrl-Alt-Backspace|Ctrl-[|Ctrl-]|Ctrl-Shift-U|Command-Shift-L|Ctrl-Alt-Up|Ctrl-Alt-Down|Ctrl-Alt-Shift-Up|Ctrl-Alt-Shift-Down|Ctrl-Alt-Left|Ctrl-Alt-Right|Ctrl-Alt-Shift-Left|Ctrl-Alt-Shift-Right|Ctrl-Alt-L|Ctrl-Alt-A|Ctrl-Alt-G"
+        bindKey: win: "Ctrl-Shift-E", mac: "Ctrl-Shift-E|Command-G|Command-Shift-G|Ctrl-G|Ctrl-Shift-G|Command-Shift-Up|Shift-Up|Shift-Down|Ctrl-N|Option-Shift-Left|Option-Shift-Right|Command-Shift-Left|Command-Shift-Right|Ctrl-B|Ctrl-V|Command-Option-E|Command-Shift-E|Command-D|Command-Shift-D duplicateSelection|Command-Alt-S|Command-/|Command-Shift-/|Command-Option-Up|Command-Option-Down|Command-Delete|Ctrl-H|Alt-Delete|Alt-Backspace|Ctrl-Alt-Backspace|Ctrl-[|Ctrl-]|Ctrl-Shift-U|Command-Shift-L|Ctrl-Alt-Up|Ctrl-Alt-Down|Ctrl-Alt-Shift-Up|Ctrl-Alt-Shift-Down|Ctrl-Alt-Left|Ctrl-Alt-Right|Ctrl-Alt-Shift-Left|Ctrl-Alt-Shift-Right|Ctrl-Alt-L|Ctrl-Alt-A|Ctrl-Alt-G"
         exec: =>
 
       'select by click':
@@ -1052,6 +1052,18 @@ exports.Mode = class extends TextMode
             @insertStringForward '#'
           else
             @wrap '(', '#', ' ', {selected: yes, select: yes}, ')'
+
+      'go to definition':
+        bindKey: win: 'Ctrl-E', mac: 'Ctrl-E'
+        multiSelectAction: 'forEach'
+        exec: =>
+          selected = @onlySelectedExpression()
+          if selected and (isAtom atom = selected) and atom.id?
+            references = (findAllReferences atom) @ast
+            for ref in references when (isName ref)
+              @mutate
+                inSelection: ref
+              break
 
       # Temporary
       'insert call-site type':
