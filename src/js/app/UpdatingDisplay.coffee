@@ -13,6 +13,9 @@ isStrictSuffix = (suffix, string) ->
   suffix.length < string.length and
     (string.indexOf suffix, string.length - suffix.length) isnt -1
 
+renderMany = (list) ->
+  (React.renderComponentToStaticMarkup x for x in list).join ''
+
 module.exports = hyper class UpdatingDisplay
 
   getInitialState: ->
@@ -37,7 +40,8 @@ module.exports = hyper class UpdatingDisplay
               try throw new Error "stack" catch e then ((e.stack.split '\n')[5...]).join('')
 
             valueRow = =>
-              ((_td style: 'padding-right': '5px', @displayValue v) for v in values)
+              _tr dangerouslySetInnerHTML:
+                __html:  renderMany ((_td style: 'padding-right': '5px', @displayValue v) for v in values)
 
             newTable = =>
               _table
@@ -49,7 +53,7 @@ module.exports = hyper class UpdatingDisplay
                       'padding-right': '15px'
                       'white-space': 'pre-wrap'
                     dangerouslySetInnerHTML: __html: e) for e in expressions)
-                  _tr valueRow()
+                  valueRow()
 
             if doLog
               newStack = stack()
@@ -61,8 +65,8 @@ module.exports = hyper class UpdatingDisplay
                 else
                   @timesLogged++
                   placeholder = window.document.createElement "div"
-                  React.renderComponent (_table _tbody _tr valueRow()), placeholder
-                  if table.firstChild.lastChild.textContent isnt placeholder.firstChild.firstChild.firstChild.textContent
+                  React.renderComponent (_table _tbody valueRow()), placeholder
+                  if table.firstChild.lastChild.innerHTML isnt placeholder.firstChild.firstChild.firstChild.innerHTML
                     table.firstChild.appendChild placeholder.firstChild.firstChild.firstChild
                 if @timesLogged > 1000
                   doLog = no
