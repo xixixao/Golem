@@ -238,6 +238,9 @@ exports.Mode = class extends TextMode
       console.error string
       @editor.insert string
 
+  selectInitially: (toSelect) ->
+    @initialSelection = toSelect
+
   tangibleSelectionFromRange: (range) ->
     start = @tangibleAtPos range.start
     end = @tangibleAtPos range.end
@@ -268,6 +271,10 @@ exports.Mode = class extends TextMode
     if (_empty errors) or not @isAutocompleting()
       @updateAutocomplete()
     @addErrorMarkers errors
+    if toSelect = @initialSelection
+      @initialSelection = null
+      @mutate
+        inSelection: findName toSelect.name, @ast
 
   # Traverses the AST in order, fixing positions
   repositionAst: ->
@@ -1057,14 +1064,19 @@ exports.Mode = class extends TextMode
         bindKey: win: 'Ctrl-E', mac: 'Ctrl-E'
         multiSelectAction: 'forEach'
         exec: =>
+          loadModule = (moduleName) =>
+            @editorInstance.executeCommand 'load', moduleName
           selected = @onlySelectedExpression()
           if selected and (isAtom atom = selected)
-            console.log atom
             if atom.id?
               references = (findAllReferences atom) @ast
               for ref in references when (isName ref)
-                @mutate
-                  inSelection: ref
+                if ref.imported
+                  @selectInitially name: ref.imported.name
+                  loadModule ref.imported.module
+                else
+                  @mutate
+                    inSelection: ref
                 break
             else if atom.label is 'module'
               @editorInstance.executeCommand 'load', atom.symbol
@@ -2363,6 +2375,10 @@ nodesEqual = (a, b) ->
   else
     a.symbol is b.symbol
 
+findName = (symbol, nodes) ->
+  for term in nodes when (isName term) and (term.symbol is symbol)
+    return term
+
 atomReference = (atom) ->
   name: atom.symbol, scope: atom.scope
 
@@ -2954,6 +2970,7 @@ duplicateProperties = (newAst, oldAst) ->
   oldAst.assignable = newAst.assignable
   oldAst.scope = newAst.scope
   oldAst.inferredType = newAst.inferredType
+  oldAst.imported = newAst.imported
   if isForm newAst
     for node, i in newAst
       duplicateProperties node, oldAst[i]
