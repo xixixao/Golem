@@ -1059,6 +1059,7 @@ exports.Mode = class extends TextMode
         exec: =>
           selected = @onlySelectedExpression()
           if selected and (isAtom atom = selected)
+            console.log atom
             if atom.id?
               references = (findAllReferences atom) @ast
               for ref in references when (isName ref)
