@@ -14,6 +14,9 @@ define(function () {
 var jsDump;
 
 (function(){
+  function unescape(jsName) {
+    return jsName.replace(/__/g, '-');
+  }
   function quote( str ){
     if (str.length > 2 && str[0] == '<') {
       return {html: str.toString()};
@@ -191,10 +194,12 @@ var jsDump;
         for( var key in map )
           ret.push( this.parse(key,'key') + ': ' + this.parse(map[key]) );
         this.down();
-        if (ret.length === 0 && map.constructor.name !== 'Object') {
-          return map.constructor.name;
-        } else if (map.constructor.name !== 'Object' && ret.length < 10) {
-          return join('(' + map.constructor.name, ret, ')');
+        var className = unescape(map.constructor.name);
+        var isCustom = map.constructor !== Object;
+        if (ret.length === 0 && isCustom) {
+          return className;
+        } else if (isCustom) {// && ret.length < 10
+          return join('(' + className, ret, ')');
         }
         return join( '{', ret, '}' );
       },
@@ -256,7 +261,7 @@ var jsDump;
       'class':'className'
     },
     HTML:false,//if true, entities are escaped ( <, >, \t, space and \n )
-    indentChar:'   ',//indentation unit
+    indentChar:'  ',//indentation unit
     multiline:true, //if true, items in a collection, are separated by a \n, else just a space.
     maxDepth:100 //maximum depth of object nesting
   };
