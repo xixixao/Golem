@@ -156,6 +156,10 @@ define "ace/theme/tea", ["require","exports","module","ace/lib/dom"], (require, 
     color: #FDA947
   }
 
+  .ace-tea .ace_token_module {
+    color: #FDA947
+  }
+
   .ace-tea .ace_token_comment {
     color: grey
   }

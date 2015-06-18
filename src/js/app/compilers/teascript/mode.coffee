@@ -70,7 +70,7 @@ log = (arg) ->
 
 
 exports.Mode = class extends TextMode
-  constructor: (@isSingleLineInput) ->
+  constructor: (@isSingleLineInput, @editorInstance) ->
     @$tokenizer =
       # TODO: passing of doc would require change in ACE, this MIGHT BREAK SOMETHING, check and remove todo
       getLineTokens: (line, state, row, doc = @editor.session.getDocument()) =>
@@ -1058,12 +1058,15 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach'
         exec: =>
           selected = @onlySelectedExpression()
-          if selected and (isAtom atom = selected) and atom.id?
-            references = (findAllReferences atom) @ast
-            for ref in references when (isName ref)
-              @mutate
-                inSelection: ref
-              break
+          if selected and (isAtom atom = selected)
+            if atom.id?
+              references = (findAllReferences atom) @ast
+              for ref in references when (isName ref)
+                @mutate
+                  inSelection: ref
+                break
+            else if atom.label is 'module'
+              @editorInstance.executeCommand 'load', atom.symbol
 
       # Temporary
       'insert call-site type':

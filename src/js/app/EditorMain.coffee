@@ -233,7 +233,7 @@ module.exports = hyper class EditorMain
       commandLine: 'commandLine'
       output: 'output'
     @saved = no
-    mode = new Mode no
+    mode = new Mode no, this
     @registerMode mode
     @fileName = @memory.getLastOpenFileName()
 
