@@ -2,8 +2,9 @@ React = require 'React'
 {_div} = hyper = require 'hyper'
 
 $ = require 'ejquery'
-ace = require './AceEditor'
+UndoManager = require 'ace/undomanager'
 
+ace = require './AceEditor'
 Memory = require './Memory'
 SetIntervalMixin = require './SetIntervalMixin'
 _require = require
@@ -11,10 +12,14 @@ _require = require
 module.exports = hyper class SourceEditor
 
   load: ({value, selection, moduleName, scroll}) ->
-    @editor.session.getMode().setContent value, selection, moduleName
+    session = @editor.session
+    @undoStore[@props.module.moduleName] = session.getUndoManager() if session.getUndoManager().execute
+    session.setUndoManager session.$defaultUndoManager
+    session.getMode().setContent value, selection, moduleName
+    session.setUndoManager @undoStore[moduleName] or session.getMode().createUndoManager?() or new UndoManager
     if scroll
-      @editor.session.setScrollTop scroll.top
-      @editor.session.setScrollLeft scroll.left
+      session.setScrollTop scroll.top
+      session.setScrollLeft scroll.left
 
   serializedModule: ->
     value: @editor.getValue()
@@ -61,8 +66,13 @@ module.exports = hyper class SourceEditor
     editor.setShowPrintMargin false
     editor.setOption 'scrollPastEnd', true
 
+    @undoStore = {}
+
     editor.session.on 'change', =>
       # @saved = no
+      @props.onChange()
+
+    editor.session.getSelection().on 'changeSelection', =>
       @props.onChange()
 
     editor.renderer.on 'themeLoaded', =>

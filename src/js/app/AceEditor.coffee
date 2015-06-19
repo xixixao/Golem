@@ -9,7 +9,6 @@ event = require("ace/lib/event");
 
 Editor = require("ace/editor").Editor;
 EditSession = require("ace/edit_session").EditSession;
-UndoManager = require("ace/undomanager").UndoManager;
 Renderer = require("ace/virtual_renderer").VirtualRenderer;
 require("ace/worker/worker_client");
 require("ace/keyboard/hash_handler");
@@ -34,7 +33,7 @@ exports.edit = (el, mode, theme) ->
         value = dom.getInnerText(el);
         el.innerHTML = '';
 
-    doc = ace.createEditSession(value, mode);
+    doc = new EditSession(value, mode)
 
     editor = new Editor(new Renderer(el, theme), doc);
     mode.attachToEditor(editor);

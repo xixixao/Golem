@@ -175,7 +175,7 @@ exports.Mode = class extends TextMode
 
     @editor.completers = @completers
 
-    session.setUndoManager @undoManager()
+    @editor.session.setUndoManager @createUndoManager()
 
     editor.setOption 'dragEnabled', no
     editor.setOption 'enableBlockSelect', no
@@ -231,7 +231,7 @@ exports.Mode = class extends TextMode
             in: added
             out: inside.out)
       @handleCommandExecution()
-      @undoManager().clear()
+      # @undoManager().clear()
     catch e
       # Make sure we don't error so data is never lost when loading files
       console.error e, e.stack
@@ -525,88 +525,11 @@ exports.Mode = class extends TextMode
     @finishGroupMutation()
     @handleCommandExecution command: name: 'paste'
 
-  undoManager: =>
-    @undoStack or= []
-    @redoStack or= []
-    @groupMutationRegister or= states: []
-    execute: =>
-      # ignore
-    # Our custom execute which saves the reversal of the performed mutation
-    registerMutation: (state, way) =>
-      stack = if way.undo then @undoStack else @redoStack
-      reversals = []
-      if state.changeInTree
-        replaced = state.changeInTree.at
-        added = state.changeInTree.added or []
-        reversals.push
-          changeInTree:
-            at:
-              in: added
-              out: replaced.out
-            added: replaced.in
-      if state.changeWithinAtom
-        [from, to] = sortTuple state.changeWithinAtom.range
-        added = state.changeWithinAtom.string
-        atom = state.changeWithinAtom.atom or @editedAtom()
-        reversals.push
-          changeWithinAtom:
-            range: [from, from + added.length]
-            string: atom.symbol[from...to]
-            atom: atom
-      reversals.push(
-        if @isEditing()
-          atom = @editedAtom()
-          withinAtom: atom
-          withinAtomPos: @distance (@startPos atom), @editor.selection.getRange().end
-        else
-          tangibleSelection: @selectedTangible())
+  undoManager: ->
+    manager = @editor.session.getUndoManager()
 
-      @groupMutationRegister.stack = stack
-      @groupMutationRegister.states.push merge reversals
-    packGroupMutation: =>
-      {stack, states} = @groupMutationRegister
-      states.reverse()
-      stack.push (
-        if @sameKindMutation states, stack[stack.length - 1] or []
-          res = states.concat stack.pop()
-        else
-          states)
-      @groupMutationRegister = states: []
-    undo: =>
-      @replay @undoStack, redo: yes
-      # console.log "should have undone"
-    redo: =>
-      @replay @redoStack, undo: yes
-      # console.log "should have redone"
-    clear: =>
-      @undoStack = []
-      @redoStack = []
-
-  replay: (stack, way) =>
-    states = stack.pop()
-    if states
-      @startGroupMutation()
-      for state in states
-        @mutate state, way
-      @finishGroupMutation()
-
-  sameKindMutation: (previousStates, nextStates) ->
-    if previousStates.length > 0 and nextStates.length > 0
-      [p] = previousStates
-      [n] = nextStates
-      # Renaming
-      (atom = p.changeInTree?.added[0]) and atom is n.changeWithinAtom?.atom or
-      # Inserting in atom
-      (atom = p.changeWithinAtom?.atom) and p.changeWithinAtom.string.length > 0 and
-        atom is n.changeWithinAtom?.atom and n.changeWithinAtom.string.length > 0 or
-      # Removing atom
-      (atom = p.changeWithinAtom?.atom) and p.changeWithinAtom.string.length is 0 and
-        atom is n.changeInTree?.at.in[0] or
-      # Deleting in atom
-      (atom = p.changeWithinAtom?.atom) and p.changeWithinAtom.string.length is 0 and
-        atom is n.changeWithinAtom?.atom and n.changeWithinAtom.string.length is 0
-    else
-      no
+  createUndoManager: ->
+    new CustomUndoManager this
 
   addVerticalCommands: ->
     @editor.commands.addCommands
@@ -1973,6 +1896,24 @@ exports.Mode = class extends TextMode
     @groupMutating = no
     @undoManager().packGroupMutation()
 
+  registerMutation: (state, way) ->
+    selectionMutation =
+      if @isEditing()
+        atom = @editedAtom()
+        withinAtom: atom
+        withinAtomPos: @distance (@startPos atom), @editor.selection.getRange().end
+      else
+        tangibleSelection: @selectedTangible()
+    @undoManager().registerMutation? state, selectionMutation, way
+
+  replay: (stack, way) =>
+    states = stack.pop()
+    if states
+      @startGroupMutation()
+      for state in states
+        @mutate state, way
+      @finishGroupMutation()
+
   # This render-like function, taking in a the desired output and
   # doing the imperative work to achieve it
   #
@@ -2010,8 +1951,8 @@ exports.Mode = class extends TextMode
   # $editing - Boolean
   mutate: (state, way = undo: yes) ->
     # 0. Notify UndoManager
-    @undoManager().registerMutation state, way
-    @undoManager().packGroupMutation() unless @groupMutating
+    @registerMutation state, way
+    @undoManager().packGroupMutation?() unless @groupMutating
     # 1.1. changeInTree
     if state.changeInTree
       replaced = state.changeInTree.at
@@ -2249,6 +2190,81 @@ exports.Mode = class extends TextMode
     if moduleName isnt @moduleName
       @moduleName = moduleName
       @worker.call 'setModuleName', [moduleName]
+
+class CustomUndoManager
+  constructor: (@mode) ->
+    @reset()
+
+  execute: =>
+    # ignore
+
+  # Our custom execute which saves the reversal of the performed mutation
+  registerMutation: (state, selectionMutation, way) =>
+    stack = if way.undo then @undoStack else @redoStack
+    reversals = []
+    if state.changeInTree
+      replaced = state.changeInTree.at
+      added = state.changeInTree.added or []
+      reversals.push
+        changeInTree:
+          at:
+            in: added
+            out: replaced.out
+          added: replaced.in
+    if state.changeWithinAtom
+      [from, to] = sortTuple state.changeWithinAtom.range
+      added = state.changeWithinAtom.string
+      atom = state.changeWithinAtom.atom or @mode.editedAtom()
+      reversals.push
+        changeWithinAtom:
+          range: [from, from + added.length]
+          string: atom.symbol[from...to]
+          atom: atom
+    reversals.push selectionMutation
+
+    @groupMutationRegister.stack = stack
+    @groupMutationRegister.states.push merge reversals
+
+  packGroupMutation: =>
+    {stack, states} = @groupMutationRegister
+    states.reverse()
+    stack.push (
+      if @sameKindMutation states, stack[stack.length - 1] or []
+        res = states.concat stack.pop()
+      else
+        states)
+    @groupMutationRegister = states: []
+
+  undo: =>
+    @mode.replay @undoStack, redo: yes
+    # console.log "should have undone"
+
+  redo: =>
+    @mode.replay @redoStack, undo: yes
+    # console.log "should have redone"
+
+  reset: =>
+    @undoStack = []
+    @redoStack = []
+    @groupMutationRegister = states: []
+
+  sameKindMutation: (previousStates, nextStates) ->
+    if previousStates.length > 0 and nextStates.length > 0
+      [p] = previousStates
+      [n] = nextStates
+      # Renaming
+      (atom = p.changeInTree?.added[0]) and atom is n.changeWithinAtom?.atom or
+      # Inserting in atom
+      (atom = p.changeWithinAtom?.atom) and p.changeWithinAtom.string.length > 0 and
+        atom is n.changeWithinAtom?.atom and n.changeWithinAtom.string.length > 0 or
+      # Removing atom
+      (atom = p.changeWithinAtom?.atom) and p.changeWithinAtom.string.length is 0 and
+        atom is n.changeInTree?.at.in[0] or
+      # Deleting in atom
+      (atom = p.changeWithinAtom?.atom) and p.changeWithinAtom.string.length is 0 and
+        atom is n.changeWithinAtom?.atom and n.changeWithinAtom.string.length is 0
+    else
+      no
 
 argumentNamesFromCall = (call) ->
   defaultNames = "xyzwtuvmnopqrs"
