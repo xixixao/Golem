@@ -62,7 +62,7 @@ var jsDump;
     if( !arr )
       return pre + post;
     var afterPre = /\w$/.test(pre) ? ' ' : ''
-    return inline ? pre + afterPre + arr + post : [ pre, inner + arr, base + post ].join(s);
+    return inline ? pre + afterPre + arr + post : [ pre, inner + arr + post ].join(s);//base +
   }
   function delim (arr, opening, closing) {
     var i = arr.length, ret = Array(i);
