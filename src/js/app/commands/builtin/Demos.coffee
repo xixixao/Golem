@@ -461,12 +461,9 @@ examples (fn []
 
 div (fn [by what]
   (: (Fn Num Num Num))
-  (# The integer result of dividing by what rounded towards 0 .
-    For example (/ 2 -5) equals -2 .)
-  ((if (> 0 divided)
-      floor
-      ceil) divided)
-  divided (/ by what))
+  (# The integer result of dividing by what rounded down .
+    For example (/ 2 -5) equals -3 .)
+  (floor (/ by what)))
 
 mod (macro [by of]
   (: (Fn Num Num Num))
@@ -547,12 +544,13 @@ not (macro [x]
   (# The logical negation of x .)
   (Js.unary "!" x))
 
+else True
+
 if (syntax [what then else]
-  (: (Fn Bool a a a))
   (# If what is True returns then otherwise returns else .)
   (` cond
     ,what ,then
-    True ,else))
+    else ,else))
 
 Eq (class [a]
   = (fn [x y] (: (Fn a a Bool))
@@ -748,7 +746,7 @@ range (fn [from exclude-to]
 range-by (fn [from exclude-to step]
   (: (Fn Num Num Num (Array Num)))
   (# An increasing sequence of numbers from up to exclude-to with step size .
-    For example (range 2 3 0.4) {2 2.4 2.8} .)
+    For example (range 2 3 0.4) gives {2 2.4 2.8} .)
   (if (< exclude-to from)
     (:: (Array Num) (.toList (.Range global.Immutable from exclude-to step)))
     {}))
@@ -799,8 +797,8 @@ from-? (fn [default of]
 
 ? (syntax [maybe default]
   (: (Fn (? a) a a))
-  (# If maybe is Some then its value otherwise default .
-    If maybe is Some default is not evaluated.)
+  (# If maybe is Some then returns its value otherwise returns default .
+    If maybe is Some , default is not evaluated.)
   (` match ,maybe
     None ,default
     (Some value) value))
@@ -950,11 +948,9 @@ set-bag (instance (Bag (Set a) a)
 set-set (instance (Set (Set a) a)
   {(Eq a)}
   elem? (macro [what in]
-    (: (Fn (Set a) a Bool))
     (Js.method in "contains" {what}))
 
   remove (macro [what from]
-    (: (Fn (Set a) a (Set a)))
     (Js.method from "remove" {what})))
 
 set-mappable (instance (Mappable Set)
@@ -988,7 +984,7 @@ map-bag (instance (Bag (Map k v) v)
 
 from-nullable (syntax [nullable]
   (# Wraps a JavaScript value which could be null or undefined
-    such that null and undefined result in None and other values
+    such that null and undefined results in None and other values
     are wrapped in Some .)
   (` if (is-null-or-undefined ,nullable)
     None
@@ -1069,11 +1065,9 @@ array-map (instance (Map (Array a) Num a)
     (Js.method in "has" {what}))
 
   put (macro [at what in]
-    (: (Fn Num a (Array a) (Array a)))
     (Js.method in "set" {at what}))
 
   delete (macro [key from]
-    (: (Fn Num (Array a) (Array a)))
     (Js.method from "remove" {key}))
 
   fold-keys (fn [with initial over]
@@ -1087,20 +1081,16 @@ array-seq (instance (Seq (Array a) a)
     (Js.method list "rest" {}))
 
   take (macro [n from]
-    (: (Fn Num (Array a) (Array a)))
     (Js.method from "take" {n}))
 
   drop (macro [n from]
-    (: (Fn Num (Array a) (Array a)))
     (Js.method from "skip" {n})))
 
 array-deq (instance (Deq (Array a) a)
   && (macro [what to]
-    (: (Fn Num a (Array a) (Array a)))
     (Js.method to "push" {what}))
 
   but-last (macro [list]
-    (: (Fn (Array a) (Array a)))
     (Js.method list "butLast" {}))
 
   last (fn [list]
@@ -1113,37 +1103,30 @@ array-eq (instance (Eq (Array a))
 
 list-bag (instance (Bag (List a) a)
   size (macro [list]
-    (: (Fn (List a) Num))
     (Js.access list "size"))
 
   empty (List)
 
   fold (macro [with initial set]
-    (: (Fn (Fn a b b) b (List a) b))
     (Js.method set "reduce"
       {(fn [acc x] (with x acc)) initial}))
 
   join (macro [what with]
-    (: (Fn (List a) (List a) (List a)))
     (Js.method what "concat" {with}))
 
   filter (macro [with what]
-    (: (Fn (Fn a Bool) (List a) (List a)))
     (Js.method what "filter" {with})))
 
 list-appendable (instance (Appendable (List a) a)
   & (macro [what to]
-    (: (Fn a (List a) (List a)))
     (Js.method to "unshift" {what})))
 
 list-mappable (instance (Mappable List)
   map (macro [what over]
-    (: (Fn (Fn a b) (List a) (List b)))
     (Js.method over "map" {what})))
 
 list-zippable (instance (Zippable List)
   zip (macro [with first second]
-    (: (Fn (Fn a b c) (List a) (List b) (List c)))
     (Js.method first "zipWith" {with second})))
 
 list-map (instance (Map (List a) Num a)
@@ -1151,11 +1134,9 @@ list-map (instance (Map (List a) Num a)
     (from-nullable (.get in index)))
 
   key? (macro [what in]
-    (: (Fn a (List a) Bool))
     (Js.method in "has" {what}))
 
   put (macro [at what in]
-    (: (Fn Num a (List a) (List a)))
     (Js.method
       (Js.method
         (Js.method in "toList" {})
@@ -1163,7 +1144,6 @@ list-map (instance (Map (List a) Num a)
       "toStack" {}))
 
   delete (macro [key from]
-    (: (Fn Num (List a) (List a)))
     (Js.method
       (Js.method
         (Js.method from "toList" {})
@@ -1178,20 +1158,16 @@ list-seq (instance (Seq (List a) a)
     (from-nullable (.first list)))
 
   rest (macro [list]
-    (: (Fn (List a) a))
     (Js.method list "rest" {}))
 
   take (macro [n from]
-    (: (Fn Num (List a) (List a)))
     (Js.method from "take" {n}))
 
   drop (macro [n from]
-    (: (Fn Num (List a) (List a)))
     (Js.method from "skip" {n})))
 
 list-deq (instance (Deq (List a) a)
   && (macro [what to]
-    (: (Fn Num a (List a) (List a)))
     (Js.method
       (Js.method
         (Js.method to "toList" {})
@@ -1199,7 +1175,6 @@ list-deq (instance (Deq (List a) a)
       "toStack" {}))
 
   but-last (macro [list]
-    (: (Fn (List a) (List a)))
     (Js.method list "butLast" {}))
 
   last (fn [list]
@@ -1218,6 +1193,8 @@ unchars (macro [chars]
 
 reverse (fn [what]
   (: (Fn ba ba) (Appendable ba a) (Bag ba a))
+  (# An appendable bag with a reverse order of folding, if the bag
+    preserves order on appending.)
   (fold & empty what))
 
 string-appendable (instance (Appendable String Char)
@@ -1403,22 +1380,22 @@ reduce (fn [with over]
       None (Some x)
       (Some val) (Some (with x val)))))
 
-show-array (instance (Show (Array a))
+array-show (instance (Show (Array a))
   {(Show a)}
   show (fn [array]
     (format "{%s}" (concat-with " " (map show array)))))
 
-show-list (instance (Show (List a))
+list-show (instance (Show (List a))
   {(Show a)}
   show (fn [list]
     (format "(List %s)" (concat-with " " (map show list)))))
 
-show-set (instance (Show (Set a))
+set-show (instance (Show (Set a))
   {(Show a)}
   show (fn [set]
     (format "(Set %s)" (concat-with " " (map show (element-array set))))))
 
-show-map (instance (Show (Map k v))
+map-show (instance (Show (Map k v))
   {(Show k) (Show v)}
   show (fn [mapping]
     (format "(Map %s)" (concat-with " " (map show-entry (entry-array mapping))))
@@ -1493,8 +1470,6 @@ until (fn [what next initial]
     initial
     (until what next (next initial))))
 
-else True
-
 ?-mappable (instance (Mappable ?)
   map (fn [what over]
     (match over
@@ -1521,6 +1496,12 @@ follow (fn [first-wrapped second-wrapped]
       second-wrapped)))
 
 do (syntax [..actions]
+  (# Takes a list of Chainable values or bindings and chains them.
+    Bindings have the form:
+    (set pattern chainable-value)
+    The result of chainable-value is bound to the pattern, then
+    the rest of the arguments are chained. If a chainable value
+    is not bound, its result is ignored.)
   (match actions
     {x} x
     {x ..xs} (match x
@@ -1567,6 +1548,10 @@ random-int (fn [from exclude-to]
     (lift (floor (+ from (* (- from exclude-to) p))))))
 
 -> (syntax [..args]
+  (# Given:
+    (-> x f g h)
+    returns:
+    (h (g (f x))))
   (match args
     {x} x
     {x f ..fs} (` -> (,f ,x) ,..fs)))
