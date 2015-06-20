@@ -18,7 +18,7 @@ module.exports = React.createClass
     @state.width - (leftWidth + @props.dividerWidth)
 
   handleDividerDrag: (newWidth) ->
-    if newWidth > 20 and (@_getRighColumnWidth newWidth) > 20
+    if newWidth > 10 and (@_getRighColumnWidth newWidth) > 10
       @setState
         leftColumnWidth: newWidth
       @props.onResize()
@@ -44,16 +44,23 @@ module.exports = React.createClass
     _div {},
       _div
         style:
-          float: 'left', width: @state.leftColumnWidth - 1, height: @state.height
+          float: 'left'
+          width: @state.leftColumnWidth - 1
+          height: @state.height
+          overflow: 'hidden'
         @props.children[0]
       _div
         ref: 'divider'
         onDrag: @handleDividerDrag
         style:
-          float: 'left', width: @props.dividerWidth, height: @state.height,
+          float: 'left'
+          width: @props.dividerWidth
+          height: @state.height,
           cursor: 'col-resize'
         @props.children[1]
       _div
         style:
-          float: 'left', width: rightColumnWidth, height: @state.height
+          float: 'left'
+          width: rightColumnWidth
+          height: @state.height
         @props.children[2]
