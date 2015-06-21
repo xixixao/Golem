@@ -23,6 +23,7 @@ log = (arg) ->
 {
   isForm
   isCall
+  isNotCapital
   concat
   map
   concatMap
@@ -1021,7 +1022,7 @@ exports.Mode = class extends TextMode
               @startGroupMutation()
               @insertStringForward "(: #{withoutConcretes})"
               @mutate
-                tangibleSelection: firstFakeInside FORWARD, @onlySelectedExpression()
+                tangibleSelection: firstTypeVarInside FORWARD, _fst _arguments @onlySelectedExpression()
               @finishGroupMutation()
 
       # Temporary
@@ -2537,11 +2538,19 @@ concatTangibles = (tangibles) ->
 tangibleToIns = (tangible) ->
   tangible.in
 
+firstTypeVarInside = (direction, form) ->
+  notTypeVar = (x) ->
+    (isAtom x) and not isNotCapital x
+  firstNotMatchingInside notTypeVar, direction, form
+
 firstFakeInside = (direction, form) ->
+  firstNotMatchingInside isExpression, direction, form
+
+firstNotMatchingInside = (notMatch, direction, form) ->
   inside = tangibleInside (opposite direction), form
-  while (notFake = (isExpression child = toNode inside)) and isNodeInside child, form
+  while (notMatched = (notMatch child = toNode inside)) and isNodeInside child, form
     inside = followingTangibleAtomOrPosition direction, inside
-  if notFake
+  if notMatched
     form
   else
     inside
