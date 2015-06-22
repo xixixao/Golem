@@ -83,6 +83,12 @@ module.exports = hyper class CommandLine
       exec: =>
         @props.onFocusOutput 0
 
+    editor.commands.addCommand
+      name: 'erase all output'
+      bindKey: win: 'Ctrl-Shift-Backspace', mac: 'Command-Shift-Backspace'
+      exec: =>
+        @props.onRemoveAll()
+
 
     commandWorker = mode.worker
     @props.memory.loadCommands timeline

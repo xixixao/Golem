@@ -445,6 +445,9 @@ module.exports = hyper class EditorMain
   handleCommandFailed: (text) ->
     @displayMessage 'command', "Command Line: #{text}"
 
+  handleRemoveAll: ->
+    @executeCommand 'erase'
+
   handleFocus: (to) ->
     (index) =>
       # if to is @focus.output
@@ -523,6 +526,7 @@ module.exports = hyper class EditorMain
           onLeave: @handleFocus @focus.sourceEditor
           onFocus: @handleFocus @focus.commandLine
           onFocusOutput: @handleFocus @focus.output
+          onRemoveAll: @handleRemoveAll
           focus: @state.focused is @focus.commandLine
           timeline: @state.timeline
           memory: @memory
