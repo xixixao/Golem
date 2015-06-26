@@ -22,13 +22,14 @@ module.exports = class CommandMode extends Mode
         @enableSuper() if @commandMode
         superTokenizer.getLineTokens line, state, row, doc
       else
-        @disableSuper() if line is ":" and not @commandMode
+        @disableSuper() if not @commandMode
         # @clearEditingMarker()
         tokens: [value: line, type: 'text']
     oop.implement @$tokenizer, EventEmitter
 
   disableSuper: ->
-    @editor.moveCursorToPosition row: 0, column: 1
+    @editor.clearSelection()
+    @editor.moveCursorToPosition row: 0, column: @getValue().length
     @editor.commands.removeCommands @commands
     @commandMode = yes
 
