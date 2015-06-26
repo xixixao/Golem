@@ -102,7 +102,7 @@ class ExpressionWorker extends exports.Worker
           result: value[1..]
           commandSource : value
           type: 'command'
-    else
+    else if value isnt ''
       try
         console.log "expression worker compiling", @moduleName
         @sender.emit "ok",
