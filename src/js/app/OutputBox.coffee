@@ -10,10 +10,9 @@ module.exports = hyper class OutputDisplay
       @refs.fakeInput.getDOMNode().focus()
 
   handleKeyPress: (e) ->
-    console.log "key press"
     switch e.key
       when 'Backspace'
-        @props.onDelete @props.key, @props.position
+        @props.onDelete @props.outputId, @props.position
         e.preventDefault()
       when 'ArrowRight', 'Tab'
         @props.onFocusSibling @props.position, 1

@@ -486,16 +486,16 @@ module.exports = hyper class EditorMain
     @log input
 
   log: (input) ->
-    @setState
+    @setState (state) ->
       logs: [
         id: "log#{@logId++}"
-        value: input].concat @state.logs
+        value: input].concat state.logs
 
-  handleOutputDelete: (id) ->
+  handleOutputDelete: (deletedId) ->
     if @state.logs.length is 1
       do @handleFocus @focus.commandLine
     @setState
-      logs: @state.logs.filter ([someId]) -> someId isnt id
+      logs: @state.logs.filter ({id}) -> id isnt deletedId
 
   handleExpressionCommand: (name, editor) ->
     @state.mode.editor.execCommand name, targetEditor: editor
