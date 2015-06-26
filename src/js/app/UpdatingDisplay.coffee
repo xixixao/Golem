@@ -14,7 +14,7 @@ isStrictSuffix = (suffix, string) ->
     (string.indexOf suffix, string.length - suffix.length) isnt -1
 
 renderMany = (list) ->
-  (React.renderComponentToStaticMarkup x for x in list).join ''
+  (React.renderToStaticMarkup x for x in list).join ''
 
 module.exports = hyper class UpdatingDisplay
 
@@ -41,7 +41,7 @@ module.exports = hyper class UpdatingDisplay
 
             valueRow = =>
               _tr dangerouslySetInnerHTML:
-                __html:  renderMany ((_td style: 'padding-right': '5px', @displayValue v) for v in values)
+                __html:  renderMany ((_td style: paddingRight: '5px', @displayValue v) for v in values)
 
             newTable = =>
               _table
@@ -50,8 +50,8 @@ module.exports = hyper class UpdatingDisplay
                 _tbody {},
                   _tr ((_td
                     style:
-                      'padding-right': '15px'
-                      'white-space': 'pre-wrap'
+                      paddingRight: '15px'
+                      whiteSpace: 'pre-wrap'
                     dangerouslySetInnerHTML: __html: e) for e in expressions)
                   valueRow()
 
@@ -61,11 +61,11 @@ module.exports = hyper class UpdatingDisplay
                 if (table.getAttribute 'data-source-id') isnt "#{@timesExecuted}" or
                     not ((isStrictSuffix savedStacks[id], newStack) or
                       (isStrictSuffix newStack, savedStacks[id]))
-                  table.parentNode.innerHTML = React.renderComponentToString newTable()
+                  table.parentNode.innerHTML = React.renderToString newTable()
                 else
                   @timesLogged++
                   placeholder = window.document.createElement "div"
-                  React.renderComponent (_table _tbody valueRow()), placeholder
+                  React.render (_table _tbody valueRow()), placeholder
                   if table.firstChild.lastChild.innerHTML isnt placeholder.firstChild.firstChild.firstChild.innerHTML
                     table.firstChild.appendChild placeholder.firstChild.firstChild.firstChild
                 if @timesLogged > 1000
@@ -140,7 +140,7 @@ module.exports = hyper class UpdatingDisplay
     => @props.onCommand name, @editor
 
   componentDidMount: ->
-    mode = new CommandMode @props.key, @props.completers
+    mode = new CommandMode @props.outputId, @props.completers
     @editor = editor = ace.edit @refs.ace.getDOMNode(), mode, "ace/theme/tea"
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2

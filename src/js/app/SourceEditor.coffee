@@ -92,8 +92,8 @@ module.exports = hyper class SourceEditor
       className: 'areaBorder'
       style:
         backgroundColor: @state.backgroundColor
-        'padding-left': 0
-        'padding-right': 20
+        paddingLeft: 0
+        paddingRight: 20
       onMouseEnter: @handleMouseEnter
       _div ref: 'ace', style: width: '100%', height: @props.height
 

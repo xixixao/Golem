@@ -10,6 +10,7 @@ module.exports = hyper class OutputDisplay
       @refs.fakeInput.getDOMNode().focus()
 
   handleKeyPress: (e) ->
+    console.log "key press"
     switch e.key
       when 'Backspace'
         @props.onDelete @props.key, @props.position
@@ -29,13 +30,12 @@ module.exports = hyper class OutputDisplay
 
   render: ->
     _div
-      id: @props.key
-      key: @props.key
+      id: @props.outputId
       className: cx
         log: yes
         selected: @props.focus
       style:
-        'max-width': @props.width
+        maxWidth: @props.width
         cursor: 'pointer'
       onClick: @handleClick
       _div

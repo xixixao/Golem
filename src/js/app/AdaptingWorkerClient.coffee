@@ -18,7 +18,7 @@ class AdaptingWorkerClient extends WorkerClient
 
   # Adds the identifier of the source to the message to the wrapped worker
   send: (cmd, args) ->
-    # console.log "sending tagged message", cmd, @id
+    console.log "sending tagged message", cmd, @id
     @workerClient.$worker.postMessage({command: cmd, identifier: @id,  args: args})
 
   emit: (event, data) ->

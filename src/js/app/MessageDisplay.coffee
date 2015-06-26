@@ -19,7 +19,7 @@ module.exports = hyper class MessageDisplay
         overflow: 'hidden'
         height: 13
         padding: '7px 10px'
-        'font-size': '13px'
+        fontSize: '13px'
       _TransitionContainer
         on:
           opacity: 1

@@ -1,8 +1,8 @@
 React = require 'React'
-{_div} = require 'hyper'
+{_div} = hyper = require 'hyper'
 $ = require 'ejquery'
 
-module.exports = React.createClass
+module.exports = hyper class FillHeight
 
   windowResized: ->
     windowHeight = window.innerHeight

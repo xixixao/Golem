@@ -138,11 +138,11 @@ displayBox = (htmlText, editor) ->
   _div
     style:
       # 'color': '#eee'
-      'font-family': 'Helvetica, Arial'
-      'font-size': '13px'
-      'white-space': 'pre-wrap'
-      'max-height': '600px'
-      'overflow': 'scroll'
+      fontFamily: 'Helvetica, Arial'
+      fontSize: '13px'
+      whiteSpace: 'pre-wrap'
+      maxHeight: '600px'
+      overflow: 'scroll'
     className: 'messageDisplay intro'
     dangerouslySetInnerHTML: __html: htmlText
     onClick: (event) ->

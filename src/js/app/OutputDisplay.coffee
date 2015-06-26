@@ -90,13 +90,13 @@ module.exports = hyper class OutputDisplay
         height: @state.height - 25
         padding: '15px 20px 10px 0px'
         overflow: 'auto'
-      for [key, value], i in @props.logs
-        isBareReact = React.isValidComponent value
+      for {id, value}, i in @props.logs
+        isBareReact = React.isValidElement value
         isSourceLine = value.source
         isHtml = not isBareReact and not isSourceLine
         _OutputBox
-          id: key
-          key: key
+          outputId: id
+          key: id
           position: i
           focus: @props.focus and i is @props.focusedOutputIndex
           width: @props.width - 45
@@ -109,7 +109,8 @@ module.exports = hyper class OutputDisplay
           else if isSourceLine
             {source, ast, compiled} = value
             _UpdatingDisplay
-              key: key
+              key: id
+              outputId: id
               value: value
               worker: @props.worker
               completers: @props.completers

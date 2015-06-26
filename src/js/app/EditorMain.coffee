@@ -487,7 +487,9 @@ module.exports = hyper class EditorMain
 
   log: (input) ->
     @setState
-      logs: [["log#{@logId++}", input]].concat @state.logs
+      logs: [
+        id: "log#{@logId++}"
+        value: input].concat @state.logs
 
   handleOutputDelete: (id) ->
     if @state.logs.length is 1

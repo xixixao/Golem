@@ -50,10 +50,10 @@ _KeyboardShortcutsList = hyper class KeyboardShortcutsList
       for name, command of @props.commands when @shouldList command, name
         _tr key: name,
           _td
-            style: 'vertical-align': 'top',
+            style: verticalAlign: 'top',
             "#{@shortcut command} "
           _td
-            style: 'vertical-align': 'top'
+            style: verticalAlign: 'top'
             dangerouslySetInnerHTML: __html: @highlight name
 
 class ListKeyboardShortcutsCommand
