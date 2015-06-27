@@ -54,6 +54,7 @@ _KeyboardShortcutsList = hyper class KeyboardShortcutsList
       for name, command of @props.commands when @shouldList command, name
         _tr key: name,
           _td
+            className: 'colorHighlightHover'
             onClick: @executeShortcut command
             style:
               verticalAlign: 'top',
