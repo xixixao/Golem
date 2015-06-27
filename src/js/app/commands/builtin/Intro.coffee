@@ -29,9 +29,30 @@ tutorial = """Welcome! This tutorial covers the introduction to both the IDE and
 
 The IDE has three components, the command line in the top left corner, the module editor below it, and the output area on the right, where you are reading this tutorial. First, let's learn how to control the output area. Type:
     <code>42</code>
-  on the command line and press Enter. You should see a new output box above this one, with two 42s. If your cursor is still blinking on the command line, press Tab. Alternatively, click on the edge of the output box with 42 in it. Either way, the output box should now be highlighted with a bright blue border. This means you have it selected. Press Backspace (the delete key on Macs). The box should now disappear and this one should be highlighted. If you move your cursor back to the command line, the output box will get deselected. This is the basic way in which you can control your working area, making space for more programs while still seeing this tutorial.
+on the command line and press Enter. You should see a new output box above this one, with two 42s.
 
-You can also change the proportions of the
+If your cursor is still blinking on the command line, press Tab. Alternatively, click on the edge of the output box with 42 in it. Either way, the output box should now be highlighted with a bright blue border. This means you have it selected. Press Backspace (the delete key on Macs). The box should now disappear and this one should be highlighted instead. If you move your cursor back to the command line, the output box will get deselected. This is the basic way in which you can control your working area, making space for more programs while still seeing this tutorial.
+
+You can also change the proportion between the module editor and the output area by dragging the boundary between them.
+
+Shem is a functional language, similar to Haskell, so let's try some function. Type the following, character by character at the command line:
+    <code>(even? 42)</code>
+The answer should be True. You can hover over the <code>even?</code> to see its documentation. There are many functions to play with currently included in the Prelude. To modify a program, let's learn about selection.
+
+In Golem, selection works on the AST of the language, which is represented by S-Expressions, such as the one you just wrote. If you click anywhere inside the <code>even?</code> atom (atoms are the simplest expressions), you will select it and it will be highlighted in bright blue. If you clicked with a longer press, you might have started editing the atom and the selection is only faint blue. Just try clicking again. You can now remove the function using Backspace (delete).
+
+You should now see a list of functions which can be applied to your number because they take a number as their first argument. If you type in:
+    <code>od</code>
+then hit Tab and you should now have the call <code>(odd? 42)</code> and the result False.
+
+Numbers are nice, but let's learn a bit more of Shem's syntax, so we can construct more interesting programs. Evaluate the following:
+    <code>(size "Hello, world!")</code>
+First, notice that if you type <code>"</code> at the end of the string, the string will get selected. In the same way, if you type <code>)</code> inside of a form (form is an expression consisting of more expressions, called terms), the whole form will get selected. In this way, if you type all closing delimiters (quotes, parentheses), you can type any Shem program character by character as you would type it in a text editor.
+
+The string is displayed with proper quotation marks, this is merely for legibility and has no impact on compilation. Now change the current expression to this one:
+    <code>(split-on " " "Hello, world!")</code>
+The result should be <code>{“Hello,” “world!”}</code>, a list of two strings.
+
 
 """
 
@@ -139,7 +160,9 @@ displayBox = (htmlText, editor) ->
     style:
       # 'color': '#eee'
       fontFamily: 'Helvetica, Arial'
-      fontSize: '13px'
+      padding: '20px'
+      fontSize: '15px'
+      lineHeight: '22px'
       whiteSpace: 'pre-wrap'
       maxHeight: '600px'
       overflow: 'scroll'

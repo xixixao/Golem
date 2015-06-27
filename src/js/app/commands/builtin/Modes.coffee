@@ -45,12 +45,19 @@ _KeyboardShortcutsList = hyper class KeyboardShortcutsList
     platform = @props.platform
     command.logicalKey?[platform] or command.bindKey[platform]
 
+  executeShortcut: (command) ->
+    =>
+      @props.editor.execCommand command
+
   render: ->
     _table _tbody {},
       for name, command of @props.commands when @shouldList command, name
         _tr key: name,
           _td
-            style: verticalAlign: 'top',
+            onClick: @executeShortcut command
+            style:
+              verticalAlign: 'top',
+              cursor: 'pointer'
             "#{@shortcut command} "
           _td
             style: verticalAlign: 'top'
@@ -63,6 +70,7 @@ class ListKeyboardShortcutsCommand
 
   @execute = (args, state, editor) ->
     editor.log _KeyboardShortcutsList
+      editor: state.mode.editor
       commands: state.mode.editor.commands.commands
       platform: state.mode.editor.commands.platform
 
