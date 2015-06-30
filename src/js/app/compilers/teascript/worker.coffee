@@ -51,26 +51,21 @@ exports.Worker = class extends Mirror
         source: value
         inDependency: not current
 
+  methods:
+    matchingDefinitions: (reference) ->
+      compiler.findMatchingDefinitions @moduleName, reference
 
-  matchingDefinitions: (reference, id) ->
-    defs = compiler.findMatchingDefinitions @moduleName, reference
-    @sender.callback defs, id
+    availableTypes: (inferredType) ->
+      compiler.findAvailableTypes @moduleName, inferredType
 
-  availableTypes: (inferredType, id) ->
-    types = compiler.findAvailableTypes @moduleName, inferredType
-    @sender.callback types, id
+    docsFor: (reference) ->
+      compiler.findDocsFor @moduleName, reference
 
-  docsFor: (reference, id) ->
-    info = compiler.findDocsFor @moduleName, reference
-    @sender.callback info, id
+    expand: (expression) ->
+      compiler.expand @moduleName, expression
 
-  expand: (expression, id) ->
-    compiled = compiler.expand @moduleName, expression
-    @sender.callback compiled, id
-
-  compileBuild: (moduleName, id) ->
-    compiled = compiler.compileModule moduleName
-    @sender.callback compiled, id
+    compileBuild: (moduleName) ->
+      compiler.compileModule moduleName
 
 # Returns a function which runs given function maximally once during given
 # duration.
@@ -164,15 +159,22 @@ window.onmessage = (e) ->
   id = msg.identifier
 
   # check sender for global worker initialization
-  if sender and id
-    if not worker = workers[id]
-      worker = workers[id] = new ExpressionWorker new Sender id
+  if sender and id? or main and msg.command
+    worker =
+      if id?
+        workers[id] ?= new ExpressionWorker new Sender id
+      else
+        main
     if msg.command
-      if worker[msg.command]
+      if worker.methods[msg.command]
+        [..., id] = msg.args
+        @sender.callback (worker.methods[msg.command].apply worker, msg.args), id
+      else if worker[msg.command]
         worker[msg.command].apply(worker, msg.args)
       else
-          throw new Error("Unknown command:" + msg.command)
+          throw new Error("Unknown command: " + msg.command)
     else if msg.event
       worker.sender._signal(msg.event, msg.data)
   else
+    # Performs initialization of the main worker
     inheritedOnMessage e
