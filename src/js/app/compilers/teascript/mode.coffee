@@ -625,6 +625,7 @@ exports.Mode = class extends TextMode
         exec: =>
 
       'select by click':
+        readOnly: true
         autocomplete: yes
         exec: =>
           @mutate
@@ -644,6 +645,7 @@ exports.Mode = class extends TextMode
               tangibleSelection: tangible)
 
       'expand selection by click':
+        readOnly: true
         multiSelectAction: 'forEach' #selects multiple
         exec: =>
           # 1. find ancestors with a common parent
