@@ -16,6 +16,7 @@ require
     'file-saver': 'vendor/file-saver/FileSaver'
     'beautify': 'vendor/js-beautify/beautify'
     'hljs': 'vendor/highlight/highlight'
+    'marked': 'vendor/marked/marked'
   shim:
     'vendor/jquery/jquery.cookie': ['jquery']
     'vendor/jquery/jquery.total-storage': ['jquery']
