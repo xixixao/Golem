@@ -1,5 +1,6 @@
 {_div, _input} = hyper = require 'hyper'
 
+ace = require './AceEditor'
 jsDump = require 'vendor/jsDump'
 
 _AdjustableColumns = require './AdjustableColumns'
@@ -10,6 +11,7 @@ _FillHeight = require './FillHeight'
 _MessageDisplay = require './MessageDisplay'
 _OutputDisplay = require './OutputDisplay'
 
+CommandMode = require './CommandMode'
 TimeLine = require './UniqueTimeLine'
 CommandParser = require './CommandParser'
 Modes = require './Modes'
@@ -330,6 +332,43 @@ module.exports = hyper class EditorMain
 
 
 
+
+
+
+
+
+
+  createAceEditor: (value, displayId) ->
+    mode = new CommandMode displayId, []
+    container = document.getElementById displayId
+    editor = ace.edit container, mode, "ace/theme/tea"
+    editor.setFontSize 13
+    editor.renderer.setScrollMargin 2, 2
+    editor.setHighlightActiveLine false
+    editor.session.setTabSize 2
+    editor.setShowPrintMargin false
+    editor.renderer.setShowGutter false
+    editor.setOptions maxLines: Infinity
+    editor.setReadOnly true
+    # editor.setValue @props.expression, 1
+    # editor.moveCursorTo 0, 0
+    notFocusedClass = 'not-focused'
+    container.classList.add notFocusedClass
+    editor.on 'blur', ->
+      container.classList.add notFocusedClass
+
+    editor.on 'focus', ->
+      container.classList.remove notFocusedClass
+
+    mode.registerWithWorker @state.mode.worker
+    mode.setContent value, null, "@unnamed"
+
+    mode.worker.on 'ok', ({data: {result, type}}) =>
+      source = editor.getValue()
+
+      if result.ast
+        result.ast.splice 1, result.ast.length - 3
+      mode.updateAst result.ast, result.errors
 
 
 

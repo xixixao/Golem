@@ -6,7 +6,7 @@ class HelpCommand
   @symbols = @defaultSymbols
 
   @execute = (args, state, editor) ->
-    header = _p {},
+    header = _div {},
       "Issue commands by typing"
       _code ' : '
       "followed by command name and space separated arguments"
