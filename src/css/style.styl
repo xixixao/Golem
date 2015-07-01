@@ -1,4 +1,4 @@
-global-reset()
+@import "vendor/normalize.css/normalize.css"
 
 backgroundColor = #151515
 
@@ -13,6 +13,12 @@ a, a:link, a:visited
 
 textarea
   font-family Monaco, Consolas, "Lucida Console", monospace
+
+code, kbd, pre, samp
+  font-family Monaco, Consolas, "Lucida Console", monospace
+  font-size inherit
+  margin 0
+  padding 0
 
 .colorHighlightHover:hover
   color #67B3DD
@@ -69,12 +75,231 @@ infoBar()
 .messageDisplay
   font-family "Lucida Sans Unicode", "Lucida Grande", sans-serif
 
-  code
-    font-family Monaco, Consolas, "Lucida Console", monospace
 .intro
-  color: #ccc
+  color: #ddd
   code
     color: #67B3DD
+  font-size 16px
+  line-height 1.6
+  white-space normal
+
+  .lang-e
+    white-space normal
+
+  a:active,
+  a:hover
+    outline 0
+
+  h1
+    font-size 2em
+    margin 0.67em 0
+    font-size 30px
+    padding-bottom 0.3em
+    font-size 2.25em
+    line-height 1.2
+    border-bottom 1px solid #333
+
+  pre
+    overflow auto
+    margin-top 0
+    margin-bottom 0
+    font 12px Monaco, Consolas, "Lucida Console", monospace
+    word-wrap normal
+    & > code
+      padding 0
+      margin 0
+      font-size 100%
+      word-break normal
+      white-space pre
+      background transparent
+      border 0
+    code
+      display inline
+      max-width initial
+      padding 0
+      margin 0
+      overflow initial
+      line-height inherit
+      word-wrap normal
+      background-color transparent
+      border 0
+
+  code,
+  kbd,
+  pre
+    font 12px Monaco, Consolas, "Lucida Console", monospace
+    font-size 1em
+
+  table
+    border-collapse collapse
+    border-spacing 0
+    display block
+    width 100%
+    overflow auto
+    word-break normal
+    word-break keep-all
+    th
+      font-weight bold
+    tr
+      background-color #fff
+      border-top 1px solid #ccc
+      &:nth-child(2n)
+        background-color #f8f8f8
+
+  td,
+  th
+    padding 0
+
+  a
+    text-decoration none
+
+  a:hover,
+  a:active
+    text-decoration underline
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6
+    margin-top 15px
+    margin-bottom 15px
+    line-height 1.1
+    position relative
+    margin-top 1em
+    margin-bottom 16px
+    font-weight bold
+    line-height 1.4
+
+  h2
+    font-size 21px
+    padding-bottom 0.3em
+    font-size 1.75em
+    line-height 1.225
+    border-bottom 1px solid #333
+
+  h3
+    font-size 16px
+    font-size 1.5em
+    line-height 1.43
+
+  h4
+    font-size 14px
+    font-size 1.25em
+
+  h5
+    font-size 12px
+    font-size 1em
+
+  h6
+    font-size 11px
+    font-size 1em
+    color #777
+
+  blockquote
+    margin 0
+    padding 0 15px
+    color #777
+    border-left 4px solid #ddd
+    & > :first-child
+      margin-top 0
+    & > :last-child
+      margin-bottom 0
+
+  ul,
+  ol
+    padding 0
+    margin-top 0
+    margin-bottom 0
+    padding-left 2em
+
+  ol ol,
+  ul ol
+    list-style-type lower-roman
+
+  ul ul ol,
+  ul ol ol,
+  ol ul ol,
+  ol ol ol
+    list-style-type lower-alpha
+
+  dd
+    margin-left 0
+
+  code
+    font 12px Monaco, Consolas, "Lucida Console", monospace
+    padding 0
+    padding-top 0.2em
+    padding-bottom 0.2em
+    margin 0
+    font-size 85%
+    // background-color rgba(0,0,0,0.04)
+    border-radius 3px
+
+  p,
+  blockquote,
+  ul,
+  ol,
+  dl,
+  table,
+  pre
+    margin-top 0
+    margin-bottom 16px
+
+  ul ul,
+  ul ol,
+  ol ol,
+  ol ul
+    margin-top 0
+    margin-bottom 0
+
+  li
+    & > p
+      margin-top 16px
+
+  dl
+    padding 0
+    dt
+      padding 0
+      margin-top 16px
+      font-size 1em
+      font-style italic
+      font-weight bold
+    dd
+      padding 0 16px
+      margin-bottom 16px
+
+  table th,
+  table td
+    padding 6px 13px
+    border 1px solid #ddd
+
+  img
+    max-width 100%
+    box-sizing border-box
+
+  code:before,
+  code:after
+    letter-spacing -0.2em
+    content "\00a0"
+
+  pre code:before,
+  pre code:after
+    content normal
+
+  kbd
+    display inline-block
+    padding 5px 5px
+    font 12px Monaco, Consolas, "Lucida Console", monospace
+    line-height 10px
+    color #eee
+    vertical-align middle
+    background-color #333
+    border solid 1px #444
+    border-bottom-color #666
+    border-radius 3px
+    box-shadow inset 0 -1px 0 #555
 
 #compilationIndicator
   infoBar()
@@ -101,13 +326,15 @@ infoBar()
     border 2px solid rgba(0, 170, 255, 0.75)
     margin 3px
 
-    .ace_hidden-cursors .ace_cursor
-      opacity: 0
-
+    .ace_hidden-cursors .ace_cursor,
     .ace_marker-layer
       opacity: 0
 
+  .ace_editor.not-focused
 
+    .ace_hidden-cursors .ace_cursor,
+    .ace_marker-layer
+      opacity: 0
 
 .golem
   /* popup for autocompletion */
