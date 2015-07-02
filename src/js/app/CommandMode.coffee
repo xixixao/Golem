@@ -13,16 +13,16 @@ module.exports = class CommandMode extends Mode
     super yes
     @completers = completers
 
-    @commandMode = no
+    @isSuperDisabled = no
 
     superTokenizer = @$tokenizer
 
     @$tokenizer = getLineTokens: (line, state, row, doc) =>
       if line[0] isnt ':'
-        @enableSuper() if @commandMode
+        @enableSuper() if @isSuperDisabled
         superTokenizer.getLineTokens line, state, row, doc
       else
-        @disableSuper() if not @commandMode
+        @disableSuper() if not @isSuperDisabled
         # @clearEditingMarker()
         tokens: [value: line, type: 'text']
     oop.implement @$tokenizer, EventEmitter
@@ -31,16 +31,19 @@ module.exports = class CommandMode extends Mode
     @editor.clearSelection()
     @editor.moveCursorToPosition row: 0, column: @getValue().length
     @editor.commands.removeCommands @commands
-    @commandMode = yes
+    @isSuperDisabled = yes
 
   enableSuper: ->
     @addCommands()
-    @commandMode = no
+    @isSuperDisabled = no
 
   resetEditing: ->
-    if @commandMode
+    if @isInCommandMode()
       @editor.setValue ""
+      @initAst ''
       @enableSuper()
+    else
+      @setContent ""
 
   # Overrides source mode to not create another worker
   createWorker: (session) ->
