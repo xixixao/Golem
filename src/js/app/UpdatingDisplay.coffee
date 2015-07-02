@@ -148,6 +148,7 @@ module.exports = hyper class UpdatingDisplay
     editor.session.setTabSize 2
     editor.setShowPrintMargin false
     editor.renderer.setShowGutter false
+    editor.setOptions maxLines: Infinity
     # editor.setReadOnly true
     # editor.setValue @props.expression, 1
     # editor.moveCursorTo 0, 0
@@ -223,7 +224,7 @@ module.exports = hyper class UpdatingDisplay
   render: ->
     # @i ?= 0
     _div {},
-      _div ref: 'ace', style: width: '100%', height: 22
+      _div ref: 'ace', style: width: '100%'#, height: 22
       # Hidden div for stretching width
       _div style: height: 0, margin: '0 4px', overflow: 'hidden', @state.source
       _div style: padding: '0 4px', @displayExecuted @state.executed
