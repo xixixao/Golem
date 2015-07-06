@@ -1155,9 +1155,11 @@ exports.Mode = class extends TextMode
         exec: (editor, {targetEditor} = {}) =>
           targetMode = targetEditor.session.getMode()
           if selected = targetMode.onlySelectedExpression()
+            [open, close] = compiler.astizeList ''
             @editorInstance.log
               source: targetEditor.getSelectedText()
               moduleName: targetMode.moduleName
+              ast: [open, selected, close]
 
       'Define selected token':
         bindKey: win: 'Ctrl-D', mac: 'Ctrl-D'
