@@ -597,7 +597,7 @@ exports.Mode = class extends TextMode
       name: 'escape multi select'
       bindKey: 'esc'
       scrollIntoView: 'cursor'
-      readonly: true
+      readOnly: true
       exec: =>
         selection = @editor.selection
         [..., firstSelected] = selection.ranges
@@ -1148,6 +1148,17 @@ exports.Mode = class extends TextMode
               inSelection: atom
               newSelections: tangibles
 
+      'Evaluate selected expression':
+        bindKey: win: 'Ctrl-X', mac: 'Ctrl-X'
+        readOnly: yes
+        indirect: yes
+        exec: (editor, {targetEditor} = {}) =>
+          targetMode = targetEditor.session.getMode()
+          if selected = targetMode.onlySelectedExpression()
+            @editorInstance.log
+              source: targetEditor.getSelectedText()
+              moduleName: targetMode.moduleName
+
       'Define selected token':
         bindKey: win: 'Ctrl-D', mac: 'Ctrl-D'
         indirect: yes
@@ -1181,6 +1192,7 @@ exports.Mode = class extends TextMode
             if targetEditor isnt @editor
               moved = reindentTangible (toTangible selected), @parentOfSelected()
               @startGroupMutation()
+              # TODO: fix position when some expression is selected
               originalHole = bookmarkBefore @selectedTangible()
               @insertSpace FORWARD, " "
               @mutate

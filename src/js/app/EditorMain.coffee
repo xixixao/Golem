@@ -368,6 +368,10 @@ module.exports = hyper class EditorMain
     mode.parseOnlyWorker isTopLevel
     mode.setContent value, null, moduleName
 
+    for name, command of mode.commands when command.indirect
+      do (name, command) =>
+        command.exec = => @handleExpressionCommand name, editor
+
     mode.worker.on 'ok', ({data: {result, type}}) =>
       source = editor.getValue()
       mode.updateAst result.ast, result.errors
