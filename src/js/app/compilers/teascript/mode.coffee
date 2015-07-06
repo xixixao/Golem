@@ -1156,31 +1156,21 @@ exports.Mode = class extends TextMode
           targetMode = targetEditor.session.getMode()
           selected = targetMode.onlySelectedExpression()
           if selected and (isAtom atom = selected) and atom.malformed
+            top = ancestorAtDefinitonList toNode @selectedTangible()
+            # Position after top
+            movedTo = nodeEdgeOfTangible LAST, termToTangible top
             @startGroupMutation()
-            if targetEditor isnt @editor
-              # TODO: better location than just current insert position
-              @insertStringForward if isOperator atom
-                args = argumentNamesFromCall atom.parent
-                """
-                #{atom.symbol} (fn [#{args.join ' '}]
-                  )"""
-              else
-                """
-                #{atom.symbol} """
-            else
-              top = ancestorAtDefinitonList selected
-              # Position after top
-              movedTo = nodeEdgeOfTangible LAST, toTangible top
+            if isExpression top
               separator = if parentOf top then '\n' else '\n\n'
               @insertSpaceAt FORWARD, separator, movedTo
-              @insertStringForward if isOperator atom
-                args = argumentNamesFromCall atom.parent
-                """
-                #{atom.symbol} (fn [#{args.join ' '}]
-                  )"""
-              else
-                """
-                #{atom.symbol} """
+            @insertStringForward if isOperator atom
+              args = argumentNamesFromCall atom.parent
+              """
+              #{atom.symbol} (fn [#{args.join ' '}]
+                )"""
+            else
+              """
+              #{atom.symbol} """
             hole = definition = @selectableEdge LAST
             if isOperator atom
               hole = tangibleInside LAST, toNode definition
