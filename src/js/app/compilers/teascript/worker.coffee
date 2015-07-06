@@ -179,7 +179,7 @@ window.onmessage = (e) ->
     if msg.command
       if worker.methods[msg.command]
         [..., id] = msg.args
-        @sender.callback (worker.methods[msg.command].apply worker, msg.args), id
+        worker.sender.callback (worker.methods[msg.command].apply worker, msg.args), id
       else if worker[msg.command]
         worker[msg.command].apply(worker, msg.args)
       else
