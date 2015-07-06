@@ -333,11 +333,8 @@ displayBox = (htmlText, editor) ->
     className: 'messageDisplay intro'
     dangerouslySetInnerHTML: __html: htmlText
     onClick: (event) ->
-      console.log event.target
-      console.log event.target.pathname?[1...]
       if /:/.test commands = event.target.pathname?[1...]
         for command in commands.split ';'
-          console.log command
           editor.executeCommand (command[1...].split ' ')...
       event.preventDefault()
 
@@ -369,7 +366,6 @@ class LanguageReferenceCommand
       highlight: (code, tag) ->
         displayId = "display#{id++}"
         isTopLevel = tag isnt '$'
-        console.log tag, isTopLevel
         setTimeout ->
           editor.createAceEditor code, displayId, moduleName, isTopLevel
         , 1
