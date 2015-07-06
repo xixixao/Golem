@@ -235,6 +235,7 @@ module.exports = hyper class EditorMain
       commandLine: 'commandLine'
       output: 'output'
     @saved = no
+    @unnamedModules = 0
     mode = new Mode no, this
     @registerMode mode
     @fileName = @memory.getLastOpenFileName()
@@ -336,9 +337,12 @@ module.exports = hyper class EditorMain
 
 
 
+  unnamedModuleName: ->
+    newModuleName = "unnamed#{@unnamedModules++}"
+    @state.mode.worker.call 'compileModule', ['', newModuleName]
+    newModuleName
 
-
-  createAceEditor: (value, displayId) ->
+  createAceEditor: (value, displayId, moduleName, isTopLevel) ->
     mode = new CommandMode displayId, []
     container = document.getElementById displayId
     editor = ace.edit container, mode, "ace/theme/tea"
@@ -361,13 +365,11 @@ module.exports = hyper class EditorMain
       container.classList.remove notFocusedClass
 
     mode.registerWithWorker @state.mode.worker
-    mode.setContent value, null, "@unnamed"
+    mode.parseOnlyWorker isTopLevel
+    mode.setContent value, null, moduleName
 
     mode.worker.on 'ok', ({data: {result, type}}) =>
       source = editor.getValue()
-
-      if result.ast
-        result.ast.splice 1, result.ast.length - 3
       mode.updateAst result.ast, result.errors
 
 

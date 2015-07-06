@@ -59,6 +59,9 @@ module.exports = class CommandMode extends Mode
     @worker.call 'setValue', [@editor.session.getDocument().getValue()]
     @worker.call 'onUpdate', [shouldExecute]
 
+  parseOnlyWorker: (isTopLevel) ->
+    @worker.call 'parseOnly', [isTopLevel]
+
   addCommands: ->
     super
     @editor.commands.addCommands

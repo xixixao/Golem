@@ -11,7 +11,6 @@ exports.Worker = class extends Mirror
   constructor: (sender) ->
     super sender
     @setTimeout 20 # Take over the scheduling from Mirror
-    @compiler = compiler
     # @trigger = delay 700
 
   setModuleName: (@moduleName) ->
@@ -30,7 +29,7 @@ exports.Worker = class extends Mirror
   _compile: (value, moduleName, current) ->
     console.log "worker: compiling #{moduleName}, current: #{current}"
     try
-      result = cacheModule compiler.compileTopLevel, value, moduleName
+      result = cacheModule compiler.compileModuleTopLevel, value, moduleName
       if result.request
         listening = @sender.on 'ok', (requested) =>
           if requested.moduleName is result.request
@@ -52,6 +51,9 @@ exports.Worker = class extends Mirror
         inDependency: not current
 
   methods:
+    parseExpression: (source) ->
+      compiler.parseExpression @moduleName, source
+
     matchingDefinitions: (reference) ->
       compiler.findMatchingDefinitions @moduleName, reference
 
@@ -65,7 +67,7 @@ exports.Worker = class extends Mirror
       compiler.expand @moduleName, expression
 
     compileBuild: (moduleName) ->
-      compiler.compileModule moduleName
+      compiler.compileModuleWithDependencies moduleName
 
 # Returns a function which runs given function maximally once during given
 # duration.
@@ -84,9 +86,10 @@ delay = (duration) ->
     timeout = setTimeout (reset run, fn), duration
     ready = false
 
-class ExpressionWorker extends exports.Worker
+class AdhocWorker extends exports.Worker
   constructor: (sender) ->
     super sender
+    @compilationFn = compiler.compileExpression
 
   onUpdate: (execute) ->
     value = @doc.getValue()
@@ -104,15 +107,23 @@ class ExpressionWorker extends exports.Worker
           type: (if execute then 'execute' else 'normal')
           commandSource: value
           result:
-            @compiler.compileExpression value, @moduleName
+            @compilationFn value, @moduleName
 
       catch e
         console.log e.stack
+        console.log e
         @sender.emit "error",
           text: e.message
           type: 'error'
           commandSource: value
         return
+
+  parseOnly: (isTopLevel) ->
+    @compilationFn =
+      if isTopLevel
+        compiler.parseTopLevel
+      else
+        compiler.parseExpression
 
 cache = {}
 
@@ -162,7 +173,7 @@ window.onmessage = (e) ->
   if sender and id? or main and msg.command
     worker =
       if id?
-        workers[id] ?= new ExpressionWorker new Sender id
+        workers[id] ?= new AdhocWorker (new Sender id), msg
       else
         main
     if msg.command

@@ -120,65 +120,65 @@ These will give you a feel for the expression syntax of the language.
 
 ### Literals and calling functions
 
-```e
+```$
 (+ 2 15)```
 
-```e
+```$
 (* 4 19)```
 
 You might not expect the following order of the operands:
 
-```e
+```$
 (- 1472 1892)```
 
-```e
+```$
 (/ 2 5)```
 
 No precendence rules to remember:
 
-```e
+```$
 (* 50 (- 184 672))```
 
 Booleans:
 
-```e
+```$
 (and True False)```
 
-```e
+```$
 (and True True)```
 
-```e
+```$
 (or False True)```
 
-```e
+```$
 (not False)```
 
-```e
+```$
 (not (and True True))```
 
 Equality:
 
-```e
+```$
 (= 5 5)```
 
-```e
+```$
 (= 1 0)```
 
-```e
+```$
 (!= 5 5)```
 
-```e
+```$
 (!= "hello" "hello")```
 
 What non-LISP languages call functions:
 
-```e
+```$
 (sqrt 49)```
 
-```e
+```$
 (min 9 10)```
 
-```e
+```$
 (max 101.5 101.51)```
 
 ## Defining functions
@@ -363,12 +363,15 @@ class LanguageReferenceCommand
   @symbols = @defaultSymbols
 
   @execute = (args, state, editor) ->
+    moduleName = editor.unnamedModuleName()
     id = 1000
     marked languageReference,
       highlight: (code, tag) ->
         displayId = "display#{id++}"
+        isTopLevel = tag isnt '$'
+        console.log tag, isTopLevel
         setTimeout ->
-          editor.createAceEditor code, displayId
+          editor.createAceEditor code, displayId, moduleName, isTopLevel
         , 1
         """<div id="#{displayId}" style="height: 22px"></div>"""
       (_, text) ->

@@ -217,7 +217,7 @@ exports.Mode = class extends TextMode
   setContent: (string, selectedRange, moduleName) ->
     # console.log "setting content"
     try
-      @reportModuleName moduleName if moduleName?
+      @assignModuleName moduleName if moduleName?
       added = astize string, @ast
       inside = insideTangible @ast
       @mutate(
@@ -267,7 +267,10 @@ exports.Mode = class extends TextMode
 
   # Called after worker compiles
   updateAst: (ast, errors = []) ->
-    duplicateProperties ast, @ast
+    try
+      duplicateProperties ast, @ast
+    catch e
+      console.error ast, @ast
     @$tokenizer._signal 'update', data: rows: first: 1
     if (_empty errors) or not @isAutocompleting()
       @updateAutocomplete()
@@ -2189,7 +2192,7 @@ exports.Mode = class extends TextMode
 
     @worker
 
-  reportModuleName: (moduleName) ->
+  assignModuleName: (moduleName) ->
     if moduleName isnt @moduleName
       @moduleName = moduleName
       @worker.call 'setModuleName', [moduleName]

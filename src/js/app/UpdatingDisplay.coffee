@@ -174,7 +174,7 @@ module.exports = hyper class UpdatingDisplay
       #          (source nodes..., commandExpression)
       if source is commandSource #TODO: investigate why these get out of sync
         if result.ast
-          result.ast.splice 1, result.ast.length - 3
+          result.ast.splice 1, result.ast.length - 3 #TODO: remove this hack, why are we validating like this?
         mode.updateAst result.ast, result.errors
 
         if not result.malformed

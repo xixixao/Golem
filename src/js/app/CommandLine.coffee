@@ -34,7 +34,7 @@ module.exports = hyper class CommandLine
     if updatedSource isnt @props.updatedSource
       @editor.session.getMode().updateWorker no
 
-    @editor.session.getMode().reportModuleName moduleName
+    @editor.session.getMode().assignModuleName moduleName
 
   componentDidMount: ->
     mode = new CommandMode "COMMAND_LINE", @props.completers
