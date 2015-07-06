@@ -624,6 +624,7 @@ exports.Mode = class extends TextMode
 
     @editor.commands.addCommands @commands =
       'ignoretheseshortcuts':
+        readOnly: true
         bindKey: win: "Ctrl-Shift-E", mac: "Ctrl-Shift-E|Command-G|Command-Shift-G|Ctrl-G|Ctrl-Shift-G|Command-Shift-Up|Shift-Up|Shift-Down|Ctrl-N|Option-Shift-Left|Option-Shift-Right|Command-Shift-Left|Command-Shift-Right|Ctrl-B|Ctrl-V|Command-Option-E|Command-Shift-E|Command-D|Command-Shift-D duplicateSelection|Command-Alt-S|Command-/|Command-Shift-/|Command-Option-Up|Command-Option-Down|Command-Delete|Ctrl-H|Alt-Delete|Alt-Backspace|Ctrl-Alt-Backspace|Ctrl-[|Ctrl-]|Ctrl-Shift-U|Command-Shift-L|Ctrl-Alt-Up|Ctrl-Alt-Down|Ctrl-Alt-Shift-Up|Ctrl-Alt-Shift-Down|Ctrl-Alt-Left|Ctrl-Alt-Right|Ctrl-Alt-Shift-Left|Ctrl-Alt-Shift-Right|Ctrl-Alt-L|Ctrl-Alt-A|Ctrl-Alt-G"
         exec: =>
 
@@ -686,6 +687,7 @@ exports.Mode = class extends TextMode
 
       'select enclosing expression':
         bindKey: win: 'Ctrl-Up', mac: 'Command-Up'
+        readOnly: true
         multiSelectAction: 'forEach'
         exec: =>
           @mutate
@@ -697,6 +699,7 @@ exports.Mode = class extends TextMode
 
       'select the first expression inside selection':
         bindKey: win: 'Ctrl-Down', mac: 'Command-Down'
+        readOnly: true
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
@@ -704,6 +707,7 @@ exports.Mode = class extends TextMode
 
       'select the last expression inside selection':
         bindKey: win: 'Ctrl-Shift-Down', mac: 'Command-Shift-Down'
+        readOnly: true
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
@@ -711,6 +715,7 @@ exports.Mode = class extends TextMode
 
       'move to next atom or position':
         bindKey: win: 'Right', mac: 'Right'
+        readOnly: true
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
@@ -718,6 +723,7 @@ exports.Mode = class extends TextMode
 
       'move to previous atom or position':
         bindKey: win: 'Left', mac: 'Left'
+        readOnly: true
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
@@ -725,6 +731,7 @@ exports.Mode = class extends TextMode
 
       'select next sibling expression':
         bindKey: win: 'Ctrl-Right', mac: 'Command-Right'
+        readOnly: true
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
@@ -732,6 +739,7 @@ exports.Mode = class extends TextMode
 
       'select previous sibling expression':
         bindKey: win: 'Ctrl-Left', mac: 'Command-Left'
+        readOnly: true
         multiSelectAction: 'forEach'
         autocomplete: yes
         exec: =>
@@ -739,12 +747,14 @@ exports.Mode = class extends TextMode
 
       'include next expression in selection':
         bindKey: win: 'Shift-Right', mac: 'Shift-Right'
+        readOnly: true
         multiSelectAction: 'forEach'
         exec: =>
           @expandSelection NEXT
 
       'include previous expression in selection':
         bindKey: win: 'Shift-Left', mac: 'Shift-Left'
+        readOnly: true
         multiSelectAction: 'forEach'
         exec: =>
           @expandSelection PREVIOUS
@@ -785,6 +795,7 @@ exports.Mode = class extends TextMode
 
       'jump to next occurence of the selection':
         bindKey: win: 'Ctrl-Tab', mac: 'Alt-Tab'
+        readOnly: true
         scrollIntoView: 'center'
         multiSelectAction: 'forEach'
         exec: =>
@@ -792,6 +803,7 @@ exports.Mode = class extends TextMode
 
       'jump to previous occurence of the selection':
         bindKey: win: 'Ctrl-Shift-Tab', mac: 'Alt-Shift-Tab'
+        readOnly: true
         scrollIntoView: 'center'
         multiSelectAction: 'forEach'
         exec: =>
@@ -799,12 +811,14 @@ exports.Mode = class extends TextMode
 
       'multiselect next reference':
         bindKey: win: 'Ctrl-S', mac: 'Ctrl-S'
+        readOnly: true
         scrollIntoView: 'center'
         exec: =>
           @multiSelectReferenceInDirection FORWARD
 
       'multiselect previous reference':
         bindKey: win: 'Ctrl-Shift-S', mac: 'Ctrl-Shift-S'
+        readOnly: true
         scrollIntoView: 'center'
         exec: =>
           @multiSelectReferenceInDirection BACKWARD
@@ -903,18 +917,21 @@ exports.Mode = class extends TextMode
 
       'select enclosing form or insert )':
         bindKey: win: ')', mac: ')'
+        readOnly: true
         multiSelectAction: 'forEach'
         exec: =>
           @closeParentOrInsert ')'
 
       'select enclosing form or insert }':
         bindKey: win: '}', mac: '}'
+        readOnly: true
         multiSelectAction: 'forEach'
         exec: =>
           @closeParentOrInsert '}'
 
       'select enclosing form or insert ]':
         bindKey: win: ']', mac: ']'
+        readOnly: true
         multiSelectAction: 'forEach'
         exec: =>
           @closeParentOrInsert ']'
@@ -934,6 +951,7 @@ exports.Mode = class extends TextMode
       'select enclosing definition':
         bindKey: win: 'Ctrl-Shift-0', mac: 'Command-Shift-0'
         logicalKey: win: 'Ctrl-)', mac: 'Command-)'
+        readOnly: true
         multiSelectAction: 'forEach'
         exec: =>
           @mutate
@@ -991,6 +1009,7 @@ exports.Mode = class extends TextMode
 
       'go to definition':
         bindKey: win: 'Ctrl-E', mac: 'Ctrl-E'
+        readOnly: true
         multiSelectAction: 'forEach'
         exec: =>
           loadModule = (moduleName) =>
@@ -1013,6 +1032,7 @@ exports.Mode = class extends TextMode
       # Temporary
       'insert call-site type':
         bindKey: win: 'Ctrl-T', mac: 'Ctrl-T'
+        readOnly: true
         indirect: yes
         autocomplete: yes
         exec: (editor, {targetEditor} = {}) =>
@@ -1033,6 +1053,7 @@ exports.Mode = class extends TextMode
       # Temporary
       'show type of an expression':
         bindKey: win: 'Ctrl-Shift-T', mac: 'Ctrl-Shift-T'
+        readOnly: true
         multiSelectAction: 'forEach'
         exec: =>
           selected = @selectedTangible()

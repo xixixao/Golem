@@ -112,7 +112,7 @@ Now that you are familiar with the IDE, let's learn more about the language itse
 """
 
 languageReference = """
-This is a short guide to Shem, the language. By clicking on each example, you can either evaluate it or add it to the current module editor. You are encouraged to insert the examples yourself and modify them as desired. Some examples are taken from [Learn You a Haskell](http://learnyouahaskell.com) for comparison.
+This is a short guide to Shem, the language. You can evaluate a selected expression using <kbd>Ctrl-X</kbd> and insert any selection to the module editor using <kbd>Ctrl-C</kbd>. Some examples are taken from [Learn You a Haskell](http://learnyouahaskell.com) for comparison.
 
 ## Basics
 
