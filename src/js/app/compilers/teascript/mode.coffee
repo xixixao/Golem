@@ -1173,17 +1173,17 @@ exports.Mode = class extends TextMode
             newName = (isAtom atom = selected) and atom.malformed
 
             @startGroupMutation()
-            top = ancestorAtDefinitonList toNode @selectedTangible()
-            # Position after top
-            movedTo = nodeEdgeOfTangible LAST, termToTangible top
             selections = targetMode.selectedTangiblesList()
             if not newName and sameMode
               originalHoles = for selection in selections
                 @mutate @removeSelectable selection
                 bookmarkBefore @selectedTangible()
 
+            top = ancestorAtDefinitonList toNode @selectedTangible()
+            # Position after top
+            movedTo = nodeEdgeOfTangible LAST, termToTangible top
             # Otherwise top must be an already selected fake
-            if isExpression top
+            if not top.fake or isName siblingTerm PREVIOUS, top
               separator = if parentOf top then '\n' else '\n\n'
               @insertSpaceAt FORWARD, separator, movedTo
 
