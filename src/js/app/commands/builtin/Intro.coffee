@@ -188,6 +188,129 @@ double-me (fn [x]
   (+ x x))
 ```
 
+Where clauses without the where keyword:
+
+```
+double-us (fn [x y]
+  (+ xs ys)
+  xs (* 2 x)
+  ys (* 2 y))
+```
+
+Document your code with comments and type annotations:
+
+```
+tripple-me (fn [x]
+  (: (Fn Num Num))
+  (# A not very useful function taking x and returning
+    triple its value.)
+  (* 3 x))
+```
+
+## Tuples
+
+```$
+["Christopher" "Walken" 55]
+```
+
+```$
+(tuple "Hello" 6)
+```
+
+## Collections
+
+Persistent arrays with log32 lookup:
+
+```
+lost-numbers {4 8 15 16 23 42}
+```
+
+```$
+(join lost-numbers {42 13 1 0})
+```
+
+```$
+(& 1 {2 3 4 5})
+```
+
+```$
+(&& 6 {2 3 4 5})
+```
+
+```$
+(concat {{2 3} {} {4 5 6}})
+```
+
+Potentially partial functions return `?` values:
+
+```$
+(first {5 4 3 2 1})
+```
+
+```$
+(last {5 4 3 2 1})
+```
+
+```$
+(but-last {5 4 3 2 1})
+```
+
+```$
+(at 2 {5 4 3 2 1})
+```
+
+Functions returning part of a collection are more lenient:
+
+```$
+(take 5 {1 2})
+```
+
+```$
+(drop 5 {1 2})
+```
+
+Functions returning a `Bool` have names ending in ?:
+
+```$
+(empty? {})
+```
+
+```$
+(elem? 5 {1 2 3})
+```
+
+```$
+(size {5 4 3 2 1})
+```
+
+Numerical ranges:
+
+```$
+(range 0 10)
+```
+
+Optional use of labels:
+
+```$
+(range from: 0.5 exclude-to: 10)
+```
+
+```$
+(range-by from: 0.5 exclude-to: 10 step: 3)
+```
+
+```$
+(repeat times: 15 what: 0)
+```
+
+```$
+(concat-repeat times: 15 what: 0)
+```
+
+
+
+
+
 
 """
 
