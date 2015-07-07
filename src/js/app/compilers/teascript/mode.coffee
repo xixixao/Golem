@@ -1149,10 +1149,11 @@ exports.Mode = class extends TextMode
               newSelections: tangibles
 
       'Evaluate selected expression':
-        bindKey: win: 'Ctrl-X', mac: 'Ctrl-X'
+        bindKey: win: 'Ctrl-Shift-X', mac: 'Ctrl-X'
         readOnly: yes
         indirect: yes
         exec: (editor, {targetEditor} = {}) =>
+          targetEditor ?= @editor
           targetMode = targetEditor.session.getMode()
           if selected = targetMode.onlySelectedExpression()
             [open, close] = compiler.astizeList ''
@@ -1160,6 +1161,23 @@ exports.Mode = class extends TextMode
               source: targetEditor.getSelectedText()
               moduleName: targetMode.moduleName
               ast: [open, selected, close]
+
+      'Add definition of selected name':
+        bindKey: win: 'Ctrl-Shift-C', mac: 'Ctrl-C'
+        readOnly: yes
+        indirect: yes
+        exec: (editor, {targetEditor} = {}) =>
+          targetEditor ?= @editor
+          targetMode = targetEditor.session.getMode()
+          if (atom = targetMode.onlySelectedExpression()) and isName atom
+            def = tangibleBetween (toTangible atom), (toTangible siblingTerm NEXT, atom)
+            movedTo = @insertIntoDefinitionListContaining @selectedTangible()
+            moved = reindentTangible def, movedTo.parent
+            @mutate
+              changeInTree:
+                added: moved
+                at: outsToTangible [movedTo]
+              inSelections: moved
 
       'Define selected token':
         bindKey: win: 'Ctrl-D', mac: 'Ctrl-D'
@@ -1178,14 +1196,7 @@ exports.Mode = class extends TextMode
               originalHoles = for selection in selections
                 @mutate @removeSelectable selection
                 bookmarkBefore @selectedTangible()
-
-            top = ancestorAtDefinitonList toNode @selectedTangible()
-            # Position after top
-            movedTo = nodeEdgeOfTangible LAST, termToTangible top
-            # Otherwise top must be an already selected fake
-            if not top.fake or isName siblingTerm PREVIOUS, top
-              separator = if parentOf top then '\n' else '\n\n'
-              @insertSpaceAt FORWARD, separator, movedTo
+            movedTo = @insertIntoDefinitionListContaining @selectedTangible()
 
             if newName
               @insertStringForward if isOperator atom
@@ -1205,14 +1216,12 @@ exports.Mode = class extends TextMode
             else
               nameHole = bookmarkBefore @selectedTangible()
               @insertSpace FORWARD, " "
-              moved = reindentTangible (_fst selections), top.parent
+              moved = reindentTangible (_fst selections), movedTo.parent
               rememberedHoles = join (pickupBookmarks originalHoles or []), [nameHole()]
               @mutate
                 changeInTree:
                   added: moved
-                  at:
-                    in: []
-                    out: [movedTo]
+                  at: outsToTangible [movedTo]
                 tangibleSelection: rememberedHoles[0]
                 newSelections: rememberedHoles[1...]
             @finishGroupMutation()
@@ -1716,6 +1725,18 @@ exports.Mode = class extends TextMode
       tangibleSelection:
         in: []
         out: if direction is FORWARD then [insertPos] else added
+
+  # TODO: doesn't work when part of a pattern is selected, needs more info
+  # on the AST
+  insertIntoDefinitionListContaining: (tangible) ->
+    top = ancestorAtDefinitonList toNode tangible
+    # Position after top
+    movedTo = nodeEdgeOfTangible LAST, termToTangible top
+    # Otherwise top must be an already selected fake
+    if not top.fake or isName siblingTerm PREVIOUS, top
+      separator = if parentOf top then '\n' else '\n\n'
+      @insertSpaceAt FORWARD, separator, movedTo
+    movedTo
 
   selectLineAdjecentAtomOrPosition: (direction) ->
     pos = @startPos selected = toNode @selectedTangible()
