@@ -1168,63 +1168,45 @@ exports.Mode = class extends TextMode
           targetEditor ?= @editor
           targetMode = targetEditor.session.getMode()
           selected = targetMode.onlySelectedExpression()
-          if selected and (isAtom atom = selected) and atom.malformed
+          if selected
+            sameMode = targetEditor is @editor
+            newName = (isAtom atom = selected) and atom.malformed
+
+            @startGroupMutation()
             top = ancestorAtDefinitonList toNode @selectedTangible()
             # Position after top
             movedTo = nodeEdgeOfTangible LAST, termToTangible top
-            @startGroupMutation()
-            if isExpression top
-              separator = if parentOf top then '\n' else '\n\n'
-              @insertSpaceAt FORWARD, separator, movedTo
-            @insertStringForward if isOperator atom
-              args = argumentNamesFromCall atom.parent
-              """
-              #{atom.symbol} (fn [#{args.join ' '}]
-                )"""
-            else
-              """
-              #{atom.symbol} """
-            hole = definition = @selectableEdge LAST
-            if isOperator atom
-              hole = tangibleInside LAST, toNode definition
-            @mutate
-              tangibleSelection: hole
-            @finishGroupMutation()
-          else if selected
-            if targetEditor isnt @editor
-              moved = reindentTangible (toTangible selected), @parentOfSelected()
-              @startGroupMutation()
-              # TODO: fix position when some expression is selected
-              originalHole = bookmarkBefore @selectedTangible()
-              @insertSpace FORWARD, " "
-              @mutate
-                changeInTree:
-                  added: moved
-                  at: @selectedTangible()
-                tangibleSelection: originalHole()
-              @finishGroupMutation()
-            else
-              # Find parent scope
-              # Add empty space and selected form
-              # put cursor to original place and the new space
-              # --- actually it's like adding an argument
-              top = ancestorAtDefinitonList selected
-              # Position after top
-              movedTo = nodeEdgeOfTangible LAST, toTangible top
-              moved = reindentTangible @selectedTangible(), top.parent
-              separator = if parentOf top then '\n' else '\n\n'
-
-              @startGroupMutation()
-              selections = @selectedTangiblesList()
+            selections = targetMode.selectedTangiblesList()
+            if not newName and sameMode
               originalHoles = for selection in selections
                 @mutate @removeSelectable selection
                 bookmarkBefore @selectedTangible()
 
+            # Otherwise top must be an already selected fake
+            if isExpression top
+              separator = if parentOf top then '\n' else '\n\n'
               @insertSpaceAt FORWARD, separator, movedTo
-              newHole = bookmarkBefore @selectedTangible()
-              @insertSpaceAt FORWARD, " ", movedTo
 
-              rememberedHoles = pickupBookmarks originalHoles
+            if newName
+              @insertStringForward if isOperator atom
+                args = argumentNamesFromCall atom.parent
+                """
+                #{atom.symbol} (fn [#{args.join ' '}]
+                  )"""
+              else
+                """
+                #{atom.symbol} """
+              hole = definition = @selectableEdge LAST
+              if isOperator atom
+                # body of the function
+                hole = tangibleInside LAST, toNode definition
+              @mutate
+                tangibleSelection: hole
+            else
+              nameHole = bookmarkBefore @selectedTangible()
+              @insertSpace FORWARD, " "
+              moved = reindentTangible (_fst selections), top.parent
+              rememberedHoles = join (pickupBookmarks originalHoles or []), [nameHole()]
               @mutate
                 changeInTree:
                   added: moved
@@ -1232,8 +1214,8 @@ exports.Mode = class extends TextMode
                     in: []
                     out: [movedTo]
                 tangibleSelection: rememberedHoles[0]
-                newSelections: join rememberedHoles[1...], [newHole()]
-              @finishGroupMutation()
+                newSelections: rememberedHoles[1...]
+            @finishGroupMutation()
 
       'Inline selected expression or replace a name by its definition':
         bindKey: win: 'Ctrl-I', mac: 'Ctrl-I'
