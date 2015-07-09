@@ -219,6 +219,8 @@ tripple-me (fn [x]
 
 ## Collections
 
+### Arrays
+
 Persistent arrays with log32 lookup:
 
 ```
@@ -252,14 +254,18 @@ Potentially partial functions return `?` values:
 ```
 
 ```$
-(but-last {5 4 3 2 1})
-```
-
-```$
 (at 2 {5 4 3 2 1})
 ```
 
 Functions returning part of a collection are more lenient:
+
+```$
+(rest {5 4 3 2 1})
+```
+
+```$
+(but-last {5 4 3 2 1})
+```
 
 ```$
 (take 5 {1 2})
@@ -304,7 +310,7 @@ Optional use of labels:
 ```
 
 ```$
-(concat-repeat times: 15 what: 0)
+(concat-repeat times: 8 what: {0 1})
 ```
 
 
