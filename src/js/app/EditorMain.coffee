@@ -523,7 +523,7 @@ module.exports = hyper class EditorMain
 
   componentDidMount: ->
     if @state.timeline.size() < 10
-      @_executeCommand @state.commandMap.help
+      @_executeCommand @state.commandMap['intro']
     @_executeCommand @state.commandMap['load-demos']
     window.log = @logResult
 

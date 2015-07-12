@@ -20,7 +20,7 @@ Now press Enter. Congratulations, you have
 
 Next steps:
 - Go through the [Tutorial](:e;:tutorial)
-- Look at the [Language Reference](:e;:language-guide)
+- Look at the [Language Guide](:e;:language-guide)
 - Start breathing again after you spotted all the parentheses
 - Bug us on <a href="http://github.com/xixixao/Golem">Github</a>
 """
@@ -108,10 +108,12 @@ Golem provides many useful actions for transforming code. To see all the availab
 
 ## The Language
 
-Now that you are familiar with the IDE, let's learn more about the language itself. You can keep this tutorial open for reference. Display [:language-guide](:language-guide).
+Now that you are familiar with the IDE, let's learn more about the language itself. You can keep this tutorial open for reference. Display [:language-guide](:e;:language-guide).
 """
 
 languageGuide = """
+[Intro](:e;:intro) > [Tutorial](:e;:tutorial) > Language Guide
+
 This is a short guide to Shem, the language. You can evaluate a selected expression using <kbd>Ctrl-X</kbd> and add a selected name with its definition to the module editor using <kbd>Ctrl-C</kbd>. Some examples and their order are taken from [Learn You a Haskell](http://learnyouahaskell.com), for comparison.
 
 ## Basics
@@ -370,7 +372,6 @@ if-factorial (fn [x]
     1
     (* x (factorial (- 1 x)))))
 ```
-
 
 """
 
