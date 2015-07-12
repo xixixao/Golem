@@ -1,2 +1,3048 @@
-define(function(require,exports,module){var e,t,n,i,r,o,s,a,l,c,u,h,p,d,f,m,g,v,y,b,w,C,x,A,_,E,S,T,F,k,D,M,R,L,N,B,O,I,$,P,j,W,z,H,q,U,V,K,G,J,Y,X,Q,Z,et,tt,nt,it,rt,ot,st,at,lt,ct,ut,ht,pt,dt,ft,mt=module.uri||"",gt=(mt.substring(0,mt.lastIndexOf("/")+1),{}.hasOwnProperty),vt=function(e,t){function n(){this.constructor=e}for(var i in t)gt.call(t,i)&&(e[i]=t[i]);return n.prototype=t.prototype,e.prototype=new n,e.__super__=t.prototype,e},yt=[].indexOf||function(e){for(var t=0,n=this.length;n>t;t++)if(t in this&&this[t]===e)return t;return-1},bt=[].slice;Error.stackTraceLimit=1/0,P=require("./scope").Scope,dt=require("./lexer"),N=dt.RESERVED,$=dt.STRICT_PROSCRIBED,ft=require("./helpers"),Q=ft.compact,nt=ft.flatten,tt=ft.extend,st=ft.merge,Z=ft.del,ct=ft.starts,et=ft.ends,rt=ft.last,lt=ft.some,X=ft.addLocationDataFn,ot=ft.locationDataToString,ut=ft.throwSyntaxError,exports.extend=tt,exports.addLocationDataFn=X,Y=function(){return!0},k=function(){return!1},q=function(){return this},F=function(){return this.negated=!this.negated,this},exports.CodeFragment=c=function(){function e(e,t){var n;this.code=""+t,this.locationData=null!=e?e.locationData:void 0,this.type=(null!=e&&null!=(n=e.constructor)?n.name:void 0)||"unknown"}return e.prototype.toString=function(){return""+this.code+(this.locationData?": "+ot(this.locationData):"")},e}(),it=function(e){var t;return function(){var n,i,r;for(r=[],n=0,i=e.length;i>n;n++)t=e[n],r.push(t.code);return r}().join("")},exports.Base=i=function(){function e(){}return e.prototype.compile=function(e,t){return it(this.compileToFragments(e,t))},e.prototype.compileToFragments=function(e,t){var n;return e=tt({},e),t&&(e.level=t),n=this.unfoldSoak(e)||this,n.tab=e.indent,e.level!==E&&n.isStatement(e)?n.compileClosure(e):n.compileNode(e)},e.prototype.compileClosure=function(e){var t;return(t=this.jumps())&&t.error("cannot use a pure statement in an expression"),e.sharedScope=!0,a.wrap(this).compileNode(e)},e.prototype.cache=function(e,t,i){var r,o;return this.isComplex()?(r=new S(i||e.scope.freeVariable("ref")),o=new n(r,this),t?[o.compileToFragments(e,t),[this.makeCode(r.value)]]:[o,r]):(r=t?this.compileToFragments(e,t):this,[r,r])},e.prototype.cacheToCodeFragments=function(e){return[it(e[0]),it(e[1])]},e.prototype.makeReturn=function(e){var t;return t=this.unwrapAll(),e?new o(new S(""+e+".push"),[t]):new O(t)},e.prototype.contains=function(e){var t;return t=void 0,this.traverseChildren(!1,function(n){return e(n)?(t=n,!1):void 0}),t},e.prototype.lastNonComment=function(e){var t;for(t=e.length;t--;)if(!(e[t]instanceof u))return e[t];return null},e.prototype.toString=function(e,t){var n;return null==e&&(e=""),null==t&&(t=this.constructor.name),n="\n"+e+t,this.soak&&(n+="?"),this.eachChild(function(t){return n+=t.toString(e+H)}),n},e.prototype.eachChild=function(e){var t,n,i,r,o,s,a,l;if(!this.children)return this;for(a=this.children,i=0,o=a.length;o>i;i++)if(t=a[i],this[t])for(l=nt([this[t]]),r=0,s=l.length;s>r;r++)if(n=l[r],e(n)===!1)return this;return this},e.prototype.traverseChildren=function(e,t){return this.eachChild(function(n){var i;return i=t(n),i!==!1?n.traverseChildren(e,t):void 0})},e.prototype.invert=function(){return new M("!",this)},e.prototype.unwrapAll=function(){var e;for(e=this;e!==(e=e.unwrap()););return e},e.prototype.children=[],e.prototype.isStatement=k,e.prototype.jumps=k,e.prototype.isComplex=Y,e.prototype.isChainable=k,e.prototype.isAssignable=k,e.prototype.unwrap=q,e.prototype.unfoldSoak=k,e.prototype.assigns=k,e.prototype.updateLocationDataIfMissing=function(e){return this.locationData||(this.locationData=e),this.eachChild(function(t){return t.updateLocationDataIfMissing(e)})},e.prototype.error=function(e){return ut(e,this.locationData)},e.prototype.makeCode=function(e){return new c(this,e)},e.prototype.wrapInBraces=function(e){return[].concat(this.makeCode("("),e,this.makeCode(")"))},e.prototype.joinFragmentArrays=function(e,t){var n,i,r,o,s;for(n=[],r=o=0,s=e.length;s>o;r=++o)i=e[r],r&&n.push(this.makeCode(t)),n=n.concat(i);return n},e}(),exports.Block=r=function(e){function t(e){this.expressions=Q(nt(e||[]))}return vt(t,e),t.prototype.children=["expressions"],t.prototype.push=function(e){return this.expressions.push(e),this},t.prototype.pop=function(){return this.expressions.pop()},t.prototype.unshift=function(e){return this.expressions.unshift(e),this},t.prototype.unwrap=function(){return 1===this.expressions.length?this.expressions[0]:this},t.prototype.isEmpty=function(){return!this.expressions.length},t.prototype.isStatement=function(e){var t,n,i,r;for(r=this.expressions,n=0,i=r.length;i>n;n++)if(t=r[n],t.isStatement(e))return!0;return!1},t.prototype.jumps=function(e){var t,n,i,r;for(r=this.expressions,n=0,i=r.length;i>n;n++)if(t=r[n],t.jumps(e))return t},t.prototype.makeReturn=function(e){var t,n;for(n=this.expressions.length;n--;)if(t=this.expressions[n],!(t instanceof u)){this.expressions[n]=t.makeReturn(e),t instanceof O&&!t.expression&&this.expressions.splice(n,1);break}return this},t.prototype.compileToFragments=function(e,n){return null==e&&(e={}),e.scope?t.__super__.compileToFragments.call(this,e,n):this.compileRoot(e)},t.prototype.compileNode=function(e){var n,i,r,o,s,a,l,c,u;for(this.tab=e.indent,a=e.level===E,i=[],u=this.expressions,o=l=0,c=u.length;c>l;o=++l)s=u[o],s=s.unwrapAll(),s=s.unfoldSoak(e)||s,s instanceof t?i.push(s.compileNode(e)):a?(s.front=!0,r=s.compileToFragments(e),s.isStatement(e)||(r.unshift(this.makeCode(""+this.tab)),r.push(this.makeCode(";"))),i.push(r)):i.push(s.compileToFragments(e,x));return a?this.spaced?[].concat(this.joinFragmentArrays(i,"\n\n"),this.makeCode("\n")):this.joinFragmentArrays(i,"\n"):(n=i.length?this.joinFragmentArrays(i,", "):[this.makeCode("void 0")],i.length>1&&e.level>=x?this.wrapInBraces(n):n)},t.prototype.compileRoot=function(e){var t,n,i,r,o,s,a,l,c,h;for(e.indent=e.bare?"":H,e.level=E,this.spaced=!0,e.scope=new P(null,this,null),h=e.locals||[],l=0,c=h.length;c>l;l++)r=h[l],e.scope.parameter(r);return o=[],e.bare||(s=function(){var e,n,r,o;for(r=this.expressions,o=[],i=e=0,n=r.length;n>e&&(t=r[i],t.unwrap()instanceof u);i=++e)o.push(t);return o}.call(this),a=this.expressions.slice(s.length),this.expressions=s,s.length&&(o=this.compileNode(st(e,{indent:""})),o.push(this.makeCode("\n"))),this.expressions=a),n=this.compileWithDeclarations(e),e.bare?n:[].concat(o,this.makeCode("(function() {\n"),n,this.makeCode("\n}).call(this);\n"))},t.prototype.compileWithDeclarations=function(e){var t,n,i,r,o,s,a,l,c,h,p,d,f,m;for(r=[],s=[],d=this.expressions,o=h=0,p=d.length;p>h&&(i=d[o],i=i.unwrap(),i instanceof u||i instanceof S);o=++h);return e=st(e,{level:E}),o&&(a=this.expressions.splice(o,9e9),f=[this.spaced,!1],c=f[0],this.spaced=f[1],m=[this.compileNode(e),c],r=m[0],this.spaced=m[1],this.expressions=a),s=this.compileNode(e),l=e.scope,l.expressions===this&&(n=e.scope.hasDeclarations(),t=l.hasAssignments,n||t?(o&&r.push(this.makeCode("\n")),r.push(this.makeCode(""+this.tab+"var ")),n&&r.push(this.makeCode(l.declaredVariables().join(", "))),t&&(n&&r.push(this.makeCode(",\n"+(this.tab+H))),r.push(this.makeCode(l.assignedVariables().join(",\n"+(this.tab+H))))),r.push(this.makeCode(";\n"+(this.spaced?"\n":"")))):r.length&&s.length&&r.push(this.makeCode("\n"))),r.concat(s)},t.wrap=function(e){return 1===e.length&&e[0]instanceof t?e[0]:new t(e)},t}(i),exports.Literal=S=function(e){function t(e){this.value=e}return vt(t,e),t.prototype.makeReturn=function(){return this.isStatement()?this:t.__super__.makeReturn.apply(this,arguments)},t.prototype.isAssignable=function(){return f.test(this.value)},t.prototype.isStatement=function(){var e;return"break"===(e=this.value)||"continue"===e||"debugger"===e},t.prototype.isComplex=k,t.prototype.assigns=function(e){return e===this.value},t.prototype.jumps=function(e){return("break"!==this.value||(null!=e?e.loop:void 0)||(null!=e?e.block:void 0))&&("continue"!==this.value||(null!=e?e.loop:void 0))?void 0:this},t.prototype.compileNode=function(e){var t,n,i;return n="this"===this.value?(null!=(i=e.scope.method)?i.bound:void 0)?e.scope.method.context:this.value:this.value.reserved?'"'+this.value+'"':this.value,t=this.isStatement()?""+this.tab+n+";":n,[this.makeCode(t)]},t.prototype.toString=function(){return' "'+this.value+'"'},t}(i),exports.Undefined=function(e){function t(){return t.__super__.constructor.apply(this,arguments)}return vt(t,e),t.prototype.isAssignable=k,t.prototype.isComplex=k,t.prototype.compileNode=function(e){return[this.makeCode(e.level>=w?"(void 0)":"void 0")]},t}(i),exports.Null=function(e){function t(){return t.__super__.constructor.apply(this,arguments)}return vt(t,e),t.prototype.isAssignable=k,t.prototype.isComplex=k,t.prototype.compileNode=function(){return[this.makeCode("null")]},t}(i),exports.Bool=function(e){function t(e){this.val=e}return vt(t,e),t.prototype.isAssignable=k,t.prototype.isComplex=k,t.prototype.compileNode=function(){return[this.makeCode(this.val)]},t}(i),exports.Return=O=function(e){function t(e){e&&!e.unwrap().isUndefined&&(this.expression=e)}return vt(t,e),t.prototype.children=["expression"],t.prototype.isStatement=Y,t.prototype.makeReturn=q,t.prototype.jumps=q,t.prototype.compileToFragments=function(e,n){var i,r;return i=null!=(r=this.expression)?r.makeReturn():void 0,!i||i instanceof t?t.__super__.compileToFragments.call(this,e,n):i.compileToFragments(e,n)},t.prototype.compileNode=function(e){var t;return t=[],t.push(this.makeCode(this.tab+("return"+(this.expression?" ":"")))),this.expression&&(t=t.concat(this.expression.compileToFragments(e,_))),t.push(this.makeCode(";")),t},t}(i),exports.Value=G=function(e){function i(e,t,n){return!t&&e instanceof i?e:(this.base=e,this.properties=t||[],n&&(this[n]=!0),this)}return vt(i,e),i.prototype.children=["base","properties"],i.prototype.add=function(e){return this.properties=this.properties.concat(e),this},i.prototype.hasProperties=function(){return!!this.properties.length},i.prototype.isArray=function(){return!this.properties.length&&this.base instanceof t},i.prototype.isComplex=function(){return this.hasProperties()||this.base.isComplex()},i.prototype.isAssignable=function(){return this.hasProperties()||this.base.isAssignable()},i.prototype.isSimpleNumber=function(){return this.base instanceof S&&I.test(this.base.value)},i.prototype.isString=function(){return this.base instanceof S&&g.test(this.base.value)},i.prototype.isAtomic=function(){var e,t,n,i;for(i=this.properties.concat(this.base),t=0,n=i.length;n>t;t++)if(e=i[t],e.soak||e instanceof o)return!1;return!0},i.prototype.isStatement=function(e){return!this.properties.length&&this.base.isStatement(e)},i.prototype.assigns=function(e){return!this.properties.length&&this.base.assigns(e)},i.prototype.jumps=function(e){return!this.properties.length&&this.base.jumps(e)},i.prototype.isObject=function(e){return this.properties.length?!1:this.base instanceof D&&(!e||this.base.generated)},i.prototype.isSplice=function(){return rt(this.properties)instanceof j},i.prototype.unwrap=function(){return this.properties.length?this:this.base},i.prototype.cacheReference=function(e){var t,r,o,s;return o=rt(this.properties),this.properties.length<2&&!this.base.isComplex()&&!(null!=o?o.isComplex():void 0)?[this,this]:(t=new i(this.base,this.properties.slice(0,-1)),t.isComplex()&&(r=new S(e.scope.freeVariable("base")),t=new i(new L(new n(r,t)))),o?(o.isComplex()&&(s=new S(e.scope.freeVariable("name")),o=new b(new n(s,o.index)),s=new b(s)),[t.add(o),new i(r||t.base,[s||o])]):[t,r])},i.prototype.compileNode=function(e){var t,n,i,r,o;for(this.base.front=this.front,i=this.properties,t=this.base.compileToFragments(e,i.length?w:null),(this.base instanceof L||i.length)&&I.test(it(t))&&t.push(this.makeCode(".")),r=0,o=i.length;o>r;r++)n=i[r],t.push.apply(t,n.compileToFragments(e));return t},i.prototype.unfoldSoak=function(e){return null!=this.unfoldedSoak?this.unfoldedSoak:this.unfoldedSoak=function(t){return function(){var r,o,s,a,l,c,u,p,d,f;if(s=t.base.unfoldSoak(e))return(d=s.body.properties).push.apply(d,t.properties),s;for(f=t.properties,o=u=0,p=f.length;p>u;o=++u)if(a=f[o],a.soak)return a.soak=!1,r=new i(t.base,t.properties.slice(0,o)),c=new i(t.base,t.properties.slice(o)),r.isComplex()&&(l=new S(e.scope.freeVariable("ref")),r=new L(new n(l,r)),c.base=l),new v(new h(r),c,{soak:!0});return!1}}(this)()},i}(i),exports.Comment=u=function(e){function t(e){this.comment=e}return vt(t,e),t.prototype.isStatement=Y,t.prototype.makeReturn=q,t.prototype.compileNode=function(e,t){var n;return n="/*"+at(this.comment,this.tab)+(yt.call(this.comment,"\n")>=0?"\n"+this.tab:"")+"*/\n",(t||e.level)===E&&(n=e.indent+n),[this.makeCode(n)]},t}(i),exports.Call=o=function(t){function n(e,t,n){this.args=null!=t?t:[],this.soak=n,this.isNew=!1,this.isSuper="super"===e,this.variable=this.isSuper?null:e}return vt(n,t),n.prototype.children=["variable","args"],n.prototype.newInstance=function(){var e,t;return e=(null!=(t=this.variable)?t.base:void 0)||this.variable,e instanceof n&&!e.isNew?e.newInstance():this.isNew=!0,this},n.prototype.superReference=function(t){var n,i;return i=t.scope.namedMethod(),(null!=i?i.klass:void 0)?(n=[new e(new S("__super__"))],i["static"]&&n.push(new e(new S("constructor"))),n.push(new e(new S(i.name))),new G(new S(i.klass),n).compile(t)):(null!=i?i.ctor:void 0)?""+i.name+".__super__.constructor":this.error("cannot call super outside of an instance method.")},n.prototype.superThis=function(e){var t;return t=e.scope.method,t&&!t.klass&&t.context||"this"},n.prototype.unfoldSoak=function(e){var t,i,r,o,s,a,l,c,u;if(this.soak){if(this.variable){if(i=ht(e,this,"variable"))return i;c=new G(this.variable).cacheReference(e),r=c[0],s=c[1]}else r=new S(this.superReference(e)),s=new G(r);return s=new n(s,this.args),s.isNew=this.isNew,r=new S("typeof "+r.compile(e)+' === "function"'),new v(r,new G(s),{soak:!0})}for(t=this,o=[];;)if(t.variable instanceof n)o.push(t),t=t.variable;else{if(!(t.variable instanceof G))break;if(o.push(t),!((t=t.variable.base)instanceof n))break}for(u=o.reverse(),a=0,l=u.length;l>a;a++)t=u[a],i&&(t.variable instanceof n?t.variable=i:t.variable.base=i),i=ht(e,t,"variable");return i},n.prototype.compileNode=function(e){var t,n,i,r,o,s,a,l,c,u;if(null!=(c=this.variable)&&(c.front=this.front),r=W.compileSplattedArray(e,this.args,!0),r.length)return this.compileSplat(e,r);for(i=[],u=this.args,n=a=0,l=u.length;l>a;n=++a)t=u[n],n&&i.push(this.makeCode(", ")),i.push.apply(i,t.compileToFragments(e,x));return o=[],this.isSuper?(s=this.superReference(e)+(".call("+this.superThis(e)),i.length&&(s+=", "),o.push(this.makeCode(s))):(this.isNew&&o.push(this.makeCode("new ")),o.push.apply(o,this.variable.compileToFragments(e,w)),o.push(this.makeCode("("))),o.push.apply(o,i),o.push(this.makeCode(")")),o},n.prototype.compileSplat=function(e,t){var n,i,r,o,s,a;return this.isSuper?[].concat(this.makeCode(""+this.superReference(e)+".apply("+this.superThis(e)+", "),t,this.makeCode(")")):this.isNew?(o=this.tab+H,[].concat(this.makeCode("(function(func, args, ctor) {\n"+o+"ctor.prototype = func.prototype;\n"+o+"var child = new ctor, result = func.apply(child, args);\n"+o+"return Object(result) === result ? result : child;\n"+this.tab+"})("),this.variable.compileToFragments(e,x),this.makeCode(", "),t,this.makeCode(", function(){})"))):(n=[],i=new G(this.variable),(s=i.properties.pop())&&i.isComplex()?(a=e.scope.freeVariable("ref"),n=n.concat(this.makeCode("("+a+" = "),i.compileToFragments(e,x),this.makeCode(")"),s.compileToFragments(e))):(r=i.compileToFragments(e,w),I.test(it(r))&&(r=this.wrapInBraces(r)),s?(a=it(r),r.push.apply(r,s.compileToFragments(e))):a="null",n=n.concat(r)),n=n.concat(this.makeCode(".apply("+a+", "),t,this.makeCode(")")))},n}(i),exports.Extends=p=function(e){function t(e,t){this.child=e,this.parent=t}return vt(t,e),t.prototype.children=["child","parent"],t.prototype.compileToFragments=function(e){return new o(new G(new S(pt("extends"))),[this.child,this.parent]).compileToFragments(e)},t}(i),exports.Access=e=function(e){function t(e,t){this.name=e,this.name.asKey=!0,this.soak="soak"===t}return vt(t,e),t.prototype.children=["name"],t.prototype.compileToFragments=function(e){var t;return t=this.name.compileToFragments(e),f.test(it(t))?t.unshift(this.makeCode(".")):(t.unshift(this.makeCode("[")),t.push(this.makeCode("]"))),t},t.prototype.isComplex=k,t}(i),exports.Index=b=function(e){function t(e){this.index=e}return vt(t,e),t.prototype.children=["index"],t.prototype.compileToFragments=function(e){return[].concat(this.makeCode("["),this.index.compileToFragments(e,_),this.makeCode("]"))},t.prototype.isComplex=function(){return this.index.isComplex()},t}(i),exports.Range=B=function(e){function t(e,t,n){this.from=e,this.to=t,this.exclusive="exclusive"===n,this.equals=this.exclusive?"":"="}return vt(t,e),t.prototype.children=["from","to"],t.prototype.compileVariables=function(e){var t,n,i,r,o;return e=st(e,{top:!0}),n=this.cacheToCodeFragments(this.from.cache(e,x)),this.fromC=n[0],this.fromVar=n[1],i=this.cacheToCodeFragments(this.to.cache(e,x)),this.toC=i[0],this.toVar=i[1],(t=Z(e,"step"))&&(r=this.cacheToCodeFragments(t.cache(e,x)),this.step=r[0],this.stepVar=r[1]),o=[this.fromVar.match(I),this.toVar.match(I)],this.fromNum=o[0],this.toNum=o[1],this.stepVar?this.stepNum=this.stepVar.match(I):void 0},t.prototype.compileNode=function(e){var t,n,i,r,o,s,a,l,c,u,h,p,d,f;return this.fromVar||this.compileVariables(e),e.index?(a=this.fromNum&&this.toNum,o=Z(e,"index"),s=Z(e,"name"),c=s&&s!==o,p=""+o+" = "+this.fromC,this.toC!==this.toVar&&(p+=", "+this.toC),this.step!==this.stepVar&&(p+=", "+this.step),d=[""+o+" <"+this.equals,""+o+" >"+this.equals],l=d[0],r=d[1],n=this.stepNum?+this.stepNum>0?""+l+" "+this.toVar:""+r+" "+this.toVar:a?(f=[+this.fromNum,+this.toNum],i=f[0],h=f[1],f,h>=i?""+l+" "+h:""+r+" "+h):(t=this.stepVar?""+this.stepVar+" > 0":""+this.fromVar+" <= "+this.toVar,""+t+" ? "+l+" "+this.toVar+" : "+r+" "+this.toVar),u=this.stepVar?""+o+" += "+this.stepVar:a?c?h>=i?"++"+o:"--"+o:h>=i?""+o+"++":""+o+"--":c?""+t+" ? ++"+o+" : --"+o:""+t+" ? "+o+"++ : "+o+"--",c&&(p=""+s+" = "+p),c&&(u=""+s+" = "+u),[this.makeCode(""+p+"; "+n+"; "+u)]):this.compileArray(e)},t.prototype.compileArray=function(e){var t,n,i,r,o,s,a,l,c,u,h,p,d;return this.fromNum&&this.toNum&&Math.abs(this.fromNum-this.toNum)<=20?(c=function(){d=[];for(var e=p=+this.fromNum,t=+this.toNum;t>=p?t>=e:e>=t;t>=p?e++:e--)d.push(e);return d}.apply(this),this.exclusive&&c.pop(),[this.makeCode("["+c.join(", ")+"]")]):(s=this.tab+H,o=e.scope.freeVariable("i"),u=e.scope.freeVariable("results"),l="\n"+s+u+" = [];",this.fromNum&&this.toNum?(e.index=o,n=it(this.compileNode(e))):(h=""+o+" = "+this.fromC+(this.toC!==this.toVar?", "+this.toC:""),i=""+this.fromVar+" <= "+this.toVar,n="var "+h+"; "+i+" ? "+o+" <"+this.equals+" "+this.toVar+" : "+o+" >"+this.equals+" "+this.toVar+"; "+i+" ? "+o+"++ : "+o+"--"),a="{ "+u+".push("+o+"); }\n"+s+"return "+u+";\n"+e.indent,r=function(e){return null!=e?e.contains(function(e){return e instanceof S&&"arguments"===e.value&&!e.asKey}):void 0},(r(this.from)||r(this.to))&&(t=", arguments"),[this.makeCode("(function() {"+l+"\n"+s+"for ("+n+")"+a+"}).apply(this"+(null!=t?t:"")+")")])},t}(i),exports.Slice=j=function(e){function t(e){this.range=e,t.__super__.constructor.call(this)}return vt(t,e),t.prototype.children=["range"],t.prototype.compileNode=function(e){var t,n,i,r,o,s,a;return a=this.range,o=a.to,i=a.from,r=i&&i.compileToFragments(e,_)||[this.makeCode("0")],o&&(t=o.compileToFragments(e,_),n=it(t),(this.range.exclusive||-1!==+n)&&(s=", "+(this.range.exclusive?n:I.test(n)?""+(+n+1):(t=o.compileToFragments(e,w),"+"+it(t)+" + 1 || 9e9")))),[this.makeCode(".slice("+it(r)+(s||"")+")")]},t}(i),exports.Obj=D=function(e){function t(e,t){this.generated=null!=t?t:!1,this.objects=this.properties=e||[]}return vt(t,e),t.prototype.children=["properties"],t.prototype.compileNode=function(e){var t,i,r,o,s,a,l,c,h,p,d,f,m;if(h=this.properties,!h.length)return[this.makeCode(this.front?"({})":"{}")];if(this.generated)for(p=0,f=h.length;f>p;p++)l=h[p],l instanceof G&&l.error("cannot have an implicit value in an implicit object");for(r=e.indent+=H,a=this.lastNonComment(this.properties),t=[],i=d=0,m=h.length;m>d;i=++d)c=h[i],s=i===h.length-1?"":c===a||c instanceof u?"\n":",\n",o=c instanceof u?"":r,c instanceof n&&c.variable instanceof G&&c.variable.hasProperties()&&c.variable.error("Invalid object key"),c instanceof G&&c["this"]&&(c=new n(c.properties[0].name,c,"object")),c instanceof u||(c instanceof n||(c=new n(c,c,"object")),(c.variable.base||c.variable).asKey=!0),o&&t.push(this.makeCode(o)),t.push.apply(t,c.compileToFragments(e,E)),s&&t.push(this.makeCode(s));return t.unshift(this.makeCode("{"+(h.length&&"\n"))),t.push(this.makeCode(""+(h.length&&"\n"+this.tab)+"}")),this.front?this.wrapInBraces(t):t},t.prototype.assigns=function(e){var t,n,i,r;for(r=this.properties,n=0,i=r.length;i>n;n++)if(t=r[n],t.assigns(e))return!0;return!1},t}(i),exports.Arr=t=function(e){function t(e){this.objects=e||[]}return vt(t,e),t.prototype.children=["objects"],t.prototype.compileNode=function(e){var t,n,i,r,o,s,a;if(!this.objects.length)return[this.makeCode("[]")];if(e.indent+=H,t=W.compileSplattedArray(e,this.objects),t.length)return t;for(t=[],n=function(){var t,n,i,r;for(i=this.objects,r=[],t=0,n=i.length;n>t;t++)o=i[t],r.push(o.compileToFragments(e,x));return r}.call(this),r=s=0,a=n.length;a>s;r=++s)i=n[r],r&&t.push(this.makeCode(", ")),t.push.apply(t,i);return it(t).indexOf("\n")>=0?(t.unshift(this.makeCode("[\n"+e.indent)),t.push(this.makeCode("\n"+this.tab+"]"))):(t.unshift(this.makeCode("[")),t.push(this.makeCode("]"))),t},t.prototype.assigns=function(e){var t,n,i,r;for(r=this.objects,n=0,i=r.length;i>n;n++)if(t=r[n],t.assigns(e))return!0;return!1},t}(i),exports.Class=s=function(t){function i(e,t,n){this.variable=e,this.parent=t,this.body=null!=n?n:new r,this.boundFuncs=[],this.body.classBody=!0}return vt(i,t),i.prototype.children=["variable","parent","body"],i.prototype.determineName=function(){var t,n;return this.variable?(t=(n=rt(this.variable.properties))?n instanceof e&&n.name.value:this.variable.base.value,yt.call($,t)>=0&&this.variable.error("class variable name may not be "+t),t&&(t=f.test(t)&&t)):null},i.prototype.setContext=function(e){return this.body.traverseChildren(!1,function(t){return t.classBody?!1:t instanceof S&&"this"===t.value?t.value=e:t instanceof l&&(t.klass=e,t.bound)?t.context=e:void 0})},i.prototype.addBoundFunctions=function(t){var n,i,r,o,s;for(s=this.boundFuncs,r=0,o=s.length;o>r;r++)n=s[r],i=new G(new S("this"),[new e(n)]).compile(t),this.ctor.body.unshift(new S(""+i+" = "+pt("bind")+"("+i+", this)"))},i.prototype.addProperties=function(t,i,r){var o,s,a,c,u;return u=t.base.properties.slice(0),a=function(){var t;for(t=[];o=u.shift();)o instanceof n&&(s=o.variable.base,delete o.context,c=o.value,"constructor"===s.value?(this.ctor&&o.error("cannot define more than one constructor in a class"),c.bound&&o.error("cannot define a constructor as a bound function"),c instanceof l?o=this.ctor=c:(this.externalCtor=r.scope.freeVariable("class"),o=new n(new S(this.externalCtor),c))):o.variable["this"]?(c["static"]=!0,c.bound&&(c.context=i)):(o.variable=new G(new S(i),[new e(new S("prototype")),new e(s)]),c instanceof l&&c.bound&&(this.boundFuncs.push(s),c.bound=!1))),t.push(o);return t}.call(this),Q(a)},i.prototype.walkBody=function(e,t){return this.traverseChildren(!1,function(n){return function(o){var s,a,l,c,u,h,p;if(s=!0,o instanceof i)return!1;if(o instanceof r){for(p=a=o.expressions,l=u=0,h=p.length;h>u;l=++u)c=p[l],c instanceof G&&c.isObject(!0)&&(s=!1,a[l]=n.addProperties(c,e,t));o.expressions=a=nt(a)}return s&&!(o instanceof i)}}(this))},i.prototype.hoistDirectivePrologue=function(){var e,t,n;for(t=0,e=this.body.expressions;(n=e[t])&&n instanceof u||n instanceof G&&n.isString();)++t;return this.directives=e.splice(0,t)},i.prototype.ensureConstructor=function(e,t){var i,r,o;return i=!this.ctor,this.ctor||(this.ctor=new l),this.ctor.ctor=this.ctor.name=e,this.ctor.klass=null,this.ctor.noReturn=!0,i?(this.parent&&(o=new S(""+e+".__super__.constructor.apply(this, arguments)")),this.externalCtor&&(o=new S(""+this.externalCtor+".apply(this, arguments)")),o&&(r=new S(t.scope.freeVariable("ref")),this.ctor.body.unshift(new n(r,o))),this.addBoundFunctions(t),o&&(this.ctor.body.push(r),this.ctor.body.makeReturn()),this.body.expressions.unshift(this.ctor)):this.addBoundFunctions(t)},i.prototype.compileNode=function(e){var t,i,r,o,s,c,u;return i=this.determineName(),s=i||"_Class",s.reserved&&(s="_"+s),o=new S(s),this.hoistDirectivePrologue(),this.setContext(s),this.walkBody(s,e),this.ensureConstructor(s,e),this.body.spaced=!0,this.ctor instanceof l||this.body.expressions.unshift(this.ctor),this.body.expressions.push(o),(u=this.body.expressions).unshift.apply(u,this.directives),t=a.wrap(this.body),this.parent&&(this.superClass=new S(e.scope.freeVariable("super",!1)),this.body.expressions.unshift(new p(o,this.superClass)),t.args.push(this.parent),c=t.variable.params||t.variable.base.params,c.push(new R(this.superClass))),r=new L(t,!0),this.variable&&(r=new n(this.variable,r)),r.compileToFragments(e)},i}(i),exports.Assign=n=function(t){function n(e,t,n,i){var r,o,s;this.variable=e,this.value=t,this.context=n,this.param=i&&i.param,this.subpattern=i&&i.subpattern,s=o=this.variable.unwrapAll().value,r=yt.call($,s)>=0,r&&"object"!==this.context&&this.variable.error('variable name may not be "'+o+'"')}return vt(n,t),n.prototype.children=["variable","value"],n.prototype.isStatement=function(e){return(null!=e?e.level:void 0)===E&&null!=this.context&&yt.call(this.context,"?")>=0},n.prototype.assigns=function(e){return this["object"===this.context?"value":"variable"].assigns(e)},n.prototype.unfoldSoak=function(e){return ht(e,this,"variable")},n.prototype.compileNode=function(e){var t,n,i,r,o,s,a,c,u,h,p;if(i=this.variable instanceof G){if(this.variable.isArray()||this.variable.isObject())return this.compilePatternMatch(e);if(this.variable.isSplice())return this.compileSplice(e);if("||="===(c=this.context)||"&&="===c||"?="===c)return this.compileConditional(e)}return n=this.variable.compileToFragments(e,x),o=it(n),this.context||(a=this.variable.unwrapAll(),a.isAssignable()||this.variable.error('"'+this.variable.compile(e)+'" cannot be assigned'),("function"==typeof a.hasProperties?a.hasProperties():void 0)||(this.param?e.scope.add(o,"var"):e.scope.find(o))),this.value instanceof l&&(r=T.exec(o))&&(r[1]&&(this.value.klass=r[1]),this.value.name=null!=(u=null!=(h=null!=(p=r[2])?p:r[3])?h:r[4])?u:r[5]),s=this.value.compileToFragments(e,x),"object"===this.context?n.concat(this.makeCode(": "),s):(t=n.concat(this.makeCode(" "+(this.context||"=")+" "),s),e.level<=x?t:this.wrapInBraces(t))},n.prototype.compilePatternMatch=function(t){var i,r,o,s,a,l,c,u,h,p,d,m,g,v,y,w,C,_,T,F,k,D,M,R,B,O,I,$;if(w=t.level===E,_=this.value,d=this.variable.base.objects,!(m=d.length))return o=_.compileToFragments(t),t.level>=A?this.wrapInBraces(o):o;if(c=this.variable.isObject(),w&&1===m&&!((p=d[0])instanceof W))return p instanceof n?(M=p,R=M.variable,l=R.base,p=M.value):l=c?p["this"]?p.properties[0].name:p:new S(0),i=f.test(l.unwrap().value||0),_=new G(_),_.properties.push(new(i?e:b)(l)),B=p.unwrap().value,yt.call(N,B)>=0&&p.error("assignment to a reserved word: "+p.compile(t)),new n(p,_,null,{param:this.param}).compileToFragments(t,E);for(T=_.compileToFragments(t,x),F=it(T),r=[],y=!1,(!f.test(F)||this.variable.assigns(F))&&(r.push([this.makeCode(""+(g=t.scope.freeVariable("ref"))+" = ")].concat(bt.call(T))),T=[this.makeCode(g)],F=g),a=k=0,D=d.length;D>k;a=++k)p=d[a],l=a,c&&(p instanceof n?(O=p,I=O.variable,l=I.base,p=O.value):p.base instanceof L?($=new G(p.unwrapAll()).cacheReference(t),p=$[0],l=$[1]):l=p["this"]?p.properties[0].name:p),!y&&p instanceof W?(h=p.name.unwrap().value,p=p.unwrap(),C=""+m+" <= "+F+".length ? "+pt("slice")+".call("+F+", "+a,(v=m-a-1)?(u=t.scope.freeVariable("i"),C+=", "+u+" = "+F+".length - "+v+") : ("+u+" = "+a+", [])"):C+=") : []",C=new S(C),y=""+u+"++"):(h=p.unwrap().value,p instanceof W&&p.error("multiple splats are disallowed in an assignment"),"number"==typeof l?(l=new S(y||l),i=!1):i=c&&f.test(l.unwrap().value||0),C=new G(new S(F),[new(i?e:b)(l)])),null!=h&&yt.call(N,h)>=0&&p.error("assignment to a reserved word: "+p.compile(t)),r.push(new n(p,C,null,{param:this.param,subpattern:!0}).compileToFragments(t,x));return w||this.subpattern||r.push(T),s=this.joinFragmentArrays(r,", "),t.level<x?s:this.wrapInBraces(s)},n.prototype.compileConditional=function(e){var t,i,r;return r=this.variable.cacheReference(e),t=r[0],i=r[1],!t.properties.length&&t.base instanceof S&&"this"!==t.base.value&&!e.scope.check(t.base.value)&&this.variable.error('the variable "'+t.base.value+"\" can't be assigned with "+this.context+" because it has not been declared before"),yt.call(this.context,"?")>=0&&(e.isExistentialEquals=!0),new M(this.context.slice(0,-1),t,new n(i,this.value,"=")).compileToFragments(e)},n.prototype.compileSplice=function(e){var t,n,i,r,o,s,a,l,c,u,h,p;return u=this.variable.properties.pop().range,i=u.from,a=u.to,n=u.exclusive,s=this.variable.compile(e),i?(h=this.cacheToCodeFragments(i.cache(e,A)),r=h[0],o=h[1]):r=o="0",a?(null!=i?i.isSimpleNumber():void 0)&&a.isSimpleNumber()?(a=+a.compile(e)-+o,n||(a+=1)):(a=a.compile(e,w)+" - "+o,n||(a+=" + 1")):a="9e9",p=this.value.cache(e,x),l=p[0],c=p[1],t=[].concat(this.makeCode("[].splice.apply("+s+", ["+r+", "+a+"].concat("),l,this.makeCode(")), "),c),e.level>E?this.wrapInBraces(t):t},n}(i),exports.Code=l=function(e){function i(e,t,n){this.params=e||[],this.body=t||new r,this.bound="boundfunc"===n,this.bound&&(this.context="_this")}return vt(i,e),i.prototype.children=["params","body"],i.prototype.isStatement=function(){return!!this.ctor},i.prototype.jumps=k,i.prototype.compileNode=function(e){var i,r,o,s,a,l,c,u,h,p,d,f,m,g,y,b,C,x,A,_,E,T,F,k,D,R,L,N,B;for(e.scope=new P(e.scope,this.body,this),e.scope.shared=Z(e,"sharedScope"),e.indent+=H,delete e.bare,delete e.isExistentialEquals,h=[],o=[],this.eachParamName(function(t){return e.scope.check(t)?void 0:e.scope.parameter(t)}),D=this.params,y=0,A=D.length;A>y;y++)if(u=D[y],u.splat){for(R=this.params,b=0,_=R.length;_>b;b++)c=R[b].name,c["this"]&&(c=c.properties[0].name),c.value&&e.scope.add(c.value,"var",!0);d=new n(new G(new t(function(){var t,n,i,r;for(i=this.params,r=[],t=0,n=i.length;n>t;t++)c=i[t],r.push(c.asReference(e));return r}.call(this))),new G(new S("arguments")));break}for(L=this.params,C=0,E=L.length;E>C;C++)u=L[C],u.isComplex()?(m=p=u.asReference(e),u.value&&(m=new M("?",p,u.value)),o.push(new n(new G(u.name),m,"=",{param:!0}))):(p=u,u.value&&(l=new S(p.name.value+" == null"),m=new n(new G(u.name),u.value,"="),o.push(new v(l,m)))),d||h.push(p);for(g=this.body.isEmpty(),d&&o.unshift(d),o.length&&(N=this.body.expressions).unshift.apply(N,o),s=x=0,T=h.length;T>x;s=++x)c=h[s],h[s]=c.compileToFragments(e),e.scope.parameter(it(h[s]));for(f=[],this.eachParamName(function(e,t){return yt.call(f,e)>=0&&t.error("multiple parameters named '"+e+"'"),f.push(e)}),g||this.noReturn||this.body.makeReturn(),this.bound&&((null!=(B=e.scope.parent.method)?B.bound:void 0)?this.bound=this.context=e.scope.parent.method.context:this["static"]||e.scope.parent.assign("_this","this")),a=e.indent,r="function",this.ctor&&(r+=" "+this.name),r+="(",i=[this.makeCode(r)],s=k=0,F=h.length;F>k;s=++k)c=h[s],s&&i.push(this.makeCode(", ")),i.push.apply(i,c);return i.push(this.makeCode(") {")),this.body.isEmpty()||(i=i.concat(this.makeCode("\n"),this.body.compileWithDeclarations(e),this.makeCode("\n"+this.tab))),i.push(this.makeCode("}")),this.ctor?[this.makeCode(this.tab)].concat(bt.call(i)):this.front||e.level>=w?this.wrapInBraces(i):i},i.prototype.eachParamName=function(e){var t,n,i,r,o;for(r=this.params,o=[],n=0,i=r.length;i>n;n++)t=r[n],o.push(t.eachName(e));
-return o},i.prototype.traverseChildren=function(e,t){return e?i.__super__.traverseChildren.call(this,e,t):void 0},i}(i),exports.Param=R=function(e){function t(e,t,n){var i;this.name=e,this.value=t,this.splat=n,i=e=this.name.unwrapAll().value,yt.call($,i)>=0&&this.name.error('parameter name "'+e+'" is not allowed')}return vt(t,e),t.prototype.children=["name","value"],t.prototype.compileToFragments=function(e){return this.name.compileToFragments(e,x)},t.prototype.asReference=function(e){var t;return this.reference?this.reference:(t=this.name,t["this"]?(t=t.properties[0].name,t.value.reserved&&(t=new S(e.scope.freeVariable(t.value)))):t.isComplex()&&(t=new S(e.scope.freeVariable("arg"))),t=new G(t),this.splat&&(t=new W(t)),this.reference=t)},t.prototype.isComplex=function(){return this.name.isComplex()},t.prototype.eachName=function(e,t){var i,r,o,s,a,l;if(null==t&&(t=this.name),i=function(t){var n;return n=t.properties[0].name,n.value.reserved?void 0:e(n.value,n)},t instanceof S)return e(t.value,t);if(t instanceof G)return i(t);for(l=t.objects,s=0,a=l.length;a>s;s++)o=l[s],o instanceof n?this.eachName(e,o.value.unwrap()):o instanceof W?(r=o.name.unwrap(),e(r.value,r)):o instanceof G?o.isArray()||o.isObject()?this.eachName(e,o.base):o["this"]?i(o):e(o.base.value,o.base):o.error("illegal parameter "+o.compile())},t}(i),exports.Splat=W=function(e){function t(e){this.name=e.compile?e:new S(e)}return vt(t,e),t.prototype.children=["name"],t.prototype.isAssignable=Y,t.prototype.assigns=function(e){return this.name.assigns(e)},t.prototype.compileToFragments=function(e){return this.name.compileToFragments(e)},t.prototype.unwrap=function(){return this.name},t.compileSplattedArray=function(e,n,i){var r,o,s,a,l,c,u,h,p,d;for(u=-1;(h=n[++u])&&!(h instanceof t););if(u>=n.length)return[];if(1===n.length)return h=n[0],l=h.compileToFragments(e,x),i?l:[].concat(h.makeCode(""+pt("slice")+".call("),l,h.makeCode(")"));for(r=n.slice(u),c=p=0,d=r.length;d>p;c=++p)h=r[c],s=h.compileToFragments(e,x),r[c]=h instanceof t?[].concat(h.makeCode(""+pt("slice")+".call("),s,h.makeCode(")")):[].concat(h.makeCode("["),s,h.makeCode("]"));return 0===u?(h=n[0],a=h.joinFragmentArrays(r.slice(1),", "),r[0].concat(h.makeCode(".concat("),a,h.makeCode(")"))):(o=function(){var t,i,r,o;for(r=n.slice(0,u),o=[],t=0,i=r.length;i>t;t++)h=r[t],o.push(h.compileToFragments(e,x));return o}(),o=n[0].joinFragmentArrays(o,", "),a=n[u].joinFragmentArrays(r,", "),[].concat(n[0].makeCode("["),o,n[u].makeCode("].concat("),a,rt(n).makeCode(")")))},t}(i),exports.While=J=function(e){function t(e,t){this.condition=(null!=t?t.invert:void 0)?e.invert():e,this.guard=null!=t?t.guard:void 0}return vt(t,e),t.prototype.children=["condition","guard","body"],t.prototype.isStatement=Y,t.prototype.makeReturn=function(e){return e?t.__super__.makeReturn.apply(this,arguments):(this.returns=!this.jumps({loop:!0}),this)},t.prototype.addBody=function(e){return this.body=e,this},t.prototype.jumps=function(){var e,t,n,i;if(e=this.body.expressions,!e.length)return!1;for(n=0,i=e.length;i>n;n++)if(t=e[n],t.jumps({loop:!0}))return t;return!1},t.prototype.compileNode=function(e){var t,n,i,o;return e.indent+=H,o="",n=this.body,n.isEmpty()?n=this.makeCode(""):(this.returns&&(n.makeReturn(i=e.scope.freeVariable("results")),o=""+this.tab+i+" = [];\n"),this.guard&&(n.expressions.length>1?n.expressions.unshift(new v(new L(this.guard).invert(),new S("continue"))):this.guard&&(n=r.wrap([new v(this.guard,n)]))),n=[].concat(this.makeCode("\n"),n.compileToFragments(e,E),this.makeCode("\n"+this.tab))),t=[].concat(this.makeCode(o+this.tab+"while ("),this.condition.compileToFragments(e,_),this.makeCode(") {"),n,this.makeCode("}")),this.returns&&t.push(this.makeCode("\n"+this.tab+"return "+i+";")),t},t}(i),exports.Op=M=function(e){function t(e,t,n,r){if("in"===e)return new y(t,n);if("do"===e)return this.generateDo(t);if("new"===e){if(t instanceof o&&!t["do"]&&!t.isNew)return t.newInstance();(t instanceof l&&t.bound||t["do"])&&(t=new L(t))}return this.operator=i[e]||e,this.first=t,this.second=n,this.flip=!!r,this}var i,r;return vt(t,e),i={"==":"===","!=":"!==",of:"in"},r={"!==":"===","===":"!=="},t.prototype.children=["first","second"],t.prototype.isSimpleNumber=k,t.prototype.isUnary=function(){return!this.second},t.prototype.isComplex=function(){var e;return!(this.isUnary()&&("+"===(e=this.operator)||"-"===e))||this.first.isComplex()},t.prototype.isChainable=function(){var e;return"<"===(e=this.operator)||">"===e||">="===e||"<="===e||"==="===e||"!=="===e},t.prototype.invert=function(){var e,n,i,o,s;if(this.isChainable()&&this.first.isChainable()){for(e=!0,n=this;n&&n.operator;)e&&(e=n.operator in r),n=n.first;if(!e)return new L(this).invert();for(n=this;n&&n.operator;)n.invert=!n.invert,n.operator=r[n.operator],n=n.first;return this}return(o=r[this.operator])?(this.operator=o,this.first.unwrap()instanceof t&&this.first.invert(),this):this.second?new L(this).invert():"!"===this.operator&&(i=this.first.unwrap())instanceof t&&("!"===(s=i.operator)||"in"===s||"instanceof"===s)?i:new t("!",this)},t.prototype.unfoldSoak=function(e){var t;return("++"===(t=this.operator)||"--"===t||"delete"===t)&&ht(e,this,"first")},t.prototype.generateDo=function(e){var t,i,r,s,a,c,u,h;for(s=[],i=e instanceof n&&(a=e.value.unwrap())instanceof l?a:e,h=i.params||[],c=0,u=h.length;u>c;c++)r=h[c],r.value?(s.push(r.value),delete r.value):s.push(r);return t=new o(e,s),t["do"]=!0,t},t.prototype.compileNode=function(e){var t,n,i,r;return n=this.isChainable()&&this.first.isChainable(),n||(this.first.front=this.front),"delete"===this.operator&&e.scope.check(this.first.unwrapAll().value)&&this.error("delete operand may not be argument or var"),("--"===(i=this.operator)||"++"===i)&&(r=this.first.unwrapAll().value,yt.call($,r)>=0)&&this.error('cannot increment/decrement "'+this.first.unwrapAll().value+'"'),this.isUnary()?this.compileUnary(e):n?this.compileChain(e):"?"===this.operator?this.compileExistence(e):(t=[].concat(this.first.compileToFragments(e,A),this.makeCode(" "+this.operator+" "),this.second.compileToFragments(e,A)),e.level<=A?t:this.wrapInBraces(t))},t.prototype.compileChain=function(e){var t,n,i,r;return r=this.first.second.cache(e),this.first.second=r[0],i=r[1],n=this.first.compileToFragments(e,A),t=n.concat(this.makeCode(" "+(this.invert?"&&":"||")+" "),i.compileToFragments(e),this.makeCode(" "+this.operator+" "),this.second.compileToFragments(e,A)),this.wrapInBraces(t)},t.prototype.compileExistence=function(e){var t,i;return!e.isExistentialEquals&&this.first.isComplex()?(i=new S(e.scope.freeVariable("ref")),t=new L(new n(i,this.first))):(t=this.first,i=t),new v(new h(t),i,{type:"if"}).addElse(this.second).compileToFragments(e)},t.prototype.compileUnary=function(e){var n,i,r;return i=[],n=this.operator,i.push([this.makeCode(n)]),"!"===n&&this.first instanceof h?(this.first.negated=!this.first.negated,this.first.compileToFragments(e)):e.level>=w?new L(this).compileToFragments(e):(r="+"===n||"-"===n,("new"===n||"typeof"===n||"delete"===n||r&&this.first instanceof t&&this.first.operator===n)&&i.push([this.makeCode(" ")]),(r&&this.first instanceof t||"new"===n&&this.first.isStatement(e))&&(this.first=new L(this.first)),i.push(this.first.compileToFragments(e,A)),this.flip&&i.reverse(),this.joinFragmentArrays(i,""))},t.prototype.toString=function(e){return t.__super__.toString.call(this,e,this.constructor.name+" "+this.operator)},t}(i),exports.In=y=function(e){function t(e,t){this.object=e,this.array=t}return vt(t,e),t.prototype.children=["object","array"],t.prototype.invert=F,t.prototype.compileNode=function(e){var t,n,i,r,o;if(this.array instanceof G&&this.array.isArray()){for(o=this.array.base.objects,i=0,r=o.length;r>i;i++)if(n=o[i],n instanceof W){t=!0;break}if(!t)return this.compileOrTest(e)}return this.compileLoopTest(e)},t.prototype.compileOrTest=function(e){var t,n,i,r,o,s,a,l,c,u,h,p;if(0===this.array.base.objects.length)return[this.makeCode(""+!!this.negated)];for(u=this.object.cache(e,A),s=u[0],o=u[1],h=this.negated?[" !== "," && "]:[" === "," || "],t=h[0],n=h[1],a=[],p=this.array.base.objects,i=l=0,c=p.length;c>l;i=++l)r=p[i],i&&a.push(this.makeCode(n)),a=a.concat(i?o:s,this.makeCode(t),r.compileToFragments(e,w));return e.level<A?a:this.wrapInBraces(a)},t.prototype.compileLoopTest=function(e){var t,n,i,r;return r=this.object.cache(e,x),i=r[0],n=r[1],t=[].concat(this.makeCode(pt("indexOf")+".call("),this.array.compileToFragments(e,x),this.makeCode(", "),n,this.makeCode(") "+(this.negated?"< 0":">= 0"))),it(i)===it(n)?t:(t=i.concat(this.makeCode(", "),t),e.level<x?t:this.wrapInBraces(t))},t.prototype.toString=function(e){return t.__super__.toString.call(this,e,this.constructor.name+(this.negated?"!":""))},t}(i),exports.Try=V=function(e){function t(e,t,n,i){this.attempt=e,this.errorVariable=t,this.recovery=n,this.ensure=i}return vt(t,e),t.prototype.children=["attempt","recovery","ensure"],t.prototype.isStatement=Y,t.prototype.jumps=function(e){var t;return this.attempt.jumps(e)||(null!=(t=this.recovery)?t.jumps(e):void 0)},t.prototype.makeReturn=function(e){return this.attempt&&(this.attempt=this.attempt.makeReturn(e)),this.recovery&&(this.recovery=this.recovery.makeReturn(e)),this},t.prototype.compileNode=function(e){var t,i,r,o;return e.indent+=H,o=this.attempt.compileToFragments(e,E),t=this.recovery?(r=new S("_error"),this.errorVariable?this.recovery.unshift(new n(this.errorVariable,r)):void 0,[].concat(this.makeCode(" catch ("),r.compileToFragments(e),this.makeCode(") {\n"),this.recovery.compileToFragments(e,E),this.makeCode("\n"+this.tab+"}"))):this.ensure||this.recovery?[]:[this.makeCode(" catch (_error) {}")],i=this.ensure?[].concat(this.makeCode(" finally {\n"),this.ensure.compileToFragments(e,E),this.makeCode("\n"+this.tab+"}")):[],[].concat(this.makeCode(""+this.tab+"try {\n"),o,this.makeCode("\n"+this.tab+"}"),t,i)},t}(i),exports.Throw=U=function(e){function t(e){this.expression=e}return vt(t,e),t.prototype.children=["expression"],t.prototype.isStatement=Y,t.prototype.jumps=k,t.prototype.makeReturn=q,t.prototype.compileNode=function(e){return[].concat(this.makeCode(this.tab+"throw "),this.expression.compileToFragments(e),this.makeCode(";"))},t}(i),exports.Existence=h=function(e){function t(e){this.expression=e}return vt(t,e),t.prototype.children=["expression"],t.prototype.invert=F,t.prototype.compileNode=function(e){var t,n,i,r;return this.expression.front=this.front,i=this.expression.compile(e,A),f.test(i)&&!e.scope.check(i)?(r=this.negated?["===","||"]:["!==","&&"],t=r[0],n=r[1],i="typeof "+i+" "+t+' "undefined" '+n+" "+i+" "+t+" null"):i=""+i+" "+(this.negated?"==":"!=")+" null",[this.makeCode(e.level<=C?i:"("+i+")")]},t}(i),exports.Parens=L=function(e){function t(e){this.body=e}return vt(t,e),t.prototype.children=["body"],t.prototype.unwrap=function(){return this.body},t.prototype.isComplex=function(){return this.body.isComplex()},t.prototype.compileNode=function(e){var t,n,i;return n=this.body.unwrap(),n instanceof G&&n.isAtomic()?(n.front=this.front,n.compileToFragments(e)):(i=n.compileToFragments(e,_),t=e.level<A&&(n instanceof M||n instanceof o||n instanceof d&&n.returns),t?i:this.wrapInBraces(i))},t}(i),exports.For=d=function(e){function t(e,t){var n;this.source=t.source,this.guard=t.guard,this.step=t.step,this.name=t.name,this.index=t.index,this.body=r.wrap([e]),this.own=!!t.own,this.object=!!t.object,this.object&&(n=[this.index,this.name],this.name=n[0],this.index=n[1]),this.index instanceof G&&this.index.error("index cannot be a pattern matching expression"),this.range=this.source instanceof G&&this.source.base instanceof B&&!this.source.properties.length,this.pattern=this.name instanceof G,this.range&&this.index&&this.index.error("indexes do not apply to range loops"),this.range&&this.pattern&&this.name.error("cannot pattern match over range loops"),this.own&&!this.object&&this.index.error("cannot use own with for-in"),this.returns=!1}return vt(t,e),t.prototype.children=["body","source","guard","step"],t.prototype.compileNode=function(e){var t,i,o,s,a,l,c,u,h,p,d,m,g,y,b,w,C,A,_,T,F,k,D,M,R,N,B,$,P,j,W,z,q,U;return t=r.wrap([this.body]),A=null!=(q=rt(t.expressions))?q.jumps():void 0,A&&A instanceof O&&(this.returns=!1),B=this.range?this.source.base:this.source,N=e.scope,T=this.name&&this.name.compile(e,x),y=this.index&&this.index.compile(e,x),T&&!this.pattern&&N.find(T),y&&N.find(y),this.returns&&(R=N.freeVariable("results")),b=this.object&&y||N.freeVariable("i"),w=this.range&&T||y||b,C=w!==b?""+w+" = ":"",this.step&&!this.range&&(U=this.cacheToCodeFragments(this.step.cache(e,x)),$=U[0],j=U[1],P=j.match(I)),this.pattern&&(T=b),z="",d="",c="",m=this.tab+H,this.range?p=B.compileToFragments(st(e,{index:b,name:T,step:this.step})):(W=this.source.compile(e,x),!T&&!this.own||f.test(W)||(c+=""+this.tab+(k=N.freeVariable("ref"))+" = "+W+";\n",W=k),T&&!this.pattern&&(F=""+T+" = "+W+"["+w+"]"),this.object||($!==j&&(c+=""+this.tab+$+";\n"),this.step&&P&&(h=0>+P)||(_=N.freeVariable("len")),a=""+C+b+" = 0, "+_+" = "+W+".length",l=""+C+b+" = "+W+".length - 1",o=""+b+" < "+_,s=""+b+" >= 0",this.step?(P?h&&(o=s,a=l):(o=""+j+" > 0 ? "+o+" : "+s,a="("+j+" > 0 ? ("+a+") : "+l+")"),g=""+b+" += "+j):g=""+(w!==b?"++"+b:""+b+"++"),p=[this.makeCode(""+a+"; "+o+"; "+C+g)])),this.returns&&(D=""+this.tab+R+" = [];\n",M="\n"+this.tab+"return "+R+";",t.makeReturn(R)),this.guard&&(t.expressions.length>1?t.expressions.unshift(new v(new L(this.guard).invert(),new S("continue"))):this.guard&&(t=r.wrap([new v(this.guard,t)]))),this.pattern&&t.expressions.unshift(new n(this.name,new S(""+W+"["+w+"]"))),u=[].concat(this.makeCode(c),this.pluckDirectCall(e,t)),F&&(z="\n"+m+F+";"),this.object&&(p=[this.makeCode(""+w+" in "+W)],this.own&&(d="\n"+m+"if (!"+pt("hasProp")+".call("+W+", "+w+")) continue;")),i=t.compileToFragments(st(e,{indent:m}),E),i&&i.length>0&&(i=[].concat(this.makeCode("\n"),i,this.makeCode("\n"))),[].concat(u,this.makeCode(""+(D||"")+this.tab+"for ("),p,this.makeCode(") {"+d+z),i,this.makeCode(""+this.tab+"}"+(M||"")))},t.prototype.pluckDirectCall=function(e,t){var i,r,s,a,c,u,h,p,d,f,m,g,v,y,b;for(r=[],f=t.expressions,c=p=0,d=f.length;d>p;c=++p)s=f[c],s=s.unwrapAll(),s instanceof o&&(h=s.variable.unwrapAll(),(h instanceof l||h instanceof G&&(null!=(m=h.base)?m.unwrapAll():void 0)instanceof l&&1===h.properties.length&&("call"===(g=null!=(v=h.properties[0].name)?v.value:void 0)||"apply"===g))&&(a=(null!=(y=h.base)?y.unwrapAll():void 0)||h,u=new S(e.scope.freeVariable("fn")),i=new G(u),h.base&&(b=[i,h],h.base=b[0],i=b[1]),t.expressions[c]=new o(i,s.args),r=r.concat(this.makeCode(this.tab),new n(u,a).compileToFragments(e,E),this.makeCode(";\n"))));return r},t}(J),exports.Switch=z=function(e){function t(e,t,n){this.subject=e,this.cases=t,this.otherwise=n}return vt(t,e),t.prototype.children=["subject","cases","otherwise"],t.prototype.isStatement=Y,t.prototype.jumps=function(e){var t,n,i,r,o,s,a;for(null==e&&(e={block:!0}),o=this.cases,i=0,r=o.length;r>i;i++)if(s=o[i],n=s[0],t=s[1],t.jumps(e))return t;return null!=(a=this.otherwise)?a.jumps(e):void 0},t.prototype.makeReturn=function(e){var t,n,i,o,s;for(o=this.cases,n=0,i=o.length;i>n;n++)t=o[n],t[1].makeReturn(e);return e&&(this.otherwise||(this.otherwise=new r([new S("void 0")]))),null!=(s=this.otherwise)&&s.makeReturn(e),this},t.prototype.compileNode=function(e){var t,n,i,r,o,s,a,l,c,u,h,p,d,f,m,g;for(l=e.indent+H,c=e.indent=l+H,s=[].concat(this.makeCode(this.tab+"switch ("),this.subject?this.subject.compileToFragments(e,_):this.makeCode("false"),this.makeCode(") {\n")),f=this.cases,a=u=0,p=f.length;p>u;a=++u){for(m=f[a],r=m[0],t=m[1],g=nt([r]),h=0,d=g.length;d>h;h++)i=g[h],this.subject||(i=i.invert()),s=s.concat(this.makeCode(l+"case "),i.compileToFragments(e,_),this.makeCode(":\n"));if((n=t.compileToFragments(e,E)).length>0&&(s=s.concat(n,this.makeCode("\n"))),a===this.cases.length-1&&!this.otherwise)break;o=this.lastNonComment(t.expressions),o instanceof O||o instanceof S&&o.jumps()&&"debugger"!==o.value||s.push(i.makeCode(c+"break;\n"))}return this.otherwise&&this.otherwise.expressions.length&&s.push.apply(s,[this.makeCode(l+"default:\n")].concat(bt.call(this.otherwise.compileToFragments(e,E)),[this.makeCode("\n")])),s.push(this.makeCode(this.tab+"}")),s},t}(i),exports.If=v=function(e){function t(e,t,n){this.body=t,null==n&&(n={}),this.condition="unless"===n.type?e.invert():e,this.elseBody=null,this.isChain=!1,this.soak=n.soak}return vt(t,e),t.prototype.children=["condition","body","elseBody"],t.prototype.bodyNode=function(){var e;return null!=(e=this.body)?e.unwrap():void 0},t.prototype.elseBodyNode=function(){var e;return null!=(e=this.elseBody)?e.unwrap():void 0},t.prototype.addElse=function(e){return this.isChain?this.elseBodyNode().addElse(e):(this.isChain=e instanceof t,this.elseBody=this.ensureBlock(e)),this},t.prototype.isStatement=function(e){var t;return(null!=e?e.level:void 0)===E||this.bodyNode().isStatement(e)||(null!=(t=this.elseBodyNode())?t.isStatement(e):void 0)},t.prototype.jumps=function(e){var t;return this.body.jumps(e)||(null!=(t=this.elseBody)?t.jumps(e):void 0)},t.prototype.compileNode=function(e){return this.isStatement(e)?this.compileStatement(e):this.compileExpression(e)},t.prototype.makeReturn=function(e){return e&&(this.elseBody||(this.elseBody=new r([new S("void 0")]))),this.body&&(this.body=new r([this.body.makeReturn(e)])),this.elseBody&&(this.elseBody=new r([this.elseBody.makeReturn(e)])),this},t.prototype.ensureBlock=function(e){return e instanceof r?e:new r([e])},t.prototype.compileStatement=function(e){var n,i,r,o,s,a,l;return r=Z(e,"chainChild"),(s=Z(e,"isExistentialEquals"))?new t(this.condition.invert(),this.elseBodyNode(),{type:"if"}).compileToFragments(e):(l=e.indent+H,o=this.condition.compileToFragments(e,_),i=this.ensureBlock(this.body).compileToFragments(st(e,{indent:l})),a=[].concat(this.makeCode("if ("),o,this.makeCode(") {\n"),i,this.makeCode("\n"+this.tab+"}")),r||a.unshift(this.makeCode(this.tab)),this.elseBody?(n=a.concat(this.makeCode(" else ")),this.isChain?(e.chainChild=!0,n=n.concat(this.elseBody.unwrap().compileToFragments(e,E))):n=n.concat(this.makeCode("{\n"),this.elseBody.compileToFragments(st(e,{indent:l}),E),this.makeCode("\n"+this.tab+"}")),n):a)},t.prototype.compileExpression=function(e){var t,n,i,r;return i=this.condition.compileToFragments(e,C),n=this.bodyNode().compileToFragments(e,x),t=this.elseBodyNode()?this.elseBodyNode().compileToFragments(e,x):[this.makeCode("void 0")],r=i.concat(this.makeCode(" ? "),n,this.makeCode(" : "),t),e.level>=C?this.wrapInBraces(r):r},t.prototype.unfoldSoak=function(){return this.soak&&this},t}(i),a={wrap:function(t,n,i){var s,a,c,u,h;return t.jumps()?t:(u=new l([],r.wrap([t])),s=[],a=t.contains(this.isLiteralArguments),a&&t.classBody&&a.error("Class bodies shouldn't reference arguments"),(a||t.contains(this.isLiteralThis))&&(h=new S(a?"apply":"call"),s=[new S("this")],a&&s.push(new S("arguments")),u=new G(u,[new e(h)])),u.noReturn=i,c=new o(u,s),n?r.wrap([c]):c)},isLiteralArguments:function(e){return e instanceof S&&"arguments"===e.value&&!e.asKey},isLiteralThis:function(e){return e instanceof S&&"this"===e.value&&!e.asKey||e instanceof l&&e.bound||e instanceof o&&e.isSuper}},ht=function(e,t,n){var i;if(i=t[n].unfoldSoak(e))return t[n]=i.body,i.body=new G(t),i},K={"extends":function(){return"function(child, parent) { for (var key in parent) { if ("+pt("hasProp")+".call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; }"},bind:function(){return"function(fn, me){ return function(){ return fn.apply(me, arguments); }; }"},indexOf:function(){return"[].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; }"},hasProp:function(){return"{}.hasOwnProperty"},slice:function(){return"[].slice"}},E=1,_=2,x=3,C=4,A=5,w=6,H="  ",m="[$A-Za-z_\\x7f-\\uffff][$\\w\\x7f-\\uffff]*",f=RegExp("^"+m+"$"),I=/^[+-]?\d+$/,T=RegExp("^(?:("+m+")\\.prototype(?:\\.("+m+")|\\[(\"(?:[^\\\\\"\\r\\n]|\\\\.)*\"|'(?:[^\\\\'\\r\\n]|\\\\.)*')\\]|\\[(0x[\\da-fA-F]+|\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)\\]))|("+m+")$"),g=/^['"]/,pt=function(e){var t;return t="__"+e,P.root.assign(t,K[e]()),t},at=function(e,t){return e=e.replace(/\n/g,"$&"+t),e.replace(/\s+$/,"")}});
+define(function (require, exports, module) {
+  var __filename = module.uri || "", __dirname = __filename.substring(0, __filename.lastIndexOf("/") + 1);
+  var Access, Arr, Assign, Base, Block, Call, Class, Closure, Code, CodeFragment, Comment, Existence, Extends, For, IDENTIFIER, IDENTIFIER_STR, IS_STRING, If, In, Index, LEVEL_ACCESS, LEVEL_COND, LEVEL_LIST, LEVEL_OP, LEVEL_PAREN, LEVEL_TOP, Literal, METHOD_DEF, NEGATE, NO, Obj, Op, Param, Parens, RESERVED, Range, Return, SIMPLENUM, STRICT_PROSCRIBED, Scope, Slice, Splat, Switch, TAB, THIS, Throw, Try, UTILITIES, Value, While, YES, addLocationDataFn, compact, del, ends, extend, flatten, fragmentsToText, last, locationDataToString, merge, multident, some, starts, throwSyntaxError, unfoldSoak, utility, _ref, _ref1,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  __slice = [].slice;
+
+Error.stackTraceLimit = Infinity;
+
+Scope = require('./scope').Scope;
+
+_ref = require('./lexer'), RESERVED = _ref.RESERVED, STRICT_PROSCRIBED = _ref.STRICT_PROSCRIBED;
+
+_ref1 = require('./helpers'), compact = _ref1.compact, flatten = _ref1.flatten, extend = _ref1.extend, merge = _ref1.merge, del = _ref1.del, starts = _ref1.starts, ends = _ref1.ends, last = _ref1.last, some = _ref1.some, addLocationDataFn = _ref1.addLocationDataFn, locationDataToString = _ref1.locationDataToString, throwSyntaxError = _ref1.throwSyntaxError;
+
+exports.extend = extend;
+
+exports.addLocationDataFn = addLocationDataFn;
+
+YES = function() {
+  return true;
+};
+
+NO = function() {
+  return false;
+};
+
+THIS = function() {
+  return this;
+};
+
+NEGATE = function() {
+  this.negated = !this.negated;
+  return this;
+};
+
+exports.CodeFragment = CodeFragment = (function() {
+  function CodeFragment(parent, code) {
+    var _ref2;
+    this.code = "" + code;
+    this.locationData = parent != null ? parent.locationData : void 0;
+    this.type = (parent != null ? (_ref2 = parent.constructor) != null ? _ref2.name : void 0 : void 0) || 'unknown';
+  }
+
+  CodeFragment.prototype.toString = function() {
+    return "" + this.code + (this.locationData ? ": " + locationDataToString(this.locationData) : '');
+  };
+
+  return CodeFragment;
+
+})();
+
+fragmentsToText = function(fragments) {
+  var fragment;
+  return ((function() {
+    var _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = fragments.length; _i < _len; _i++) {
+      fragment = fragments[_i];
+      _results.push(fragment.code);
+    }
+    return _results;
+  })()).join('');
+};
+
+exports.Base = Base = (function() {
+  function Base() {}
+
+  Base.prototype.compile = function(o, lvl) {
+    return fragmentsToText(this.compileToFragments(o, lvl));
+  };
+
+  Base.prototype.compileToFragments = function(o, lvl) {
+    var node;
+    o = extend({}, o);
+    if (lvl) {
+      o.level = lvl;
+    }
+    node = this.unfoldSoak(o) || this;
+    node.tab = o.indent;
+    if (o.level === LEVEL_TOP || !node.isStatement(o)) {
+      return node.compileNode(o);
+    } else {
+      return node.compileClosure(o);
+    }
+  };
+
+  Base.prototype.compileClosure = function(o) {
+    var jumpNode;
+    if (jumpNode = this.jumps()) {
+      jumpNode.error('cannot use a pure statement in an expression');
+    }
+    o.sharedScope = true;
+    return Closure.wrap(this).compileNode(o);
+  };
+
+  Base.prototype.cache = function(o, level, reused) {
+    var ref, sub;
+    if (!this.isComplex()) {
+      ref = level ? this.compileToFragments(o, level) : this;
+      return [ref, ref];
+    } else {
+      ref = new Literal(reused || o.scope.freeVariable('ref'));
+      sub = new Assign(ref, this);
+      if (level) {
+        return [sub.compileToFragments(o, level), [this.makeCode(ref.value)]];
+      } else {
+        return [sub, ref];
+      }
+    }
+  };
+
+  Base.prototype.cacheToCodeFragments = function(cacheValues) {
+    return [fragmentsToText(cacheValues[0]), fragmentsToText(cacheValues[1])];
+  };
+
+  Base.prototype.makeReturn = function(res) {
+    var me;
+    me = this.unwrapAll();
+    if (res) {
+      return new Call(new Literal("" + res + ".push"), [me]);
+    } else {
+      return new Return(me);
+    }
+  };
+
+  Base.prototype.contains = function(pred) {
+    var node;
+    node = void 0;
+    this.traverseChildren(false, function(n) {
+      if (pred(n)) {
+        node = n;
+        return false;
+      }
+    });
+    return node;
+  };
+
+  Base.prototype.lastNonComment = function(list) {
+    var i;
+    i = list.length;
+    while (i--) {
+      if (!(list[i] instanceof Comment)) {
+        return list[i];
+      }
+    }
+    return null;
+  };
+
+  Base.prototype.toString = function(idt, name) {
+    var tree;
+    if (idt == null) {
+      idt = '';
+    }
+    if (name == null) {
+      name = this.constructor.name;
+    }
+    tree = '\n' + idt + name;
+    if (this.soak) {
+      tree += '?';
+    }
+    this.eachChild(function(node) {
+      return tree += node.toString(idt + TAB);
+    });
+    return tree;
+  };
+
+  Base.prototype.eachChild = function(func) {
+    var attr, child, _i, _j, _len, _len1, _ref2, _ref3;
+    if (!this.children) {
+      return this;
+    }
+    _ref2 = this.children;
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      attr = _ref2[_i];
+      if (this[attr]) {
+        _ref3 = flatten([this[attr]]);
+        for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
+          child = _ref3[_j];
+          if (func(child) === false) {
+            return this;
+          }
+        }
+      }
+    }
+    return this;
+  };
+
+  Base.prototype.traverseChildren = function(crossScope, func) {
+    return this.eachChild(function(child) {
+      var recur;
+      recur = func(child);
+      if (recur !== false) {
+        return child.traverseChildren(crossScope, func);
+      }
+    });
+  };
+
+  Base.prototype.invert = function() {
+    return new Op('!', this);
+  };
+
+  Base.prototype.unwrapAll = function() {
+    var node;
+    node = this;
+    while (node !== (node = node.unwrap())) {
+      continue;
+    }
+    return node;
+  };
+
+  Base.prototype.children = [];
+
+  Base.prototype.isStatement = NO;
+
+  Base.prototype.jumps = NO;
+
+  Base.prototype.isComplex = YES;
+
+  Base.prototype.isChainable = NO;
+
+  Base.prototype.isAssignable = NO;
+
+  Base.prototype.unwrap = THIS;
+
+  Base.prototype.unfoldSoak = NO;
+
+  Base.prototype.assigns = NO;
+
+  Base.prototype.updateLocationDataIfMissing = function(locationData) {
+    this.locationData || (this.locationData = locationData);
+    return this.eachChild(function(child) {
+      return child.updateLocationDataIfMissing(locationData);
+    });
+  };
+
+  Base.prototype.error = function(message) {
+    return throwSyntaxError(message, this.locationData);
+  };
+
+  Base.prototype.makeCode = function(code) {
+    return new CodeFragment(this, code);
+  };
+
+  Base.prototype.wrapInBraces = function(fragments) {
+    return [].concat(this.makeCode('('), fragments, this.makeCode(')'));
+  };
+
+  Base.prototype.joinFragmentArrays = function(fragmentsList, joinStr) {
+    var answer, fragments, i, _i, _len;
+    answer = [];
+    for (i = _i = 0, _len = fragmentsList.length; _i < _len; i = ++_i) {
+      fragments = fragmentsList[i];
+      if (i) {
+        answer.push(this.makeCode(joinStr));
+      }
+      answer = answer.concat(fragments);
+    }
+    return answer;
+  };
+
+  return Base;
+
+})();
+
+exports.Block = Block = (function(_super) {
+  __extends(Block, _super);
+
+  function Block(nodes) {
+    this.expressions = compact(flatten(nodes || []));
+  }
+
+  Block.prototype.children = ['expressions'];
+
+  Block.prototype.push = function(node) {
+    this.expressions.push(node);
+    return this;
+  };
+
+  Block.prototype.pop = function() {
+    return this.expressions.pop();
+  };
+
+  Block.prototype.unshift = function(node) {
+    this.expressions.unshift(node);
+    return this;
+  };
+
+  Block.prototype.unwrap = function() {
+    if (this.expressions.length === 1) {
+      return this.expressions[0];
+    } else {
+      return this;
+    }
+  };
+
+  Block.prototype.isEmpty = function() {
+    return !this.expressions.length;
+  };
+
+  Block.prototype.isStatement = function(o) {
+    var exp, _i, _len, _ref2;
+    _ref2 = this.expressions;
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      exp = _ref2[_i];
+      if (exp.isStatement(o)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  Block.prototype.jumps = function(o) {
+    var exp, _i, _len, _ref2;
+    _ref2 = this.expressions;
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      exp = _ref2[_i];
+      if (exp.jumps(o)) {
+        return exp;
+      }
+    }
+  };
+
+  Block.prototype.makeReturn = function(res) {
+    var expr, len;
+    len = this.expressions.length;
+    while (len--) {
+      expr = this.expressions[len];
+      if (!(expr instanceof Comment)) {
+        this.expressions[len] = expr.makeReturn(res);
+        if (expr instanceof Return && !expr.expression) {
+          this.expressions.splice(len, 1);
+        }
+        break;
+      }
+    }
+    return this;
+  };
+
+  Block.prototype.compileToFragments = function(o, level) {
+    if (o == null) {
+      o = {};
+    }
+    if (o.scope) {
+      return Block.__super__.compileToFragments.call(this, o, level);
+    } else {
+      return this.compileRoot(o);
+    }
+  };
+
+  Block.prototype.compileNode = function(o) {
+    var answer, compiledNodes, fragments, index, node, top, _i, _len, _ref2;
+    this.tab = o.indent;
+    top = o.level === LEVEL_TOP;
+    compiledNodes = [];
+    _ref2 = this.expressions;
+    for (index = _i = 0, _len = _ref2.length; _i < _len; index = ++_i) {
+      node = _ref2[index];
+      node = node.unwrapAll();
+      node = node.unfoldSoak(o) || node;
+      if (node instanceof Block) {
+        compiledNodes.push(node.compileNode(o));
+      } else if (top) {
+        node.front = true;
+        fragments = node.compileToFragments(o);
+        if (!node.isStatement(o)) {
+          fragments.unshift(this.makeCode("" + this.tab));
+          fragments.push(this.makeCode(";"));
+        }
+        compiledNodes.push(fragments);
+      } else {
+        compiledNodes.push(node.compileToFragments(o, LEVEL_LIST));
+      }
+    }
+    if (top) {
+      if (this.spaced) {
+        return [].concat(this.joinFragmentArrays(compiledNodes, '\n\n'), this.makeCode("\n"));
+      } else {
+        return this.joinFragmentArrays(compiledNodes, '\n');
+      }
+    }
+    if (compiledNodes.length) {
+      answer = this.joinFragmentArrays(compiledNodes, ', ');
+    } else {
+      answer = [this.makeCode("void 0")];
+    }
+    if (compiledNodes.length > 1 && o.level >= LEVEL_LIST) {
+      return this.wrapInBraces(answer);
+    } else {
+      return answer;
+    }
+  };
+
+  Block.prototype.compileRoot = function(o) {
+    var exp, fragments, i, name, prelude, preludeExps, rest, _i, _len, _ref2;
+    o.indent = o.bare ? '' : TAB;
+    o.level = LEVEL_TOP;
+    this.spaced = true;
+    o.scope = new Scope(null, this, null);
+    _ref2 = o.locals || [];
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      name = _ref2[_i];
+      o.scope.parameter(name);
+    }
+    prelude = [];
+    if (!o.bare) {
+      preludeExps = (function() {
+        var _j, _len1, _ref3, _results;
+        _ref3 = this.expressions;
+        _results = [];
+        for (i = _j = 0, _len1 = _ref3.length; _j < _len1; i = ++_j) {
+          exp = _ref3[i];
+          if (!(exp.unwrap() instanceof Comment)) {
+            break;
+          }
+          _results.push(exp);
+        }
+        return _results;
+      }).call(this);
+      rest = this.expressions.slice(preludeExps.length);
+      this.expressions = preludeExps;
+      if (preludeExps.length) {
+        prelude = this.compileNode(merge(o, {
+          indent: ''
+        }));
+        prelude.push(this.makeCode("\n"));
+      }
+      this.expressions = rest;
+    }
+    fragments = this.compileWithDeclarations(o);
+    if (o.bare) {
+      return fragments;
+    }
+    return [].concat(prelude, this.makeCode("(function() {\n"), fragments, this.makeCode("\n}).call(this);\n"));
+  };
+
+  Block.prototype.compileWithDeclarations = function(o) {
+    var assigns, declars, exp, fragments, i, post, rest, scope, spaced, _i, _len, _ref2, _ref3, _ref4;
+    fragments = [];
+    post = [];
+    _ref2 = this.expressions;
+    for (i = _i = 0, _len = _ref2.length; _i < _len; i = ++_i) {
+      exp = _ref2[i];
+      exp = exp.unwrap();
+      if (!(exp instanceof Comment || exp instanceof Literal)) {
+        break;
+      }
+    }
+    o = merge(o, {
+      level: LEVEL_TOP
+    });
+    if (i) {
+      rest = this.expressions.splice(i, 9e9);
+      _ref3 = [this.spaced, false], spaced = _ref3[0], this.spaced = _ref3[1];
+      _ref4 = [this.compileNode(o), spaced], fragments = _ref4[0], this.spaced = _ref4[1];
+      this.expressions = rest;
+    }
+    post = this.compileNode(o);
+    scope = o.scope;
+    if (scope.expressions === this) {
+      declars = o.scope.hasDeclarations();
+      assigns = scope.hasAssignments;
+      if (declars || assigns) {
+        if (i) {
+          fragments.push(this.makeCode('\n'));
+        }
+        fragments.push(this.makeCode("" + this.tab + "var "));
+        if (declars) {
+          fragments.push(this.makeCode(scope.declaredVariables().join(', ')));
+        }
+        if (assigns) {
+          if (declars) {
+            fragments.push(this.makeCode(",\n" + (this.tab + TAB)));
+          }
+          fragments.push(this.makeCode(scope.assignedVariables().join(",\n" + (this.tab + TAB))));
+        }
+        fragments.push(this.makeCode(";\n" + (this.spaced ? '\n' : '')));
+      } else if (fragments.length && post.length) {
+        fragments.push(this.makeCode("\n"));
+      }
+    }
+    return fragments.concat(post);
+  };
+
+  Block.wrap = function(nodes) {
+    if (nodes.length === 1 && nodes[0] instanceof Block) {
+      return nodes[0];
+    }
+    return new Block(nodes);
+  };
+
+  return Block;
+
+})(Base);
+
+exports.Literal = Literal = (function(_super) {
+  __extends(Literal, _super);
+
+  function Literal(value) {
+    this.value = value;
+  }
+
+  Literal.prototype.makeReturn = function() {
+    if (this.isStatement()) {
+      return this;
+    } else {
+      return Literal.__super__.makeReturn.apply(this, arguments);
+    }
+  };
+
+  Literal.prototype.isAssignable = function() {
+    return IDENTIFIER.test(this.value);
+  };
+
+  Literal.prototype.isStatement = function() {
+    var _ref2;
+    return (_ref2 = this.value) === 'break' || _ref2 === 'continue' || _ref2 === 'debugger';
+  };
+
+  Literal.prototype.isComplex = NO;
+
+  Literal.prototype.assigns = function(name) {
+    return name === this.value;
+  };
+
+  Literal.prototype.jumps = function(o) {
+    if (this.value === 'break' && !((o != null ? o.loop : void 0) || (o != null ? o.block : void 0))) {
+      return this;
+    }
+    if (this.value === 'continue' && !(o != null ? o.loop : void 0)) {
+      return this;
+    }
+  };
+
+  Literal.prototype.compileNode = function(o) {
+    var answer, code, _ref2;
+    code = this.value === 'this' ? ((_ref2 = o.scope.method) != null ? _ref2.bound : void 0) ? o.scope.method.context : this.value : this.value.reserved ? "\"" + this.value + "\"" : this.value;
+    answer = this.isStatement() ? "" + this.tab + code + ";" : code;
+    return [this.makeCode(answer)];
+  };
+
+  Literal.prototype.toString = function() {
+    return ' "' + this.value + '"';
+  };
+
+  return Literal;
+
+})(Base);
+
+exports.Undefined = (function(_super) {
+  __extends(Undefined, _super);
+
+  function Undefined() {
+    return Undefined.__super__.constructor.apply(this, arguments);
+  }
+
+  Undefined.prototype.isAssignable = NO;
+
+  Undefined.prototype.isComplex = NO;
+
+  Undefined.prototype.compileNode = function(o) {
+    return [this.makeCode(o.level >= LEVEL_ACCESS ? '(void 0)' : 'void 0')];
+  };
+
+  return Undefined;
+
+})(Base);
+
+exports.Null = (function(_super) {
+  __extends(Null, _super);
+
+  function Null() {
+    return Null.__super__.constructor.apply(this, arguments);
+  }
+
+  Null.prototype.isAssignable = NO;
+
+  Null.prototype.isComplex = NO;
+
+  Null.prototype.compileNode = function() {
+    return [this.makeCode("null")];
+  };
+
+  return Null;
+
+})(Base);
+
+exports.Bool = (function(_super) {
+  __extends(Bool, _super);
+
+  Bool.prototype.isAssignable = NO;
+
+  Bool.prototype.isComplex = NO;
+
+  Bool.prototype.compileNode = function() {
+    return [this.makeCode(this.val)];
+  };
+
+  function Bool(val) {
+    this.val = val;
+  }
+
+  return Bool;
+
+})(Base);
+
+exports.Return = Return = (function(_super) {
+  __extends(Return, _super);
+
+  function Return(expr) {
+    if (expr && !expr.unwrap().isUndefined) {
+      this.expression = expr;
+    }
+  }
+
+  Return.prototype.children = ['expression'];
+
+  Return.prototype.isStatement = YES;
+
+  Return.prototype.makeReturn = THIS;
+
+  Return.prototype.jumps = THIS;
+
+  Return.prototype.compileToFragments = function(o, level) {
+    var expr, _ref2;
+    expr = (_ref2 = this.expression) != null ? _ref2.makeReturn() : void 0;
+    if (expr && !(expr instanceof Return)) {
+      return expr.compileToFragments(o, level);
+    } else {
+      return Return.__super__.compileToFragments.call(this, o, level);
+    }
+  };
+
+  Return.prototype.compileNode = function(o) {
+    var answer;
+    answer = [];
+    answer.push(this.makeCode(this.tab + ("return" + (this.expression ? " " : ""))));
+    if (this.expression) {
+      answer = answer.concat(this.expression.compileToFragments(o, LEVEL_PAREN));
+    }
+    answer.push(this.makeCode(";"));
+    return answer;
+  };
+
+  return Return;
+
+})(Base);
+
+exports.Value = Value = (function(_super) {
+  __extends(Value, _super);
+
+  function Value(base, props, tag) {
+    if (!props && base instanceof Value) {
+      return base;
+    }
+    this.base = base;
+    this.properties = props || [];
+    if (tag) {
+      this[tag] = true;
+    }
+    return this;
+  }
+
+  Value.prototype.children = ['base', 'properties'];
+
+  Value.prototype.add = function(props) {
+    this.properties = this.properties.concat(props);
+    return this;
+  };
+
+  Value.prototype.hasProperties = function() {
+    return !!this.properties.length;
+  };
+
+  Value.prototype.isArray = function() {
+    return !this.properties.length && this.base instanceof Arr;
+  };
+
+  Value.prototype.isComplex = function() {
+    return this.hasProperties() || this.base.isComplex();
+  };
+
+  Value.prototype.isAssignable = function() {
+    return this.hasProperties() || this.base.isAssignable();
+  };
+
+  Value.prototype.isSimpleNumber = function() {
+    return this.base instanceof Literal && SIMPLENUM.test(this.base.value);
+  };
+
+  Value.prototype.isString = function() {
+    return this.base instanceof Literal && IS_STRING.test(this.base.value);
+  };
+
+  Value.prototype.isAtomic = function() {
+    var node, _i, _len, _ref2;
+    _ref2 = this.properties.concat(this.base);
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      node = _ref2[_i];
+      if (node.soak || node instanceof Call) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  Value.prototype.isStatement = function(o) {
+    return !this.properties.length && this.base.isStatement(o);
+  };
+
+  Value.prototype.assigns = function(name) {
+    return !this.properties.length && this.base.assigns(name);
+  };
+
+  Value.prototype.jumps = function(o) {
+    return !this.properties.length && this.base.jumps(o);
+  };
+
+  Value.prototype.isObject = function(onlyGenerated) {
+    if (this.properties.length) {
+      return false;
+    }
+    return (this.base instanceof Obj) && (!onlyGenerated || this.base.generated);
+  };
+
+  Value.prototype.isSplice = function() {
+    return last(this.properties) instanceof Slice;
+  };
+
+  Value.prototype.unwrap = function() {
+    if (this.properties.length) {
+      return this;
+    } else {
+      return this.base;
+    }
+  };
+
+  Value.prototype.cacheReference = function(o) {
+    var base, bref, name, nref;
+    name = last(this.properties);
+    if (this.properties.length < 2 && !this.base.isComplex() && !(name != null ? name.isComplex() : void 0)) {
+      return [this, this];
+    }
+    base = new Value(this.base, this.properties.slice(0, -1));
+    if (base.isComplex()) {
+      bref = new Literal(o.scope.freeVariable('base'));
+      base = new Value(new Parens(new Assign(bref, base)));
+    }
+    if (!name) {
+      return [base, bref];
+    }
+    if (name.isComplex()) {
+      nref = new Literal(o.scope.freeVariable('name'));
+      name = new Index(new Assign(nref, name.index));
+      nref = new Index(nref);
+    }
+    return [base.add(name), new Value(bref || base.base, [nref || name])];
+  };
+
+  Value.prototype.compileNode = function(o) {
+    var fragments, prop, props, _i, _len;
+    this.base.front = this.front;
+    props = this.properties;
+    fragments = this.base.compileToFragments(o, (props.length ? LEVEL_ACCESS : null));
+    if ((this.base instanceof Parens || props.length) && SIMPLENUM.test(fragmentsToText(fragments))) {
+      fragments.push(this.makeCode('.'));
+    }
+    for (_i = 0, _len = props.length; _i < _len; _i++) {
+      prop = props[_i];
+      fragments.push.apply(fragments, prop.compileToFragments(o));
+    }
+    return fragments;
+  };
+
+  Value.prototype.unfoldSoak = function(o) {
+    return this.unfoldedSoak != null ? this.unfoldedSoak : this.unfoldedSoak = (function(_this) {
+      return function() {
+        var fst, i, ifn, prop, ref, snd, _i, _len, _ref2, _ref3;
+        if (ifn = _this.base.unfoldSoak(o)) {
+          (_ref2 = ifn.body.properties).push.apply(_ref2, _this.properties);
+          return ifn;
+        }
+        _ref3 = _this.properties;
+        for (i = _i = 0, _len = _ref3.length; _i < _len; i = ++_i) {
+          prop = _ref3[i];
+          if (!prop.soak) {
+            continue;
+          }
+          prop.soak = false;
+          fst = new Value(_this.base, _this.properties.slice(0, i));
+          snd = new Value(_this.base, _this.properties.slice(i));
+          if (fst.isComplex()) {
+            ref = new Literal(o.scope.freeVariable('ref'));
+            fst = new Parens(new Assign(ref, fst));
+            snd.base = ref;
+          }
+          return new If(new Existence(fst), snd, {
+            soak: true
+          });
+        }
+        return false;
+      };
+    })(this)();
+  };
+
+  return Value;
+
+})(Base);
+
+exports.Comment = Comment = (function(_super) {
+  __extends(Comment, _super);
+
+  function Comment(comment) {
+    this.comment = comment;
+  }
+
+  Comment.prototype.isStatement = YES;
+
+  Comment.prototype.makeReturn = THIS;
+
+  Comment.prototype.compileNode = function(o, level) {
+    var code;
+    code = "/*" + (multident(this.comment, this.tab)) + (__indexOf.call(this.comment, '\n') >= 0 ? "\n" + this.tab : '') + "*/\n";
+    if ((level || o.level) === LEVEL_TOP) {
+      code = o.indent + code;
+    }
+    return [this.makeCode(code)];
+  };
+
+  return Comment;
+
+})(Base);
+
+exports.Call = Call = (function(_super) {
+  __extends(Call, _super);
+
+  function Call(variable, args, soak) {
+    this.args = args != null ? args : [];
+    this.soak = soak;
+    this.isNew = false;
+    this.isSuper = variable === 'super';
+    this.variable = this.isSuper ? null : variable;
+  }
+
+  Call.prototype.children = ['variable', 'args'];
+
+  Call.prototype.newInstance = function() {
+    var base, _ref2;
+    base = ((_ref2 = this.variable) != null ? _ref2.base : void 0) || this.variable;
+    if (base instanceof Call && !base.isNew) {
+      base.newInstance();
+    } else {
+      this.isNew = true;
+    }
+    return this;
+  };
+
+  Call.prototype.superReference = function(o) {
+    var accesses, method;
+    method = o.scope.namedMethod();
+    if (method != null ? method.klass : void 0) {
+      accesses = [new Access(new Literal('__super__'))];
+      if (method["static"]) {
+        accesses.push(new Access(new Literal('constructor')));
+      }
+      accesses.push(new Access(new Literal(method.name)));
+      return (new Value(new Literal(method.klass), accesses)).compile(o);
+    } else if (method != null ? method.ctor : void 0) {
+      return "" + method.name + ".__super__.constructor";
+    } else {
+      return this.error('cannot call super outside of an instance method.');
+    }
+  };
+
+  Call.prototype.superThis = function(o) {
+    var method;
+    method = o.scope.method;
+    return (method && !method.klass && method.context) || "this";
+  };
+
+  Call.prototype.unfoldSoak = function(o) {
+    var call, ifn, left, list, rite, _i, _len, _ref2, _ref3;
+    if (this.soak) {
+      if (this.variable) {
+        if (ifn = unfoldSoak(o, this, 'variable')) {
+          return ifn;
+        }
+        _ref2 = new Value(this.variable).cacheReference(o), left = _ref2[0], rite = _ref2[1];
+      } else {
+        left = new Literal(this.superReference(o));
+        rite = new Value(left);
+      }
+      rite = new Call(rite, this.args);
+      rite.isNew = this.isNew;
+      left = new Literal("typeof " + (left.compile(o)) + " === \"function\"");
+      return new If(left, new Value(rite), {
+        soak: true
+      });
+    }
+    call = this;
+    list = [];
+    while (true) {
+      if (call.variable instanceof Call) {
+        list.push(call);
+        call = call.variable;
+        continue;
+      }
+      if (!(call.variable instanceof Value)) {
+        break;
+      }
+      list.push(call);
+      if (!((call = call.variable.base) instanceof Call)) {
+        break;
+      }
+    }
+    _ref3 = list.reverse();
+    for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+      call = _ref3[_i];
+      if (ifn) {
+        if (call.variable instanceof Call) {
+          call.variable = ifn;
+        } else {
+          call.variable.base = ifn;
+        }
+      }
+      ifn = unfoldSoak(o, call, 'variable');
+    }
+    return ifn;
+  };
+
+  Call.prototype.compileNode = function(o) {
+    var arg, argIndex, compiledArgs, compiledArray, fragments, preface, _i, _len, _ref2, _ref3;
+    if ((_ref2 = this.variable) != null) {
+      _ref2.front = this.front;
+    }
+    compiledArray = Splat.compileSplattedArray(o, this.args, true);
+    if (compiledArray.length) {
+      return this.compileSplat(o, compiledArray);
+    }
+    compiledArgs = [];
+    _ref3 = this.args;
+    for (argIndex = _i = 0, _len = _ref3.length; _i < _len; argIndex = ++_i) {
+      arg = _ref3[argIndex];
+      if (argIndex) {
+        compiledArgs.push(this.makeCode(", "));
+      }
+      compiledArgs.push.apply(compiledArgs, arg.compileToFragments(o, LEVEL_LIST));
+    }
+    fragments = [];
+    if (this.isSuper) {
+      preface = this.superReference(o) + (".call(" + (this.superThis(o)));
+      if (compiledArgs.length) {
+        preface += ", ";
+      }
+      fragments.push(this.makeCode(preface));
+    } else {
+      if (this.isNew) {
+        fragments.push(this.makeCode('new '));
+      }
+      fragments.push.apply(fragments, this.variable.compileToFragments(o, LEVEL_ACCESS));
+      fragments.push(this.makeCode("("));
+    }
+    fragments.push.apply(fragments, compiledArgs);
+    fragments.push(this.makeCode(")"));
+    return fragments;
+  };
+
+  Call.prototype.compileSplat = function(o, splatArgs) {
+    var answer, base, fun, idt, name, ref;
+    if (this.isSuper) {
+      return [].concat(this.makeCode("" + (this.superReference(o)) + ".apply(" + (this.superThis(o)) + ", "), splatArgs, this.makeCode(")"));
+    }
+    if (this.isNew) {
+      idt = this.tab + TAB;
+      return [].concat(this.makeCode("(function(func, args, ctor) {\n" + idt + "ctor.prototype = func.prototype;\n" + idt + "var child = new ctor, result = func.apply(child, args);\n" + idt + "return Object(result) === result ? result : child;\n" + this.tab + "})("), this.variable.compileToFragments(o, LEVEL_LIST), this.makeCode(", "), splatArgs, this.makeCode(", function(){})"));
+    }
+    answer = [];
+    base = new Value(this.variable);
+    if ((name = base.properties.pop()) && base.isComplex()) {
+      ref = o.scope.freeVariable('ref');
+      answer = answer.concat(this.makeCode("(" + ref + " = "), base.compileToFragments(o, LEVEL_LIST), this.makeCode(")"), name.compileToFragments(o));
+    } else {
+      fun = base.compileToFragments(o, LEVEL_ACCESS);
+      if (SIMPLENUM.test(fragmentsToText(fun))) {
+        fun = this.wrapInBraces(fun);
+      }
+      if (name) {
+        ref = fragmentsToText(fun);
+        fun.push.apply(fun, name.compileToFragments(o));
+      } else {
+        ref = 'null';
+      }
+      answer = answer.concat(fun);
+    }
+    return answer = answer.concat(this.makeCode(".apply(" + ref + ", "), splatArgs, this.makeCode(")"));
+  };
+
+  return Call;
+
+})(Base);
+
+exports.Extends = Extends = (function(_super) {
+  __extends(Extends, _super);
+
+  function Extends(child, parent) {
+    this.child = child;
+    this.parent = parent;
+  }
+
+  Extends.prototype.children = ['child', 'parent'];
+
+  Extends.prototype.compileToFragments = function(o) {
+    return new Call(new Value(new Literal(utility('extends'))), [this.child, this.parent]).compileToFragments(o);
+  };
+
+  return Extends;
+
+})(Base);
+
+exports.Access = Access = (function(_super) {
+  __extends(Access, _super);
+
+  function Access(name, tag) {
+    this.name = name;
+    this.name.asKey = true;
+    this.soak = tag === 'soak';
+  }
+
+  Access.prototype.children = ['name'];
+
+  Access.prototype.compileToFragments = function(o) {
+    var name;
+    name = this.name.compileToFragments(o);
+    if (IDENTIFIER.test(fragmentsToText(name))) {
+      name.unshift(this.makeCode("."));
+    } else {
+      name.unshift(this.makeCode("["));
+      name.push(this.makeCode("]"));
+    }
+    return name;
+  };
+
+  Access.prototype.isComplex = NO;
+
+  return Access;
+
+})(Base);
+
+exports.Index = Index = (function(_super) {
+  __extends(Index, _super);
+
+  function Index(index) {
+    this.index = index;
+  }
+
+  Index.prototype.children = ['index'];
+
+  Index.prototype.compileToFragments = function(o) {
+    return [].concat(this.makeCode("["), this.index.compileToFragments(o, LEVEL_PAREN), this.makeCode("]"));
+  };
+
+  Index.prototype.isComplex = function() {
+    return this.index.isComplex();
+  };
+
+  return Index;
+
+})(Base);
+
+exports.Range = Range = (function(_super) {
+  __extends(Range, _super);
+
+  Range.prototype.children = ['from', 'to'];
+
+  function Range(from, to, tag) {
+    this.from = from;
+    this.to = to;
+    this.exclusive = tag === 'exclusive';
+    this.equals = this.exclusive ? '' : '=';
+  }
+
+  Range.prototype.compileVariables = function(o) {
+    var step, _ref2, _ref3, _ref4, _ref5;
+    o = merge(o, {
+      top: true
+    });
+    _ref2 = this.cacheToCodeFragments(this.from.cache(o, LEVEL_LIST)), this.fromC = _ref2[0], this.fromVar = _ref2[1];
+    _ref3 = this.cacheToCodeFragments(this.to.cache(o, LEVEL_LIST)), this.toC = _ref3[0], this.toVar = _ref3[1];
+    if (step = del(o, 'step')) {
+      _ref4 = this.cacheToCodeFragments(step.cache(o, LEVEL_LIST)), this.step = _ref4[0], this.stepVar = _ref4[1];
+    }
+    _ref5 = [this.fromVar.match(SIMPLENUM), this.toVar.match(SIMPLENUM)], this.fromNum = _ref5[0], this.toNum = _ref5[1];
+    if (this.stepVar) {
+      return this.stepNum = this.stepVar.match(SIMPLENUM);
+    }
+  };
+
+  Range.prototype.compileNode = function(o) {
+    var cond, condPart, from, gt, idx, idxName, known, lt, namedIndex, stepPart, to, varPart, _ref2, _ref3;
+    if (!this.fromVar) {
+      this.compileVariables(o);
+    }
+    if (!o.index) {
+      return this.compileArray(o);
+    }
+    known = this.fromNum && this.toNum;
+    idx = del(o, 'index');
+    idxName = del(o, 'name');
+    namedIndex = idxName && idxName !== idx;
+    varPart = "" + idx + " = " + this.fromC;
+    if (this.toC !== this.toVar) {
+      varPart += ", " + this.toC;
+    }
+    if (this.step !== this.stepVar) {
+      varPart += ", " + this.step;
+    }
+    _ref2 = ["" + idx + " <" + this.equals, "" + idx + " >" + this.equals], lt = _ref2[0], gt = _ref2[1];
+    condPart = this.stepNum ? +this.stepNum > 0 ? "" + lt + " " + this.toVar : "" + gt + " " + this.toVar : known ? ((_ref3 = [+this.fromNum, +this.toNum], from = _ref3[0], to = _ref3[1], _ref3), from <= to ? "" + lt + " " + to : "" + gt + " " + to) : (cond = this.stepVar ? "" + this.stepVar + " > 0" : "" + this.fromVar + " <= " + this.toVar, "" + cond + " ? " + lt + " " + this.toVar + " : " + gt + " " + this.toVar);
+    stepPart = this.stepVar ? "" + idx + " += " + this.stepVar : known ? namedIndex ? from <= to ? "++" + idx : "--" + idx : from <= to ? "" + idx + "++" : "" + idx + "--" : namedIndex ? "" + cond + " ? ++" + idx + " : --" + idx : "" + cond + " ? " + idx + "++ : " + idx + "--";
+    if (namedIndex) {
+      varPart = "" + idxName + " = " + varPart;
+    }
+    if (namedIndex) {
+      stepPart = "" + idxName + " = " + stepPart;
+    }
+    return [this.makeCode("" + varPart + "; " + condPart + "; " + stepPart)];
+  };
+
+  Range.prototype.compileArray = function(o) {
+    var args, body, cond, hasArgs, i, idt, post, pre, range, result, vars, _i, _ref2, _ref3, _results;
+    if (this.fromNum && this.toNum && Math.abs(this.fromNum - this.toNum) <= 20) {
+      range = (function() {
+        _results = [];
+        for (var _i = _ref2 = +this.fromNum, _ref3 = +this.toNum; _ref2 <= _ref3 ? _i <= _ref3 : _i >= _ref3; _ref2 <= _ref3 ? _i++ : _i--){ _results.push(_i); }
+        return _results;
+      }).apply(this);
+      if (this.exclusive) {
+        range.pop();
+      }
+      return [this.makeCode("[" + (range.join(', ')) + "]")];
+    }
+    idt = this.tab + TAB;
+    i = o.scope.freeVariable('i');
+    result = o.scope.freeVariable('results');
+    pre = "\n" + idt + result + " = [];";
+    if (this.fromNum && this.toNum) {
+      o.index = i;
+      body = fragmentsToText(this.compileNode(o));
+    } else {
+      vars = ("" + i + " = " + this.fromC) + (this.toC !== this.toVar ? ", " + this.toC : '');
+      cond = "" + this.fromVar + " <= " + this.toVar;
+      body = "var " + vars + "; " + cond + " ? " + i + " <" + this.equals + " " + this.toVar + " : " + i + " >" + this.equals + " " + this.toVar + "; " + cond + " ? " + i + "++ : " + i + "--";
+    }
+    post = "{ " + result + ".push(" + i + "); }\n" + idt + "return " + result + ";\n" + o.indent;
+    hasArgs = function(node) {
+      return node != null ? node.contains(function(n) {
+        return n instanceof Literal && n.value === 'arguments' && !n.asKey;
+      }) : void 0;
+    };
+    if (hasArgs(this.from) || hasArgs(this.to)) {
+      args = ', arguments';
+    }
+    return [this.makeCode("(function() {" + pre + "\n" + idt + "for (" + body + ")" + post + "}).apply(this" + (args != null ? args : '') + ")")];
+  };
+
+  return Range;
+
+})(Base);
+
+exports.Slice = Slice = (function(_super) {
+  __extends(Slice, _super);
+
+  Slice.prototype.children = ['range'];
+
+  function Slice(range) {
+    this.range = range;
+    Slice.__super__.constructor.call(this);
+  }
+
+  Slice.prototype.compileNode = function(o) {
+    var compiled, compiledText, from, fromCompiled, to, toStr, _ref2;
+    _ref2 = this.range, to = _ref2.to, from = _ref2.from;
+    fromCompiled = from && from.compileToFragments(o, LEVEL_PAREN) || [this.makeCode('0')];
+    if (to) {
+      compiled = to.compileToFragments(o, LEVEL_PAREN);
+      compiledText = fragmentsToText(compiled);
+      if (!(!this.range.exclusive && +compiledText === -1)) {
+        toStr = ', ' + (this.range.exclusive ? compiledText : SIMPLENUM.test(compiledText) ? "" + (+compiledText + 1) : (compiled = to.compileToFragments(o, LEVEL_ACCESS), "+" + (fragmentsToText(compiled)) + " + 1 || 9e9"));
+      }
+    }
+    return [this.makeCode(".slice(" + (fragmentsToText(fromCompiled)) + (toStr || '') + ")")];
+  };
+
+  return Slice;
+
+})(Base);
+
+exports.Obj = Obj = (function(_super) {
+  __extends(Obj, _super);
+
+  function Obj(props, generated) {
+    this.generated = generated != null ? generated : false;
+    this.objects = this.properties = props || [];
+  }
+
+  Obj.prototype.children = ['properties'];
+
+  Obj.prototype.compileNode = function(o) {
+    var answer, i, idt, indent, join, lastNoncom, node, prop, props, _i, _j, _len, _len1;
+    props = this.properties;
+    if (!props.length) {
+      return [this.makeCode(this.front ? '({})' : '{}')];
+    }
+    if (this.generated) {
+      for (_i = 0, _len = props.length; _i < _len; _i++) {
+        node = props[_i];
+        if (node instanceof Value) {
+          node.error('cannot have an implicit value in an implicit object');
+        }
+      }
+    }
+    idt = o.indent += TAB;
+    lastNoncom = this.lastNonComment(this.properties);
+    answer = [];
+    for (i = _j = 0, _len1 = props.length; _j < _len1; i = ++_j) {
+      prop = props[i];
+      join = i === props.length - 1 ? '' : prop === lastNoncom || prop instanceof Comment ? '\n' : ',\n';
+      indent = prop instanceof Comment ? '' : idt;
+      if (prop instanceof Assign && prop.variable instanceof Value && prop.variable.hasProperties()) {
+        prop.variable.error('Invalid object key');
+      }
+      if (prop instanceof Value && prop["this"]) {
+        prop = new Assign(prop.properties[0].name, prop, 'object');
+      }
+      if (!(prop instanceof Comment)) {
+        if (!(prop instanceof Assign)) {
+          prop = new Assign(prop, prop, 'object');
+        }
+        (prop.variable.base || prop.variable).asKey = true;
+      }
+      if (indent) {
+        answer.push(this.makeCode(indent));
+      }
+      answer.push.apply(answer, prop.compileToFragments(o, LEVEL_TOP));
+      if (join) {
+        answer.push(this.makeCode(join));
+      }
+    }
+    answer.unshift(this.makeCode("{" + (props.length && '\n')));
+    answer.push(this.makeCode("" + (props.length && '\n' + this.tab) + "}"));
+    if (this.front) {
+      return this.wrapInBraces(answer);
+    } else {
+      return answer;
+    }
+  };
+
+  Obj.prototype.assigns = function(name) {
+    var prop, _i, _len, _ref2;
+    _ref2 = this.properties;
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      prop = _ref2[_i];
+      if (prop.assigns(name)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  return Obj;
+
+})(Base);
+
+exports.Arr = Arr = (function(_super) {
+  __extends(Arr, _super);
+
+  function Arr(objs) {
+    this.objects = objs || [];
+  }
+
+  Arr.prototype.children = ['objects'];
+
+  Arr.prototype.compileNode = function(o) {
+    var answer, compiledObjs, fragments, index, obj, _i, _len;
+    if (!this.objects.length) {
+      return [this.makeCode('[]')];
+    }
+    o.indent += TAB;
+    answer = Splat.compileSplattedArray(o, this.objects);
+    if (answer.length) {
+      return answer;
+    }
+    answer = [];
+    compiledObjs = (function() {
+      var _i, _len, _ref2, _results;
+      _ref2 = this.objects;
+      _results = [];
+      for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+        obj = _ref2[_i];
+        _results.push(obj.compileToFragments(o, LEVEL_LIST));
+      }
+      return _results;
+    }).call(this);
+    for (index = _i = 0, _len = compiledObjs.length; _i < _len; index = ++_i) {
+      fragments = compiledObjs[index];
+      if (index) {
+        answer.push(this.makeCode(", "));
+      }
+      answer.push.apply(answer, fragments);
+    }
+    if (fragmentsToText(answer).indexOf('\n') >= 0) {
+      answer.unshift(this.makeCode("[\n" + o.indent));
+      answer.push(this.makeCode("\n" + this.tab + "]"));
+    } else {
+      answer.unshift(this.makeCode("["));
+      answer.push(this.makeCode("]"));
+    }
+    return answer;
+  };
+
+  Arr.prototype.assigns = function(name) {
+    var obj, _i, _len, _ref2;
+    _ref2 = this.objects;
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      obj = _ref2[_i];
+      if (obj.assigns(name)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  return Arr;
+
+})(Base);
+
+exports.Class = Class = (function(_super) {
+  __extends(Class, _super);
+
+  function Class(variable, parent, body) {
+    this.variable = variable;
+    this.parent = parent;
+    this.body = body != null ? body : new Block;
+    this.boundFuncs = [];
+    this.body.classBody = true;
+  }
+
+  Class.prototype.children = ['variable', 'parent', 'body'];
+
+  Class.prototype.determineName = function() {
+    var decl, tail;
+    if (!this.variable) {
+      return null;
+    }
+    decl = (tail = last(this.variable.properties)) ? tail instanceof Access && tail.name.value : this.variable.base.value;
+    if (__indexOf.call(STRICT_PROSCRIBED, decl) >= 0) {
+      this.variable.error("class variable name may not be " + decl);
+    }
+    return decl && (decl = IDENTIFIER.test(decl) && decl);
+  };
+
+  Class.prototype.setContext = function(name) {
+    return this.body.traverseChildren(false, function(node) {
+      if (node.classBody) {
+        return false;
+      }
+      if (node instanceof Literal && node.value === 'this') {
+        return node.value = name;
+      } else if (node instanceof Code) {
+        node.klass = name;
+        if (node.bound) {
+          return node.context = name;
+        }
+      }
+    });
+  };
+
+  Class.prototype.addBoundFunctions = function(o) {
+    var bvar, lhs, _i, _len, _ref2;
+    _ref2 = this.boundFuncs;
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      bvar = _ref2[_i];
+      lhs = (new Value(new Literal("this"), [new Access(bvar)])).compile(o);
+      this.ctor.body.unshift(new Literal("" + lhs + " = " + (utility('bind')) + "(" + lhs + ", this)"));
+    }
+  };
+
+  Class.prototype.addProperties = function(node, name, o) {
+    var assign, base, exprs, func, props;
+    props = node.base.properties.slice(0);
+    exprs = (function() {
+      var _results;
+      _results = [];
+      while (assign = props.shift()) {
+        if (assign instanceof Assign) {
+          base = assign.variable.base;
+          delete assign.context;
+          func = assign.value;
+          if (base.value === 'constructor') {
+            if (this.ctor) {
+              assign.error('cannot define more than one constructor in a class');
+            }
+            if (func.bound) {
+              assign.error('cannot define a constructor as a bound function');
+            }
+            if (func instanceof Code) {
+              assign = this.ctor = func;
+            } else {
+              this.externalCtor = o.scope.freeVariable('class');
+              assign = new Assign(new Literal(this.externalCtor), func);
+            }
+          } else {
+            if (assign.variable["this"]) {
+              func["static"] = true;
+              if (func.bound) {
+                func.context = name;
+              }
+            } else {
+              assign.variable = new Value(new Literal(name), [new Access(new Literal('prototype')), new Access(base)]);
+              if (func instanceof Code && func.bound) {
+                this.boundFuncs.push(base);
+                func.bound = false;
+              }
+            }
+          }
+        }
+        _results.push(assign);
+      }
+      return _results;
+    }).call(this);
+    return compact(exprs);
+  };
+
+  Class.prototype.walkBody = function(name, o) {
+    return this.traverseChildren(false, (function(_this) {
+      return function(child) {
+        var cont, exps, i, node, _i, _len, _ref2;
+        cont = true;
+        if (child instanceof Class) {
+          return false;
+        }
+        if (child instanceof Block) {
+          _ref2 = exps = child.expressions;
+          for (i = _i = 0, _len = _ref2.length; _i < _len; i = ++_i) {
+            node = _ref2[i];
+            if (node instanceof Value && node.isObject(true)) {
+              cont = false;
+              exps[i] = _this.addProperties(node, name, o);
+            }
+          }
+          child.expressions = exps = flatten(exps);
+        }
+        return cont && !(child instanceof Class);
+      };
+    })(this));
+  };
+
+  Class.prototype.hoistDirectivePrologue = function() {
+    var expressions, index, node;
+    index = 0;
+    expressions = this.body.expressions;
+    while ((node = expressions[index]) && node instanceof Comment || node instanceof Value && node.isString()) {
+      ++index;
+    }
+    return this.directives = expressions.splice(0, index);
+  };
+
+  Class.prototype.ensureConstructor = function(name, o) {
+    var missing, ref, superCall;
+    missing = !this.ctor;
+    this.ctor || (this.ctor = new Code);
+    this.ctor.ctor = this.ctor.name = name;
+    this.ctor.klass = null;
+    this.ctor.noReturn = true;
+    if (missing) {
+      if (this.parent) {
+        superCall = new Literal("" + name + ".__super__.constructor.apply(this, arguments)");
+      }
+      if (this.externalCtor) {
+        superCall = new Literal("" + this.externalCtor + ".apply(this, arguments)");
+      }
+      if (superCall) {
+        ref = new Literal(o.scope.freeVariable('ref'));
+        this.ctor.body.unshift(new Assign(ref, superCall));
+      }
+      this.addBoundFunctions(o);
+      if (superCall) {
+        this.ctor.body.push(ref);
+        this.ctor.body.makeReturn();
+      }
+      return this.body.expressions.unshift(this.ctor);
+    } else {
+      return this.addBoundFunctions(o);
+    }
+  };
+
+  Class.prototype.compileNode = function(o) {
+    var call, decl, klass, lname, name, params, _ref2;
+    decl = this.determineName();
+    name = decl || '_Class';
+    if (name.reserved) {
+      name = "_" + name;
+    }
+    lname = new Literal(name);
+    this.hoistDirectivePrologue();
+    this.setContext(name);
+    this.walkBody(name, o);
+    this.ensureConstructor(name, o);
+    this.body.spaced = true;
+    if (!(this.ctor instanceof Code)) {
+      this.body.expressions.unshift(this.ctor);
+    }
+    this.body.expressions.push(lname);
+    (_ref2 = this.body.expressions).unshift.apply(_ref2, this.directives);
+    call = Closure.wrap(this.body);
+    if (this.parent) {
+      this.superClass = new Literal(o.scope.freeVariable('super', false));
+      this.body.expressions.unshift(new Extends(lname, this.superClass));
+      call.args.push(this.parent);
+      params = call.variable.params || call.variable.base.params;
+      params.push(new Param(this.superClass));
+    }
+    klass = new Parens(call, true);
+    if (this.variable) {
+      klass = new Assign(this.variable, klass);
+    }
+    return klass.compileToFragments(o);
+  };
+
+  return Class;
+
+})(Base);
+
+exports.Assign = Assign = (function(_super) {
+  __extends(Assign, _super);
+
+  function Assign(variable, value, context, options) {
+    var forbidden, name, _ref2;
+    this.variable = variable;
+    this.value = value;
+    this.context = context;
+    this.param = options && options.param;
+    this.subpattern = options && options.subpattern;
+    forbidden = (_ref2 = (name = this.variable.unwrapAll().value), __indexOf.call(STRICT_PROSCRIBED, _ref2) >= 0);
+    if (forbidden && this.context !== 'object') {
+      this.variable.error("variable name may not be \"" + name + "\"");
+    }
+  }
+
+  Assign.prototype.children = ['variable', 'value'];
+
+  Assign.prototype.isStatement = function(o) {
+    return (o != null ? o.level : void 0) === LEVEL_TOP && (this.context != null) && __indexOf.call(this.context, "?") >= 0;
+  };
+
+  Assign.prototype.assigns = function(name) {
+    return this[this.context === 'object' ? 'value' : 'variable'].assigns(name);
+  };
+
+  Assign.prototype.unfoldSoak = function(o) {
+    return unfoldSoak(o, this, 'variable');
+  };
+
+  Assign.prototype.compileNode = function(o) {
+    var answer, compiledName, isValue, match, name, val, varBase, _ref2, _ref3, _ref4, _ref5;
+    if (isValue = this.variable instanceof Value) {
+      if (this.variable.isArray() || this.variable.isObject()) {
+        return this.compilePatternMatch(o);
+      }
+      if (this.variable.isSplice()) {
+        return this.compileSplice(o);
+      }
+      if ((_ref2 = this.context) === '||=' || _ref2 === '&&=' || _ref2 === '?=') {
+        return this.compileConditional(o);
+      }
+    }
+    compiledName = this.variable.compileToFragments(o, LEVEL_LIST);
+    name = fragmentsToText(compiledName);
+    if (!this.context) {
+      varBase = this.variable.unwrapAll();
+      if (!varBase.isAssignable()) {
+        this.variable.error("\"" + (this.variable.compile(o)) + "\" cannot be assigned");
+      }
+      if (!(typeof varBase.hasProperties === "function" ? varBase.hasProperties() : void 0)) {
+        if (this.param) {
+          o.scope.add(name, 'var');
+        } else {
+          o.scope.find(name);
+        }
+      }
+    }
+    if (this.value instanceof Code && (match = METHOD_DEF.exec(name))) {
+      if (match[1]) {
+        this.value.klass = match[1];
+      }
+      this.value.name = (_ref3 = (_ref4 = (_ref5 = match[2]) != null ? _ref5 : match[3]) != null ? _ref4 : match[4]) != null ? _ref3 : match[5];
+    }
+    val = this.value.compileToFragments(o, LEVEL_LIST);
+    if (this.context === 'object') {
+      return compiledName.concat(this.makeCode(": "), val);
+    }
+    answer = compiledName.concat(this.makeCode(" " + (this.context || '=') + " "), val);
+    if (o.level <= LEVEL_LIST) {
+      return answer;
+    } else {
+      return this.wrapInBraces(answer);
+    }
+  };
+
+  Assign.prototype.compilePatternMatch = function(o) {
+    var acc, assigns, code, fragments, i, idx, isObject, ivar, name, obj, objects, olen, ref, rest, splat, top, val, value, vvar, vvarText, _i, _len, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+    top = o.level === LEVEL_TOP;
+    value = this.value;
+    objects = this.variable.base.objects;
+    if (!(olen = objects.length)) {
+      code = value.compileToFragments(o);
+      if (o.level >= LEVEL_OP) {
+        return this.wrapInBraces(code);
+      } else {
+        return code;
+      }
+    }
+    isObject = this.variable.isObject();
+    if (top && olen === 1 && !((obj = objects[0]) instanceof Splat)) {
+      if (obj instanceof Assign) {
+        _ref2 = obj, (_ref3 = _ref2.variable, idx = _ref3.base), obj = _ref2.value;
+      } else {
+        idx = isObject ? obj["this"] ? obj.properties[0].name : obj : new Literal(0);
+      }
+      acc = IDENTIFIER.test(idx.unwrap().value || 0);
+      value = new Value(value);
+      value.properties.push(new (acc ? Access : Index)(idx));
+      if (_ref4 = obj.unwrap().value, __indexOf.call(RESERVED, _ref4) >= 0) {
+        obj.error("assignment to a reserved word: " + (obj.compile(o)));
+      }
+      return new Assign(obj, value, null, {
+        param: this.param
+      }).compileToFragments(o, LEVEL_TOP);
+    }
+    vvar = value.compileToFragments(o, LEVEL_LIST);
+    vvarText = fragmentsToText(vvar);
+    assigns = [];
+    splat = false;
+    if (!IDENTIFIER.test(vvarText) || this.variable.assigns(vvarText)) {
+      assigns.push([this.makeCode("" + (ref = o.scope.freeVariable('ref')) + " = ")].concat(__slice.call(vvar)));
+      vvar = [this.makeCode(ref)];
+      vvarText = ref;
+    }
+    for (i = _i = 0, _len = objects.length; _i < _len; i = ++_i) {
+      obj = objects[i];
+      idx = i;
+      if (isObject) {
+        if (obj instanceof Assign) {
+          _ref5 = obj, (_ref6 = _ref5.variable, idx = _ref6.base), obj = _ref5.value;
+        } else {
+          if (obj.base instanceof Parens) {
+            _ref7 = new Value(obj.unwrapAll()).cacheReference(o), obj = _ref7[0], idx = _ref7[1];
+          } else {
+            idx = obj["this"] ? obj.properties[0].name : obj;
+          }
+        }
+      }
+      if (!splat && obj instanceof Splat) {
+        name = obj.name.unwrap().value;
+        obj = obj.unwrap();
+        val = "" + olen + " <= " + vvarText + ".length ? " + (utility('slice')) + ".call(" + vvarText + ", " + i;
+        if (rest = olen - i - 1) {
+          ivar = o.scope.freeVariable('i');
+          val += ", " + ivar + " = " + vvarText + ".length - " + rest + ") : (" + ivar + " = " + i + ", [])";
+        } else {
+          val += ") : []";
+        }
+        val = new Literal(val);
+        splat = "" + ivar + "++";
+      } else {
+        name = obj.unwrap().value;
+        if (obj instanceof Splat) {
+          obj.error("multiple splats are disallowed in an assignment");
+        }
+        if (typeof idx === 'number') {
+          idx = new Literal(splat || idx);
+          acc = false;
+        } else {
+          acc = isObject && IDENTIFIER.test(idx.unwrap().value || 0);
+        }
+        val = new Value(new Literal(vvarText), [new (acc ? Access : Index)(idx)]);
+      }
+      if ((name != null) && __indexOf.call(RESERVED, name) >= 0) {
+        obj.error("assignment to a reserved word: " + (obj.compile(o)));
+      }
+      assigns.push(new Assign(obj, val, null, {
+        param: this.param,
+        subpattern: true
+      }).compileToFragments(o, LEVEL_LIST));
+    }
+    if (!(top || this.subpattern)) {
+      assigns.push(vvar);
+    }
+    fragments = this.joinFragmentArrays(assigns, ', ');
+    if (o.level < LEVEL_LIST) {
+      return fragments;
+    } else {
+      return this.wrapInBraces(fragments);
+    }
+  };
+
+  Assign.prototype.compileConditional = function(o) {
+    var left, right, _ref2;
+    _ref2 = this.variable.cacheReference(o), left = _ref2[0], right = _ref2[1];
+    if (!left.properties.length && left.base instanceof Literal && left.base.value !== "this" && !o.scope.check(left.base.value)) {
+      this.variable.error("the variable \"" + left.base.value + "\" can't be assigned with " + this.context + " because it has not been declared before");
+    }
+    if (__indexOf.call(this.context, "?") >= 0) {
+      o.isExistentialEquals = true;
+    }
+    return new Op(this.context.slice(0, -1), left, new Assign(right, this.value, '=')).compileToFragments(o);
+  };
+
+  Assign.prototype.compileSplice = function(o) {
+    var answer, exclusive, from, fromDecl, fromRef, name, to, valDef, valRef, _ref2, _ref3, _ref4;
+    _ref2 = this.variable.properties.pop().range, from = _ref2.from, to = _ref2.to, exclusive = _ref2.exclusive;
+    name = this.variable.compile(o);
+    if (from) {
+      _ref3 = this.cacheToCodeFragments(from.cache(o, LEVEL_OP)), fromDecl = _ref3[0], fromRef = _ref3[1];
+    } else {
+      fromDecl = fromRef = '0';
+    }
+    if (to) {
+      if ((from != null ? from.isSimpleNumber() : void 0) && to.isSimpleNumber()) {
+        to = +to.compile(o) - +fromRef;
+        if (!exclusive) {
+          to += 1;
+        }
+      } else {
+        to = to.compile(o, LEVEL_ACCESS) + ' - ' + fromRef;
+        if (!exclusive) {
+          to += ' + 1';
+        }
+      }
+    } else {
+      to = "9e9";
+    }
+    _ref4 = this.value.cache(o, LEVEL_LIST), valDef = _ref4[0], valRef = _ref4[1];
+    answer = [].concat(this.makeCode("[].splice.apply(" + name + ", [" + fromDecl + ", " + to + "].concat("), valDef, this.makeCode(")), "), valRef);
+    if (o.level > LEVEL_TOP) {
+      return this.wrapInBraces(answer);
+    } else {
+      return answer;
+    }
+  };
+
+  return Assign;
+
+})(Base);
+
+exports.Code = Code = (function(_super) {
+  __extends(Code, _super);
+
+  function Code(params, body, tag) {
+    this.params = params || [];
+    this.body = body || new Block;
+    this.bound = tag === 'boundfunc';
+    if (this.bound) {
+      this.context = '_this';
+    }
+  }
+
+  Code.prototype.children = ['params', 'body'];
+
+  Code.prototype.isStatement = function() {
+    return !!this.ctor;
+  };
+
+  Code.prototype.jumps = NO;
+
+  Code.prototype.compileNode = function(o) {
+    var answer, code, exprs, i, idt, lit, p, param, params, ref, splats, uniqs, val, wasEmpty, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref2, _ref3, _ref4, _ref5, _ref6;
+    o.scope = new Scope(o.scope, this.body, this);
+    o.scope.shared = del(o, 'sharedScope');
+    o.indent += TAB;
+    delete o.bare;
+    delete o.isExistentialEquals;
+    params = [];
+    exprs = [];
+    this.eachParamName(function(name) {
+      if (!o.scope.check(name)) {
+        return o.scope.parameter(name);
+      }
+    });
+    _ref2 = this.params;
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      param = _ref2[_i];
+      if (!param.splat) {
+        continue;
+      }
+      _ref3 = this.params;
+      for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
+        p = _ref3[_j].name;
+        if (p["this"]) {
+          p = p.properties[0].name;
+        }
+        if (p.value) {
+          o.scope.add(p.value, 'var', true);
+        }
+      }
+      splats = new Assign(new Value(new Arr((function() {
+        var _k, _len2, _ref4, _results;
+        _ref4 = this.params;
+        _results = [];
+        for (_k = 0, _len2 = _ref4.length; _k < _len2; _k++) {
+          p = _ref4[_k];
+          _results.push(p.asReference(o));
+        }
+        return _results;
+      }).call(this))), new Value(new Literal('arguments')));
+      break;
+    }
+    _ref4 = this.params;
+    for (_k = 0, _len2 = _ref4.length; _k < _len2; _k++) {
+      param = _ref4[_k];
+      if (param.isComplex()) {
+        val = ref = param.asReference(o);
+        if (param.value) {
+          val = new Op('?', ref, param.value);
+        }
+        exprs.push(new Assign(new Value(param.name), val, '=', {
+          param: true
+        }));
+      } else {
+        ref = param;
+        if (param.value) {
+          lit = new Literal(ref.name.value + ' == null');
+          val = new Assign(new Value(param.name), param.value, '=');
+          exprs.push(new If(lit, val));
+        }
+      }
+      if (!splats) {
+        params.push(ref);
+      }
+    }
+    wasEmpty = this.body.isEmpty();
+    if (splats) {
+      exprs.unshift(splats);
+    }
+    if (exprs.length) {
+      (_ref5 = this.body.expressions).unshift.apply(_ref5, exprs);
+    }
+    for (i = _l = 0, _len3 = params.length; _l < _len3; i = ++_l) {
+      p = params[i];
+      params[i] = p.compileToFragments(o);
+      o.scope.parameter(fragmentsToText(params[i]));
+    }
+    uniqs = [];
+    this.eachParamName(function(name, node) {
+      if (__indexOf.call(uniqs, name) >= 0) {
+        node.error("multiple parameters named '" + name + "'");
+      }
+      return uniqs.push(name);
+    });
+    if (!(wasEmpty || this.noReturn)) {
+      this.body.makeReturn();
+    }
+    if (this.bound) {
+      if ((_ref6 = o.scope.parent.method) != null ? _ref6.bound : void 0) {
+        this.bound = this.context = o.scope.parent.method.context;
+      } else if (!this["static"]) {
+        o.scope.parent.assign('_this', 'this');
+      }
+    }
+    idt = o.indent;
+    code = 'function';
+    if (this.ctor) {
+      code += ' ' + this.name;
+    }
+    code += '(';
+    answer = [this.makeCode(code)];
+    for (i = _m = 0, _len4 = params.length; _m < _len4; i = ++_m) {
+      p = params[i];
+      if (i) {
+        answer.push(this.makeCode(", "));
+      }
+      answer.push.apply(answer, p);
+    }
+    answer.push(this.makeCode(') {'));
+    if (!this.body.isEmpty()) {
+      answer = answer.concat(this.makeCode("\n"), this.body.compileWithDeclarations(o), this.makeCode("\n" + this.tab));
+    }
+    answer.push(this.makeCode('}'));
+    if (this.ctor) {
+      return [this.makeCode(this.tab)].concat(__slice.call(answer));
+    }
+    if (this.front || (o.level >= LEVEL_ACCESS)) {
+      return this.wrapInBraces(answer);
+    } else {
+      return answer;
+    }
+  };
+
+  Code.prototype.eachParamName = function(iterator) {
+    var param, _i, _len, _ref2, _results;
+    _ref2 = this.params;
+    _results = [];
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      param = _ref2[_i];
+      _results.push(param.eachName(iterator));
+    }
+    return _results;
+  };
+
+  Code.prototype.traverseChildren = function(crossScope, func) {
+    if (crossScope) {
+      return Code.__super__.traverseChildren.call(this, crossScope, func);
+    }
+  };
+
+  return Code;
+
+})(Base);
+
+exports.Param = Param = (function(_super) {
+  __extends(Param, _super);
+
+  function Param(name, value, splat) {
+    var _ref2;
+    this.name = name;
+    this.value = value;
+    this.splat = splat;
+    if (_ref2 = (name = this.name.unwrapAll().value), __indexOf.call(STRICT_PROSCRIBED, _ref2) >= 0) {
+      this.name.error("parameter name \"" + name + "\" is not allowed");
+    }
+  }
+
+  Param.prototype.children = ['name', 'value'];
+
+  Param.prototype.compileToFragments = function(o) {
+    return this.name.compileToFragments(o, LEVEL_LIST);
+  };
+
+  Param.prototype.asReference = function(o) {
+    var node;
+    if (this.reference) {
+      return this.reference;
+    }
+    node = this.name;
+    if (node["this"]) {
+      node = node.properties[0].name;
+      if (node.value.reserved) {
+        node = new Literal(o.scope.freeVariable(node.value));
+      }
+    } else if (node.isComplex()) {
+      node = new Literal(o.scope.freeVariable('arg'));
+    }
+    node = new Value(node);
+    if (this.splat) {
+      node = new Splat(node);
+    }
+    return this.reference = node;
+  };
+
+  Param.prototype.isComplex = function() {
+    return this.name.isComplex();
+  };
+
+  Param.prototype.eachName = function(iterator, name) {
+    var atParam, node, obj, _i, _len, _ref2;
+    if (name == null) {
+      name = this.name;
+    }
+    atParam = function(obj) {
+      var node;
+      node = obj.properties[0].name;
+      if (!node.value.reserved) {
+        return iterator(node.value, node);
+      }
+    };
+    if (name instanceof Literal) {
+      return iterator(name.value, name);
+    }
+    if (name instanceof Value) {
+      return atParam(name);
+    }
+    _ref2 = name.objects;
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      obj = _ref2[_i];
+      if (obj instanceof Assign) {
+        this.eachName(iterator, obj.value.unwrap());
+      } else if (obj instanceof Splat) {
+        node = obj.name.unwrap();
+        iterator(node.value, node);
+      } else if (obj instanceof Value) {
+        if (obj.isArray() || obj.isObject()) {
+          this.eachName(iterator, obj.base);
+        } else if (obj["this"]) {
+          atParam(obj);
+        } else {
+          iterator(obj.base.value, obj.base);
+        }
+      } else {
+        obj.error("illegal parameter " + (obj.compile()));
+      }
+    }
+  };
+
+  return Param;
+
+})(Base);
+
+exports.Splat = Splat = (function(_super) {
+  __extends(Splat, _super);
+
+  Splat.prototype.children = ['name'];
+
+  Splat.prototype.isAssignable = YES;
+
+  function Splat(name) {
+    this.name = name.compile ? name : new Literal(name);
+  }
+
+  Splat.prototype.assigns = function(name) {
+    return this.name.assigns(name);
+  };
+
+  Splat.prototype.compileToFragments = function(o) {
+    return this.name.compileToFragments(o);
+  };
+
+  Splat.prototype.unwrap = function() {
+    return this.name;
+  };
+
+  Splat.compileSplattedArray = function(o, list, apply) {
+    var args, base, compiledNode, concatPart, fragments, i, index, node, _i, _len;
+    index = -1;
+    while ((node = list[++index]) && !(node instanceof Splat)) {
+      continue;
+    }
+    if (index >= list.length) {
+      return [];
+    }
+    if (list.length === 1) {
+      node = list[0];
+      fragments = node.compileToFragments(o, LEVEL_LIST);
+      if (apply) {
+        return fragments;
+      }
+      return [].concat(node.makeCode("" + (utility('slice')) + ".call("), fragments, node.makeCode(")"));
+    }
+    args = list.slice(index);
+    for (i = _i = 0, _len = args.length; _i < _len; i = ++_i) {
+      node = args[i];
+      compiledNode = node.compileToFragments(o, LEVEL_LIST);
+      args[i] = node instanceof Splat ? [].concat(node.makeCode("" + (utility('slice')) + ".call("), compiledNode, node.makeCode(")")) : [].concat(node.makeCode("["), compiledNode, node.makeCode("]"));
+    }
+    if (index === 0) {
+      node = list[0];
+      concatPart = node.joinFragmentArrays(args.slice(1), ', ');
+      return args[0].concat(node.makeCode(".concat("), concatPart, node.makeCode(")"));
+    }
+    base = (function() {
+      var _j, _len1, _ref2, _results;
+      _ref2 = list.slice(0, index);
+      _results = [];
+      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+        node = _ref2[_j];
+        _results.push(node.compileToFragments(o, LEVEL_LIST));
+      }
+      return _results;
+    })();
+    base = list[0].joinFragmentArrays(base, ', ');
+    concatPart = list[index].joinFragmentArrays(args, ', ');
+    return [].concat(list[0].makeCode("["), base, list[index].makeCode("].concat("), concatPart, (last(list)).makeCode(")"));
+  };
+
+  return Splat;
+
+})(Base);
+
+exports.While = While = (function(_super) {
+  __extends(While, _super);
+
+  function While(condition, options) {
+    this.condition = (options != null ? options.invert : void 0) ? condition.invert() : condition;
+    this.guard = options != null ? options.guard : void 0;
+  }
+
+  While.prototype.children = ['condition', 'guard', 'body'];
+
+  While.prototype.isStatement = YES;
+
+  While.prototype.makeReturn = function(res) {
+    if (res) {
+      return While.__super__.makeReturn.apply(this, arguments);
+    } else {
+      this.returns = !this.jumps({
+        loop: true
+      });
+      return this;
+    }
+  };
+
+  While.prototype.addBody = function(body) {
+    this.body = body;
+    return this;
+  };
+
+  While.prototype.jumps = function() {
+    var expressions, node, _i, _len;
+    expressions = this.body.expressions;
+    if (!expressions.length) {
+      return false;
+    }
+    for (_i = 0, _len = expressions.length; _i < _len; _i++) {
+      node = expressions[_i];
+      if (node.jumps({
+        loop: true
+      })) {
+        return node;
+      }
+    }
+    return false;
+  };
+
+  While.prototype.compileNode = function(o) {
+    var answer, body, rvar, set;
+    o.indent += TAB;
+    set = '';
+    body = this.body;
+    if (body.isEmpty()) {
+      body = this.makeCode('');
+    } else {
+      if (this.returns) {
+        body.makeReturn(rvar = o.scope.freeVariable('results'));
+        set = "" + this.tab + rvar + " = [];\n";
+      }
+      if (this.guard) {
+        if (body.expressions.length > 1) {
+          body.expressions.unshift(new If((new Parens(this.guard)).invert(), new Literal("continue")));
+        } else {
+          if (this.guard) {
+            body = Block.wrap([new If(this.guard, body)]);
+          }
+        }
+      }
+      body = [].concat(this.makeCode("\n"), body.compileToFragments(o, LEVEL_TOP), this.makeCode("\n" + this.tab));
+    }
+    answer = [].concat(this.makeCode(set + this.tab + "while ("), this.condition.compileToFragments(o, LEVEL_PAREN), this.makeCode(") {"), body, this.makeCode("}"));
+    if (this.returns) {
+      answer.push(this.makeCode("\n" + this.tab + "return " + rvar + ";"));
+    }
+    return answer;
+  };
+
+  return While;
+
+})(Base);
+
+exports.Op = Op = (function(_super) {
+  var CONVERSIONS, INVERSIONS;
+
+  __extends(Op, _super);
+
+  function Op(op, first, second, flip) {
+    if (op === 'in') {
+      return new In(first, second);
+    }
+    if (op === 'do') {
+      return this.generateDo(first);
+    }
+    if (op === 'new') {
+      if (first instanceof Call && !first["do"] && !first.isNew) {
+        return first.newInstance();
+      }
+      if (first instanceof Code && first.bound || first["do"]) {
+        first = new Parens(first);
+      }
+    }
+    this.operator = CONVERSIONS[op] || op;
+    this.first = first;
+    this.second = second;
+    this.flip = !!flip;
+    return this;
+  }
+
+  CONVERSIONS = {
+    '==': '===',
+    '!=': '!==',
+    'of': 'in'
+  };
+
+  INVERSIONS = {
+    '!==': '===',
+    '===': '!=='
+  };
+
+  Op.prototype.children = ['first', 'second'];
+
+  Op.prototype.isSimpleNumber = NO;
+
+  Op.prototype.isUnary = function() {
+    return !this.second;
+  };
+
+  Op.prototype.isComplex = function() {
+    var _ref2;
+    return !(this.isUnary() && ((_ref2 = this.operator) === '+' || _ref2 === '-')) || this.first.isComplex();
+  };
+
+  Op.prototype.isChainable = function() {
+    var _ref2;
+    return (_ref2 = this.operator) === '<' || _ref2 === '>' || _ref2 === '>=' || _ref2 === '<=' || _ref2 === '===' || _ref2 === '!==';
+  };
+
+  Op.prototype.invert = function() {
+    var allInvertable, curr, fst, op, _ref2;
+    if (this.isChainable() && this.first.isChainable()) {
+      allInvertable = true;
+      curr = this;
+      while (curr && curr.operator) {
+        allInvertable && (allInvertable = curr.operator in INVERSIONS);
+        curr = curr.first;
+      }
+      if (!allInvertable) {
+        return new Parens(this).invert();
+      }
+      curr = this;
+      while (curr && curr.operator) {
+        curr.invert = !curr.invert;
+        curr.operator = INVERSIONS[curr.operator];
+        curr = curr.first;
+      }
+      return this;
+    } else if (op = INVERSIONS[this.operator]) {
+      this.operator = op;
+      if (this.first.unwrap() instanceof Op) {
+        this.first.invert();
+      }
+      return this;
+    } else if (this.second) {
+      return new Parens(this).invert();
+    } else if (this.operator === '!' && (fst = this.first.unwrap()) instanceof Op && ((_ref2 = fst.operator) === '!' || _ref2 === 'in' || _ref2 === 'instanceof')) {
+      return fst;
+    } else {
+      return new Op('!', this);
+    }
+  };
+
+  Op.prototype.unfoldSoak = function(o) {
+    var _ref2;
+    return ((_ref2 = this.operator) === '++' || _ref2 === '--' || _ref2 === 'delete') && unfoldSoak(o, this, 'first');
+  };
+
+  Op.prototype.generateDo = function(exp) {
+    var call, func, param, passedParams, ref, _i, _len, _ref2;
+    passedParams = [];
+    func = exp instanceof Assign && (ref = exp.value.unwrap()) instanceof Code ? ref : exp;
+    _ref2 = func.params || [];
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      param = _ref2[_i];
+      if (param.value) {
+        passedParams.push(param.value);
+        delete param.value;
+      } else {
+        passedParams.push(param);
+      }
+    }
+    call = new Call(exp, passedParams);
+    call["do"] = true;
+    return call;
+  };
+
+  Op.prototype.compileNode = function(o) {
+    var answer, isChain, _ref2, _ref3;
+    isChain = this.isChainable() && this.first.isChainable();
+    if (!isChain) {
+      this.first.front = this.front;
+    }
+    if (this.operator === 'delete' && o.scope.check(this.first.unwrapAll().value)) {
+      this.error('delete operand may not be argument or var');
+    }
+    if (((_ref2 = this.operator) === '--' || _ref2 === '++') && (_ref3 = this.first.unwrapAll().value, __indexOf.call(STRICT_PROSCRIBED, _ref3) >= 0)) {
+      this.error("cannot increment/decrement \"" + (this.first.unwrapAll().value) + "\"");
+    }
+    if (this.isUnary()) {
+      return this.compileUnary(o);
+    }
+    if (isChain) {
+      return this.compileChain(o);
+    }
+    if (this.operator === '?') {
+      return this.compileExistence(o);
+    }
+    answer = [].concat(this.first.compileToFragments(o, LEVEL_OP), this.makeCode(' ' + this.operator + ' '), this.second.compileToFragments(o, LEVEL_OP));
+    if (o.level <= LEVEL_OP) {
+      return answer;
+    } else {
+      return this.wrapInBraces(answer);
+    }
+  };
+
+  Op.prototype.compileChain = function(o) {
+    var fragments, fst, shared, _ref2;
+    _ref2 = this.first.second.cache(o), this.first.second = _ref2[0], shared = _ref2[1];
+    fst = this.first.compileToFragments(o, LEVEL_OP);
+    fragments = fst.concat(this.makeCode(" " + (this.invert ? '&&' : '||') + " "), shared.compileToFragments(o), this.makeCode(" " + this.operator + " "), this.second.compileToFragments(o, LEVEL_OP));
+    return this.wrapInBraces(fragments);
+  };
+
+  Op.prototype.compileExistence = function(o) {
+    var fst, ref;
+    if (!o.isExistentialEquals && this.first.isComplex()) {
+      ref = new Literal(o.scope.freeVariable('ref'));
+      fst = new Parens(new Assign(ref, this.first));
+    } else {
+      fst = this.first;
+      ref = fst;
+    }
+    return new If(new Existence(fst), ref, {
+      type: 'if'
+    }).addElse(this.second).compileToFragments(o);
+  };
+
+  Op.prototype.compileUnary = function(o) {
+    var op, parts, plusMinus;
+    parts = [];
+    op = this.operator;
+    parts.push([this.makeCode(op)]);
+    if (op === '!' && this.first instanceof Existence) {
+      this.first.negated = !this.first.negated;
+      return this.first.compileToFragments(o);
+    }
+    if (o.level >= LEVEL_ACCESS) {
+      return (new Parens(this)).compileToFragments(o);
+    }
+    plusMinus = op === '+' || op === '-';
+    if ((op === 'new' || op === 'typeof' || op === 'delete') || plusMinus && this.first instanceof Op && this.first.operator === op) {
+      parts.push([this.makeCode(' ')]);
+    }
+    if ((plusMinus && this.first instanceof Op) || (op === 'new' && this.first.isStatement(o))) {
+      this.first = new Parens(this.first);
+    }
+    parts.push(this.first.compileToFragments(o, LEVEL_OP));
+    if (this.flip) {
+      parts.reverse();
+    }
+    return this.joinFragmentArrays(parts, '');
+  };
+
+  Op.prototype.toString = function(idt) {
+    return Op.__super__.toString.call(this, idt, this.constructor.name + ' ' + this.operator);
+  };
+
+  return Op;
+
+})(Base);
+
+exports.In = In = (function(_super) {
+  __extends(In, _super);
+
+  function In(object, array) {
+    this.object = object;
+    this.array = array;
+  }
+
+  In.prototype.children = ['object', 'array'];
+
+  In.prototype.invert = NEGATE;
+
+  In.prototype.compileNode = function(o) {
+    var hasSplat, obj, _i, _len, _ref2;
+    if (this.array instanceof Value && this.array.isArray()) {
+      _ref2 = this.array.base.objects;
+      for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+        obj = _ref2[_i];
+        if (!(obj instanceof Splat)) {
+          continue;
+        }
+        hasSplat = true;
+        break;
+      }
+      if (!hasSplat) {
+        return this.compileOrTest(o);
+      }
+    }
+    return this.compileLoopTest(o);
+  };
+
+  In.prototype.compileOrTest = function(o) {
+    var cmp, cnj, i, item, ref, sub, tests, _i, _len, _ref2, _ref3, _ref4;
+    if (this.array.base.objects.length === 0) {
+      return [this.makeCode("" + (!!this.negated))];
+    }
+    _ref2 = this.object.cache(o, LEVEL_OP), sub = _ref2[0], ref = _ref2[1];
+    _ref3 = this.negated ? [' !== ', ' && '] : [' === ', ' || '], cmp = _ref3[0], cnj = _ref3[1];
+    tests = [];
+    _ref4 = this.array.base.objects;
+    for (i = _i = 0, _len = _ref4.length; _i < _len; i = ++_i) {
+      item = _ref4[i];
+      if (i) {
+        tests.push(this.makeCode(cnj));
+      }
+      tests = tests.concat((i ? ref : sub), this.makeCode(cmp), item.compileToFragments(o, LEVEL_ACCESS));
+    }
+    if (o.level < LEVEL_OP) {
+      return tests;
+    } else {
+      return this.wrapInBraces(tests);
+    }
+  };
+
+  In.prototype.compileLoopTest = function(o) {
+    var fragments, ref, sub, _ref2;
+    _ref2 = this.object.cache(o, LEVEL_LIST), sub = _ref2[0], ref = _ref2[1];
+    fragments = [].concat(this.makeCode(utility('indexOf') + ".call("), this.array.compileToFragments(o, LEVEL_LIST), this.makeCode(", "), ref, this.makeCode(") " + (this.negated ? '< 0' : '>= 0')));
+    if (fragmentsToText(sub) === fragmentsToText(ref)) {
+      return fragments;
+    }
+    fragments = sub.concat(this.makeCode(', '), fragments);
+    if (o.level < LEVEL_LIST) {
+      return fragments;
+    } else {
+      return this.wrapInBraces(fragments);
+    }
+  };
+
+  In.prototype.toString = function(idt) {
+    return In.__super__.toString.call(this, idt, this.constructor.name + (this.negated ? '!' : ''));
+  };
+
+  return In;
+
+})(Base);
+
+exports.Try = Try = (function(_super) {
+  __extends(Try, _super);
+
+  function Try(attempt, errorVariable, recovery, ensure) {
+    this.attempt = attempt;
+    this.errorVariable = errorVariable;
+    this.recovery = recovery;
+    this.ensure = ensure;
+  }
+
+  Try.prototype.children = ['attempt', 'recovery', 'ensure'];
+
+  Try.prototype.isStatement = YES;
+
+  Try.prototype.jumps = function(o) {
+    var _ref2;
+    return this.attempt.jumps(o) || ((_ref2 = this.recovery) != null ? _ref2.jumps(o) : void 0);
+  };
+
+  Try.prototype.makeReturn = function(res) {
+    if (this.attempt) {
+      this.attempt = this.attempt.makeReturn(res);
+    }
+    if (this.recovery) {
+      this.recovery = this.recovery.makeReturn(res);
+    }
+    return this;
+  };
+
+  Try.prototype.compileNode = function(o) {
+    var catchPart, ensurePart, placeholder, tryPart;
+    o.indent += TAB;
+    tryPart = this.attempt.compileToFragments(o, LEVEL_TOP);
+    catchPart = this.recovery ? (placeholder = new Literal('_error'), this.errorVariable ? this.recovery.unshift(new Assign(this.errorVariable, placeholder)) : void 0, [].concat(this.makeCode(" catch ("), placeholder.compileToFragments(o), this.makeCode(") {\n"), this.recovery.compileToFragments(o, LEVEL_TOP), this.makeCode("\n" + this.tab + "}"))) : !(this.ensure || this.recovery) ? [this.makeCode(' catch (_error) {}')] : [];
+    ensurePart = this.ensure ? [].concat(this.makeCode(" finally {\n"), this.ensure.compileToFragments(o, LEVEL_TOP), this.makeCode("\n" + this.tab + "}")) : [];
+    return [].concat(this.makeCode("" + this.tab + "try {\n"), tryPart, this.makeCode("\n" + this.tab + "}"), catchPart, ensurePart);
+  };
+
+  return Try;
+
+})(Base);
+
+exports.Throw = Throw = (function(_super) {
+  __extends(Throw, _super);
+
+  function Throw(expression) {
+    this.expression = expression;
+  }
+
+  Throw.prototype.children = ['expression'];
+
+  Throw.prototype.isStatement = YES;
+
+  Throw.prototype.jumps = NO;
+
+  Throw.prototype.makeReturn = THIS;
+
+  Throw.prototype.compileNode = function(o) {
+    return [].concat(this.makeCode(this.tab + "throw "), this.expression.compileToFragments(o), this.makeCode(";"));
+  };
+
+  return Throw;
+
+})(Base);
+
+exports.Existence = Existence = (function(_super) {
+  __extends(Existence, _super);
+
+  function Existence(expression) {
+    this.expression = expression;
+  }
+
+  Existence.prototype.children = ['expression'];
+
+  Existence.prototype.invert = NEGATE;
+
+  Existence.prototype.compileNode = function(o) {
+    var cmp, cnj, code, _ref2;
+    this.expression.front = this.front;
+    code = this.expression.compile(o, LEVEL_OP);
+    if (IDENTIFIER.test(code) && !o.scope.check(code)) {
+      _ref2 = this.negated ? ['===', '||'] : ['!==', '&&'], cmp = _ref2[0], cnj = _ref2[1];
+      code = "typeof " + code + " " + cmp + " \"undefined\" " + cnj + " " + code + " " + cmp + " null";
+    } else {
+      code = "" + code + " " + (this.negated ? '==' : '!=') + " null";
+    }
+    return [this.makeCode(o.level <= LEVEL_COND ? code : "(" + code + ")")];
+  };
+
+  return Existence;
+
+})(Base);
+
+exports.Parens = Parens = (function(_super) {
+  __extends(Parens, _super);
+
+  function Parens(body) {
+    this.body = body;
+  }
+
+  Parens.prototype.children = ['body'];
+
+  Parens.prototype.unwrap = function() {
+    return this.body;
+  };
+
+  Parens.prototype.isComplex = function() {
+    return this.body.isComplex();
+  };
+
+  Parens.prototype.compileNode = function(o) {
+    var bare, expr, fragments;
+    expr = this.body.unwrap();
+    if (expr instanceof Value && expr.isAtomic()) {
+      expr.front = this.front;
+      return expr.compileToFragments(o);
+    }
+    fragments = expr.compileToFragments(o, LEVEL_PAREN);
+    bare = o.level < LEVEL_OP && (expr instanceof Op || expr instanceof Call || (expr instanceof For && expr.returns));
+    if (bare) {
+      return fragments;
+    } else {
+      return this.wrapInBraces(fragments);
+    }
+  };
+
+  return Parens;
+
+})(Base);
+
+exports.For = For = (function(_super) {
+  __extends(For, _super);
+
+  function For(body, source) {
+    var _ref2;
+    this.source = source.source, this.guard = source.guard, this.step = source.step, this.name = source.name, this.index = source.index;
+    this.body = Block.wrap([body]);
+    this.own = !!source.own;
+    this.object = !!source.object;
+    if (this.object) {
+      _ref2 = [this.index, this.name], this.name = _ref2[0], this.index = _ref2[1];
+    }
+    if (this.index instanceof Value) {
+      this.index.error('index cannot be a pattern matching expression');
+    }
+    this.range = this.source instanceof Value && this.source.base instanceof Range && !this.source.properties.length;
+    this.pattern = this.name instanceof Value;
+    if (this.range && this.index) {
+      this.index.error('indexes do not apply to range loops');
+    }
+    if (this.range && this.pattern) {
+      this.name.error('cannot pattern match over range loops');
+    }
+    if (this.own && !this.object) {
+      this.index.error('cannot use own with for-in');
+    }
+    this.returns = false;
+  }
+
+  For.prototype.children = ['body', 'source', 'guard', 'step'];
+
+  For.prototype.compileNode = function(o) {
+    var body, bodyFragments, compare, compareDown, declare, declareDown, defPart, defPartFragments, down, forPartFragments, guardPart, idt1, increment, index, ivar, kvar, kvarAssign, lastJumps, lvar, name, namePart, ref, resultPart, returnResult, rvar, scope, source, step, stepNum, stepVar, svar, varPart, _ref2, _ref3;
+    body = Block.wrap([this.body]);
+    lastJumps = (_ref2 = last(body.expressions)) != null ? _ref2.jumps() : void 0;
+    if (lastJumps && lastJumps instanceof Return) {
+      this.returns = false;
+    }
+    source = this.range ? this.source.base : this.source;
+    scope = o.scope;
+    name = this.name && (this.name.compile(o, LEVEL_LIST));
+    index = this.index && (this.index.compile(o, LEVEL_LIST));
+    if (name && !this.pattern) {
+      scope.find(name);
+    }
+    if (index) {
+      scope.find(index);
+    }
+    if (this.returns) {
+      rvar = scope.freeVariable('results');
+    }
+    ivar = (this.object && index) || scope.freeVariable('i');
+    kvar = (this.range && name) || index || ivar;
+    kvarAssign = kvar !== ivar ? "" + kvar + " = " : "";
+    if (this.step && !this.range) {
+      _ref3 = this.cacheToCodeFragments(this.step.cache(o, LEVEL_LIST)), step = _ref3[0], stepVar = _ref3[1];
+      stepNum = stepVar.match(SIMPLENUM);
+    }
+    if (this.pattern) {
+      name = ivar;
+    }
+    varPart = '';
+    guardPart = '';
+    defPart = '';
+    idt1 = this.tab + TAB;
+    if (this.range) {
+      forPartFragments = source.compileToFragments(merge(o, {
+        index: ivar,
+        name: name,
+        step: this.step
+      }));
+    } else {
+      svar = this.source.compile(o, LEVEL_LIST);
+      if ((name || this.own) && !IDENTIFIER.test(svar)) {
+        defPart += "" + this.tab + (ref = scope.freeVariable('ref')) + " = " + svar + ";\n";
+        svar = ref;
+      }
+      if (name && !this.pattern) {
+        namePart = "" + name + " = " + svar + "[" + kvar + "]";
+      }
+      if (!this.object) {
+        if (step !== stepVar) {
+          defPart += "" + this.tab + step + ";\n";
+        }
+        if (!(this.step && stepNum && (down = +stepNum < 0))) {
+          lvar = scope.freeVariable('len');
+        }
+        declare = "" + kvarAssign + ivar + " = 0, " + lvar + " = " + svar + ".length";
+        declareDown = "" + kvarAssign + ivar + " = " + svar + ".length - 1";
+        compare = "" + ivar + " < " + lvar;
+        compareDown = "" + ivar + " >= 0";
+        if (this.step) {
+          if (stepNum) {
+            if (down) {
+              compare = compareDown;
+              declare = declareDown;
+            }
+          } else {
+            compare = "" + stepVar + " > 0 ? " + compare + " : " + compareDown;
+            declare = "(" + stepVar + " > 0 ? (" + declare + ") : " + declareDown + ")";
+          }
+          increment = "" + ivar + " += " + stepVar;
+        } else {
+          increment = "" + (kvar !== ivar ? "++" + ivar : "" + ivar + "++");
+        }
+        forPartFragments = [this.makeCode("" + declare + "; " + compare + "; " + kvarAssign + increment)];
+      }
+    }
+    if (this.returns) {
+      resultPart = "" + this.tab + rvar + " = [];\n";
+      returnResult = "\n" + this.tab + "return " + rvar + ";";
+      body.makeReturn(rvar);
+    }
+    if (this.guard) {
+      if (body.expressions.length > 1) {
+        body.expressions.unshift(new If((new Parens(this.guard)).invert(), new Literal("continue")));
+      } else {
+        if (this.guard) {
+          body = Block.wrap([new If(this.guard, body)]);
+        }
+      }
+    }
+    if (this.pattern) {
+      body.expressions.unshift(new Assign(this.name, new Literal("" + svar + "[" + kvar + "]")));
+    }
+    defPartFragments = [].concat(this.makeCode(defPart), this.pluckDirectCall(o, body));
+    if (namePart) {
+      varPart = "\n" + idt1 + namePart + ";";
+    }
+    if (this.object) {
+      forPartFragments = [this.makeCode("" + kvar + " in " + svar)];
+      if (this.own) {
+        guardPart = "\n" + idt1 + "if (!" + (utility('hasProp')) + ".call(" + svar + ", " + kvar + ")) continue;";
+      }
+    }
+    bodyFragments = body.compileToFragments(merge(o, {
+      indent: idt1
+    }), LEVEL_TOP);
+    if (bodyFragments && (bodyFragments.length > 0)) {
+      bodyFragments = [].concat(this.makeCode("\n"), bodyFragments, this.makeCode("\n"));
+    }
+    return [].concat(defPartFragments, this.makeCode("" + (resultPart || '') + this.tab + "for ("), forPartFragments, this.makeCode(") {" + guardPart + varPart), bodyFragments, this.makeCode("" + this.tab + "}" + (returnResult || '')));
+  };
+
+  For.prototype.pluckDirectCall = function(o, body) {
+    var base, defs, expr, fn, idx, ref, val, _i, _len, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+    defs = [];
+    _ref2 = body.expressions;
+    for (idx = _i = 0, _len = _ref2.length; _i < _len; idx = ++_i) {
+      expr = _ref2[idx];
+      expr = expr.unwrapAll();
+      if (!(expr instanceof Call)) {
+        continue;
+      }
+      val = expr.variable.unwrapAll();
+      if (!((val instanceof Code) || (val instanceof Value && ((_ref3 = val.base) != null ? _ref3.unwrapAll() : void 0) instanceof Code && val.properties.length === 1 && ((_ref4 = (_ref5 = val.properties[0].name) != null ? _ref5.value : void 0) === 'call' || _ref4 === 'apply')))) {
+        continue;
+      }
+      fn = ((_ref6 = val.base) != null ? _ref6.unwrapAll() : void 0) || val;
+      ref = new Literal(o.scope.freeVariable('fn'));
+      base = new Value(ref);
+      if (val.base) {
+        _ref7 = [base, val], val.base = _ref7[0], base = _ref7[1];
+      }
+      body.expressions[idx] = new Call(base, expr.args);
+      defs = defs.concat(this.makeCode(this.tab), new Assign(ref, fn).compileToFragments(o, LEVEL_TOP), this.makeCode(';\n'));
+    }
+    return defs;
+  };
+
+  return For;
+
+})(While);
+
+exports.Switch = Switch = (function(_super) {
+  __extends(Switch, _super);
+
+  function Switch(subject, cases, otherwise) {
+    this.subject = subject;
+    this.cases = cases;
+    this.otherwise = otherwise;
+  }
+
+  Switch.prototype.children = ['subject', 'cases', 'otherwise'];
+
+  Switch.prototype.isStatement = YES;
+
+  Switch.prototype.jumps = function(o) {
+    var block, conds, _i, _len, _ref2, _ref3, _ref4;
+    if (o == null) {
+      o = {
+        block: true
+      };
+    }
+    _ref2 = this.cases;
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      _ref3 = _ref2[_i], conds = _ref3[0], block = _ref3[1];
+      if (block.jumps(o)) {
+        return block;
+      }
+    }
+    return (_ref4 = this.otherwise) != null ? _ref4.jumps(o) : void 0;
+  };
+
+  Switch.prototype.makeReturn = function(res) {
+    var pair, _i, _len, _ref2, _ref3;
+    _ref2 = this.cases;
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      pair = _ref2[_i];
+      pair[1].makeReturn(res);
+    }
+    if (res) {
+      this.otherwise || (this.otherwise = new Block([new Literal('void 0')]));
+    }
+    if ((_ref3 = this.otherwise) != null) {
+      _ref3.makeReturn(res);
+    }
+    return this;
+  };
+
+  Switch.prototype.compileNode = function(o) {
+    var block, body, cond, conditions, expr, fragments, i, idt1, idt2, _i, _j, _len, _len1, _ref2, _ref3, _ref4;
+    idt1 = o.indent + TAB;
+    idt2 = o.indent = idt1 + TAB;
+    fragments = [].concat(this.makeCode(this.tab + "switch ("), (this.subject ? this.subject.compileToFragments(o, LEVEL_PAREN) : this.makeCode("false")), this.makeCode(") {\n"));
+    _ref2 = this.cases;
+    for (i = _i = 0, _len = _ref2.length; _i < _len; i = ++_i) {
+      _ref3 = _ref2[i], conditions = _ref3[0], block = _ref3[1];
+      _ref4 = flatten([conditions]);
+      for (_j = 0, _len1 = _ref4.length; _j < _len1; _j++) {
+        cond = _ref4[_j];
+        if (!this.subject) {
+          cond = cond.invert();
+        }
+        fragments = fragments.concat(this.makeCode(idt1 + "case "), cond.compileToFragments(o, LEVEL_PAREN), this.makeCode(":\n"));
+      }
+      if ((body = block.compileToFragments(o, LEVEL_TOP)).length > 0) {
+        fragments = fragments.concat(body, this.makeCode('\n'));
+      }
+      if (i === this.cases.length - 1 && !this.otherwise) {
+        break;
+      }
+      expr = this.lastNonComment(block.expressions);
+      if (expr instanceof Return || (expr instanceof Literal && expr.jumps() && expr.value !== 'debugger')) {
+        continue;
+      }
+      fragments.push(cond.makeCode(idt2 + 'break;\n'));
+    }
+    if (this.otherwise && this.otherwise.expressions.length) {
+      fragments.push.apply(fragments, [this.makeCode(idt1 + "default:\n")].concat(__slice.call(this.otherwise.compileToFragments(o, LEVEL_TOP)), [this.makeCode("\n")]));
+    }
+    fragments.push(this.makeCode(this.tab + '}'));
+    return fragments;
+  };
+
+  return Switch;
+
+})(Base);
+
+exports.If = If = (function(_super) {
+  __extends(If, _super);
+
+  function If(condition, body, options) {
+    this.body = body;
+    if (options == null) {
+      options = {};
+    }
+    this.condition = options.type === 'unless' ? condition.invert() : condition;
+    this.elseBody = null;
+    this.isChain = false;
+    this.soak = options.soak;
+  }
+
+  If.prototype.children = ['condition', 'body', 'elseBody'];
+
+  If.prototype.bodyNode = function() {
+    var _ref2;
+    return (_ref2 = this.body) != null ? _ref2.unwrap() : void 0;
+  };
+
+  If.prototype.elseBodyNode = function() {
+    var _ref2;
+    return (_ref2 = this.elseBody) != null ? _ref2.unwrap() : void 0;
+  };
+
+  If.prototype.addElse = function(elseBody) {
+    if (this.isChain) {
+      this.elseBodyNode().addElse(elseBody);
+    } else {
+      this.isChain = elseBody instanceof If;
+      this.elseBody = this.ensureBlock(elseBody);
+    }
+    return this;
+  };
+
+  If.prototype.isStatement = function(o) {
+    var _ref2;
+    return (o != null ? o.level : void 0) === LEVEL_TOP || this.bodyNode().isStatement(o) || ((_ref2 = this.elseBodyNode()) != null ? _ref2.isStatement(o) : void 0);
+  };
+
+  If.prototype.jumps = function(o) {
+    var _ref2;
+    return this.body.jumps(o) || ((_ref2 = this.elseBody) != null ? _ref2.jumps(o) : void 0);
+  };
+
+  If.prototype.compileNode = function(o) {
+    if (this.isStatement(o)) {
+      return this.compileStatement(o);
+    } else {
+      return this.compileExpression(o);
+    }
+  };
+
+  If.prototype.makeReturn = function(res) {
+    if (res) {
+      this.elseBody || (this.elseBody = new Block([new Literal('void 0')]));
+    }
+    this.body && (this.body = new Block([this.body.makeReturn(res)]));
+    this.elseBody && (this.elseBody = new Block([this.elseBody.makeReturn(res)]));
+    return this;
+  };
+
+  If.prototype.ensureBlock = function(node) {
+    if (node instanceof Block) {
+      return node;
+    } else {
+      return new Block([node]);
+    }
+  };
+
+  If.prototype.compileStatement = function(o) {
+    var answer, body, child, cond, exeq, ifPart, indent;
+    child = del(o, 'chainChild');
+    exeq = del(o, 'isExistentialEquals');
+    if (exeq) {
+      return new If(this.condition.invert(), this.elseBodyNode(), {
+        type: 'if'
+      }).compileToFragments(o);
+    }
+    indent = o.indent + TAB;
+    cond = this.condition.compileToFragments(o, LEVEL_PAREN);
+    body = this.ensureBlock(this.body).compileToFragments(merge(o, {
+      indent: indent
+    }));
+    ifPart = [].concat(this.makeCode("if ("), cond, this.makeCode(") {\n"), body, this.makeCode("\n" + this.tab + "}"));
+    if (!child) {
+      ifPart.unshift(this.makeCode(this.tab));
+    }
+    if (!this.elseBody) {
+      return ifPart;
+    }
+    answer = ifPart.concat(this.makeCode(' else '));
+    if (this.isChain) {
+      o.chainChild = true;
+      answer = answer.concat(this.elseBody.unwrap().compileToFragments(o, LEVEL_TOP));
+    } else {
+      answer = answer.concat(this.makeCode("{\n"), this.elseBody.compileToFragments(merge(o, {
+        indent: indent
+      }), LEVEL_TOP), this.makeCode("\n" + this.tab + "}"));
+    }
+    return answer;
+  };
+
+  If.prototype.compileExpression = function(o) {
+    var alt, body, cond, fragments;
+    cond = this.condition.compileToFragments(o, LEVEL_COND);
+    body = this.bodyNode().compileToFragments(o, LEVEL_LIST);
+    alt = this.elseBodyNode() ? this.elseBodyNode().compileToFragments(o, LEVEL_LIST) : [this.makeCode('void 0')];
+    fragments = cond.concat(this.makeCode(" ? "), body, this.makeCode(" : "), alt);
+    if (o.level >= LEVEL_COND) {
+      return this.wrapInBraces(fragments);
+    } else {
+      return fragments;
+    }
+  };
+
+  If.prototype.unfoldSoak = function() {
+    return this.soak && this;
+  };
+
+  return If;
+
+})(Base);
+
+Closure = {
+  wrap: function(expressions, statement, noReturn) {
+    var args, argumentsNode, call, func, meth;
+    if (expressions.jumps()) {
+      return expressions;
+    }
+    func = new Code([], Block.wrap([expressions]));
+    args = [];
+    argumentsNode = expressions.contains(this.isLiteralArguments);
+    if (argumentsNode && expressions.classBody) {
+      argumentsNode.error("Class bodies shouldn't reference arguments");
+    }
+    if (argumentsNode || expressions.contains(this.isLiteralThis)) {
+      meth = new Literal(argumentsNode ? 'apply' : 'call');
+      args = [new Literal('this')];
+      if (argumentsNode) {
+        args.push(new Literal('arguments'));
+      }
+      func = new Value(func, [new Access(meth)]);
+    }
+    func.noReturn = noReturn;
+    call = new Call(func, args);
+    if (statement) {
+      return Block.wrap([call]);
+    } else {
+      return call;
+    }
+  },
+  isLiteralArguments: function(node) {
+    return node instanceof Literal && node.value === 'arguments' && !node.asKey;
+  },
+  isLiteralThis: function(node) {
+    return (node instanceof Literal && node.value === 'this' && !node.asKey) || (node instanceof Code && node.bound) || (node instanceof Call && node.isSuper);
+  }
+};
+
+unfoldSoak = function(o, parent, name) {
+  var ifn;
+  if (!(ifn = parent[name].unfoldSoak(o))) {
+    return;
+  }
+  parent[name] = ifn.body;
+  ifn.body = new Value(parent);
+  return ifn;
+};
+
+UTILITIES = {
+  "extends": function() {
+    return "function(child, parent) { for (var key in parent) { if (" + (utility('hasProp')) + ".call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; }";
+  },
+  bind: function() {
+    return 'function(fn, me){ return function(){ return fn.apply(me, arguments); }; }';
+  },
+  indexOf: function() {
+    return "[].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; }";
+  },
+  hasProp: function() {
+    return '{}.hasOwnProperty';
+  },
+  slice: function() {
+    return '[].slice';
+  }
+};
+
+LEVEL_TOP = 1;
+
+LEVEL_PAREN = 2;
+
+LEVEL_LIST = 3;
+
+LEVEL_COND = 4;
+
+LEVEL_OP = 5;
+
+LEVEL_ACCESS = 6;
+
+TAB = '  ';
+
+IDENTIFIER_STR = "[$A-Za-z_\\x7f-\\uffff][$\\w\\x7f-\\uffff]*";
+
+IDENTIFIER = RegExp("^" + IDENTIFIER_STR + "$");
+
+SIMPLENUM = /^[+-]?\d+$/;
+
+METHOD_DEF = RegExp("^(?:(" + IDENTIFIER_STR + ")\\.prototype(?:\\.(" + IDENTIFIER_STR + ")|\\[(\"(?:[^\\\\\"\\r\\n]|\\\\.)*\"|'(?:[^\\\\'\\r\\n]|\\\\.)*')\\]|\\[(0x[\\da-fA-F]+|\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)\\]))|(" + IDENTIFIER_STR + ")$");
+
+IS_STRING = /^['"]/;
+
+utility = function(name) {
+  var ref;
+  ref = "__" + name;
+  Scope.root.assign(ref, UTILITIES[name]());
+  return ref;
+};
+
+multident = function(code, tab) {
+  code = code.replace(/\n/g, '$&' + tab);
+  return code.replace(/\s+$/, '');
+};
+
+});

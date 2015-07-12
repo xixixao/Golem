@@ -1,1 +1,485 @@
-define(function(require,exports,module){var e,t,n,i,r,o,s,a,l,c,u,h,p,d,f,m,g,v,y=module.uri||"",b=(y.substring(0,y.lastIndexOf("/")+1),[].indexOf||function(e){for(var t=0,n=this.length;n>t;t++)if(t in this&&this[t]===e)return t;return-1}),w=[].slice;for(p=function(e,t){var n;return n=[e,t],n.generated=!0,n},exports.Rewriter=function(){function e(){}return e.prototype.rewrite=function(e){return this.tokens=e,this.removeLeadingNewlines(),this.removeMidExpressionNewlines(),this.closeOpenCalls(),this.closeOpenIndexes(),this.addImplicitIndentation(),this.tagPostfixConditionals(),this.addImplicitBracesAndParens(),this.addLocationDataToGeneratedTokens(),this.tokens},e.prototype.scanTokens=function(e){var t,n,i;for(i=this.tokens,t=0;n=i[t];)t+=e.call(this,n,t,i);return!0},e.prototype.detectEnd=function(e,t,r){var o,s,a,l,c;for(a=this.tokens,o=0;s=a[e];){if(0===o&&t.call(this,s,e))return r.call(this,s,e);if(!s||0>o)return r.call(this,s,e-1);l=s[0],b.call(i,l)>=0?o+=1:(c=s[0],b.call(n,c)>=0&&(o-=1)),e+=1}return e-1},e.prototype.removeLeadingNewlines=function(){var e,t,n,i,r;for(r=this.tokens,e=n=0,i=r.length;i>n&&(t=r[e][0],"TERMINATOR"===t);e=++n);return e?this.tokens.splice(0,e):void 0},e.prototype.removeMidExpressionNewlines=function(){return this.scanTokens(function(e,n,i){var r;return"TERMINATOR"===e[0]&&(r=this.tag(n+1),b.call(t,r)>=0)?(i.splice(n,1),0):1})},e.prototype.closeOpenCalls=function(){var e,t;return t=function(e,t){var n;return")"===(n=e[0])||"CALL_END"===n||"OUTDENT"===e[0]&&")"===this.tag(t-1)},e=function(e,t){return this.tokens["OUTDENT"===e[0]?t-1:t][0]="CALL_END"},this.scanTokens(function(n,i){return"CALL_START"===n[0]&&this.detectEnd(i+1,t,e),1})},e.prototype.closeOpenIndexes=function(){var e,t;return t=function(e){var t;return"]"===(t=e[0])||"INDEX_END"===t},e=function(e){return e[0]="INDEX_END"},this.scanTokens(function(n,i){return"INDEX_START"===n[0]&&this.detectEnd(i+1,t,e),1})},e.prototype.matchTags=function(){var e,t,n,i,r,o,s;for(t=arguments[0],i=2<=arguments.length?w.call(arguments,1):[],e=0,n=r=0,o=i.length;o>=0?o>r:r>o;n=o>=0?++r:--r){for(;"HERECOMMENT"===this.tag(t+n+e);)e+=2;if(null!=i[n]&&("string"==typeof i[n]&&(i[n]=[i[n]]),s=this.tag(t+n+e),b.call(i[n],s)<0))return!1}return!0},e.prototype.looksObjectish=function(e){return this.matchTags(e,"@",null,":")||this.matchTags(e,null,":")},e.prototype.findTagsBackwards=function(e,t){var r,o,s,a,l,u,h;for(r=[];e>=0&&(r.length||(a=this.tag(e),b.call(t,a)<0&&(l=this.tag(e),b.call(i,l)<0||this.tokens[e].generated)&&(u=this.tag(e),b.call(c,u)<0)));)o=this.tag(e),b.call(n,o)>=0&&r.push(this.tag(e)),s=this.tag(e),b.call(i,s)>=0&&r.length&&r.pop(),e-=1;return h=this.tag(e),b.call(t,h)>=0},e.prototype.addImplicitBracesAndParens=function(){var e;return e=[],this.scanTokens(function(t,l,u){var h,d,f,m,g,v,y,w,C,x,A,E,_,S,T,F,k,D,M,R,L,N,O,B,I,$;if(R=t[0],x=(l>0?u[l-1]:[])[0],w=(l<u.length-1?u[l+1]:[])[0],T=function(){return e[e.length-1]},F=l,f=function(e){return l-F+e},m=function(){var e,t;return null!=(e=T())&&null!=(t=e[2])?t.ours:void 0},g=function(){var e;return m()&&"("===(null!=(e=T())?e[0]:void 0)},y=function(){var e;return m()&&"{"===(null!=(e=T())?e[0]:void 0)},v=function(){var e;return m&&"CONTROL"===(null!=(e=T())?e[0]:void 0)},k=function(t){var n;return n=null!=t?t:l,e.push(["(",n,{ours:!0}]),u.splice(n,0,p("CALL_START","(")),null==t?l+=1:void 0},h=function(){return e.pop(),u.splice(l,0,p("CALL_END",")")),l+=1},D=function(t,n){var i;return null==n&&(n=!0),i=null!=t?t:l,e.push(["{",i,{sameLine:!0,startsLine:n,ours:!0}]),u.splice(i,0,p("{",p(new String("{")))),null==t?l+=1:void 0},d=function(t){return t=null!=t?t:l,e.pop(),u.splice(t,0,p("}","}")),l+=1},g()&&("IF"===R||"TRY"===R||"FINALLY"===R||"CATCH"===R||"CLASS"===R||"SWITCH"===R))return e.push(["CONTROL",l,{ours:!0}]),f(1);if("INDENT"===R&&m()){if("=>"!==x&&"->"!==x&&"["!==x&&"("!==x&&","!==x&&"{"!==x&&"TRY"!==x&&"ELSE"!==x&&"="!==x)for(;g();)h();return v()&&e.pop(),e.push([R,l]),f(1)}if(b.call(i,R)>=0)return e.push([R,l]),f(1);if(b.call(n,R)>=0){for(;m();)g()?h():y()?d():e.pop();e.pop()}if((b.call(s,R)>=0&&t.spaced&&!t.stringEnd||"?"===R&&l>0&&!u[l-1].spaced)&&(b.call(r,w)>=0||b.call(a,w)>=0&&!(null!=(L=u[l+1])?L.spaced:void 0)&&!(null!=(N=u[l+1])?N.newLine:void 0)))return"?"===R&&(R=t[0]="FUNC_EXIST"),k(l+1),f(2);if(b.call(s,R)>=0&&this.matchTags(l+1,"INDENT",null,":")&&!this.findTagsBackwards(l,["CLASS","EXTENDS","IF","CATCH","SWITCH","LEADING_WHEN","FOR","WHILE","UNTIL"]))return k(l+1),e.push(["INDENT",l+2]),f(3);if(":"===R){for(A="@"===this.tag(l-2)?l-2:l-1;"HERECOMMENT"===this.tag(A-2);)A-=2;return M=0===A||(O=this.tag(A-1),b.call(c,O)>=0)||u[A-1].newLine,T()&&(B=T(),S=B[0],_=B[1],("{"===S||"INDENT"===S&&"{"===this.tag(_-1))&&(M||","===this.tag(A-1)||"{"===this.tag(A-1)))?f(1):(D(A,!!M),f(2))}if("OUTDENT"===x&&g()&&("."===R||"?."===R||"::"===R||"?::"===R))return h(),f(1);if(y()&&b.call(c,R)>=0&&(T()[2].sameLine=!1),b.call(o,R)>=0)for(;m();)if(I=T(),S=I[0],_=I[1],$=I[2],E=$.sameLine,M=$.startsLine,g()&&","!==x)h();else if(y()&&E&&!M)d();else{if(!y()||"TERMINATOR"!==R||","===x||M&&this.looksObjectish(l+1))break;d()}if(","===R&&!this.looksObjectish(l+1)&&y()&&("TERMINATOR"!==w||!this.looksObjectish(l+2)))for(C="OUTDENT"===w?1:0;y();)d(l+C);return f(1)})},e.prototype.addLocationDataToGeneratedTokens=function(){return this.scanTokens(function(e,t,n){var i,r,o,s,a,l;return e[2]?1:e.generated||e.explicit?("{"===e[0]&&(o=null!=(a=n[t+1])?a[2]:void 0)?(r=o.first_line,i=o.first_column):(s=null!=(l=n[t-1])?l[2]:void 0)?(r=s.last_line,i=s.last_column):r=i=0,e[2]={first_line:r,first_column:i,last_line:r,last_column:i},1):1})},e.prototype.addImplicitIndentation=function(){var e,t,n,i,r;return r=n=i=null,t=function(e){var t,n;return";"!==e[1]&&(t=e[0],b.call(u,t)>=0)&&!("ELSE"===e[0]&&"THEN"!==r)&&!!("CATCH"!==(n=e[0])&&"FINALLY"!==n||"->"!==r&&"=>"!==r)},e=function(e,t){return this.tokens.splice(","===this.tag(t-1)?t-1:t,0,i)},this.scanTokens(function(o,s,a){var l,c,u,p,d;if(c=o[0],"TERMINATOR"===c&&"THEN"===this.tag(s+1))return a.splice(s,1),0;if("ELSE"===c&&"OUTDENT"!==this.tag(s-1))return a.splice.apply(a,[s,0].concat(w.call(this.indentation()))),2;if("CATCH"===c)for(l=u=1;2>=u;l=++u)if("OUTDENT"===(p=this.tag(s+l))||"TERMINATOR"===p||"FINALLY"===p)return a.splice.apply(a,[s+l,0].concat(w.call(this.indentation()))),2+l;return b.call(h,c)>=0&&"INDENT"!==this.tag(s+1)&&("ELSE"!==c||"IF"!==this.tag(s+1))?(r=c,d=this.indentation(!0),n=d[0],i=d[1],"THEN"===r&&(n.fromThen=!0),a.splice(s+1,0,n),this.detectEnd(s+2,t,e),"THEN"===c&&a.splice(s,1),1):1})},e.prototype.tagPostfixConditionals=function(){var e,t,n;return n=null,t=function(e,t){var n,i;return i=e[0],n=this.tokens[t-1][0],"TERMINATOR"===i||"INDENT"===i&&b.call(h,n)<0},e=function(e){return"INDENT"!==e[0]||e.generated&&!e.fromThen?n[0]="POST_"+n[0]:void 0},this.scanTokens(function(i,r){return"IF"!==i[0]?1:(n=i,this.detectEnd(r+1,t,e),1)})},e.prototype.indentation=function(e){var t,n;return null==e&&(e=!1),t=["INDENT",2],n=["OUTDENT",2],e&&(t.generated=n.generated=!0),e||(t.explicit=n.explicit=!0),[t,n]},e.prototype.generate=p,e.prototype.tag=function(e){var t;return null!=(t=this.tokens[e])?t[0]:void 0},e}(),e=[["(",")"],["[","]"],["{","}"],["INDENT","OUTDENT"],["CALL_START","CALL_END"],["PARAM_START","PARAM_END"],["INDEX_START","INDEX_END"]],exports.INVERSES=l={},i=[],n=[],m=0,g=e.length;g>m;m++)v=e[m],d=v[0],f=v[1],i.push(l[f]=d),n.push(l[d]=f);t=["CATCH","WHEN","ELSE","FINALLY"].concat(n),s=["IDENTIFIER","SUPER",")","CALL_END","]","INDEX_END","@","THIS"],r=["IDENTIFIER","NUMBER","STRING","JS","REGEX","NEW","PARAM_START","CLASS","IF","TRY","SWITCH","THIS","BOOL","NULL","UNDEFINED","UNARY","SUPER","THROW","@","->","=>","[","(","{","--","++"],a=["+","-"],o=["POST_IF","FOR","WHILE","UNTIL","WHEN","BY","LOOP","TERMINATOR"],h=["ELSE","->","=>","TRY","FINALLY","THEN"],u=["TERMINATOR","CATCH","FINALLY","ELSE","OUTDENT","LEADING_WHEN"],c=["TERMINATOR","INDENT","OUTDENT"]});
+define(function (require, exports, module) {
+  var __filename = module.uri || "", __dirname = __filename.substring(0, __filename.lastIndexOf("/") + 1);
+  var BALANCED_PAIRS, EXPRESSION_CLOSE, EXPRESSION_END, EXPRESSION_START, IMPLICIT_CALL, IMPLICIT_END, IMPLICIT_FUNC, IMPLICIT_UNSPACED_CALL, INVERSES, LINEBREAKS, SINGLE_CLOSERS, SINGLE_LINERS, generate, left, rite, _i, _len, _ref,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  __slice = [].slice;
+
+generate = function(tag, value) {
+  var tok;
+  tok = [tag, value];
+  tok.generated = true;
+  return tok;
+};
+
+exports.Rewriter = (function() {
+  function Rewriter() {}
+
+  Rewriter.prototype.rewrite = function(tokens) {
+    this.tokens = tokens;
+    this.removeLeadingNewlines();
+    this.removeMidExpressionNewlines();
+    this.closeOpenCalls();
+    this.closeOpenIndexes();
+    this.addImplicitIndentation();
+    this.tagPostfixConditionals();
+    this.addImplicitBracesAndParens();
+    this.addLocationDataToGeneratedTokens();
+    return this.tokens;
+  };
+
+  Rewriter.prototype.scanTokens = function(block) {
+    var i, token, tokens;
+    tokens = this.tokens;
+    i = 0;
+    while (token = tokens[i]) {
+      i += block.call(this, token, i, tokens);
+    }
+    return true;
+  };
+
+  Rewriter.prototype.detectEnd = function(i, condition, action) {
+    var levels, token, tokens, _ref, _ref1;
+    tokens = this.tokens;
+    levels = 0;
+    while (token = tokens[i]) {
+      if (levels === 0 && condition.call(this, token, i)) {
+        return action.call(this, token, i);
+      }
+      if (!token || levels < 0) {
+        return action.call(this, token, i - 1);
+      }
+      if (_ref = token[0], __indexOf.call(EXPRESSION_START, _ref) >= 0) {
+        levels += 1;
+      } else if (_ref1 = token[0], __indexOf.call(EXPRESSION_END, _ref1) >= 0) {
+        levels -= 1;
+      }
+      i += 1;
+    }
+    return i - 1;
+  };
+
+  Rewriter.prototype.removeLeadingNewlines = function() {
+    var i, tag, _i, _len, _ref;
+    _ref = this.tokens;
+    for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+      tag = _ref[i][0];
+      if (tag !== 'TERMINATOR') {
+        break;
+      }
+    }
+    if (i) {
+      return this.tokens.splice(0, i);
+    }
+  };
+
+  Rewriter.prototype.removeMidExpressionNewlines = function() {
+    return this.scanTokens(function(token, i, tokens) {
+      var _ref;
+      if (!(token[0] === 'TERMINATOR' && (_ref = this.tag(i + 1), __indexOf.call(EXPRESSION_CLOSE, _ref) >= 0))) {
+        return 1;
+      }
+      tokens.splice(i, 1);
+      return 0;
+    });
+  };
+
+  Rewriter.prototype.closeOpenCalls = function() {
+    var action, condition;
+    condition = function(token, i) {
+      var _ref;
+      return ((_ref = token[0]) === ')' || _ref === 'CALL_END') || token[0] === 'OUTDENT' && this.tag(i - 1) === ')';
+    };
+    action = function(token, i) {
+      return this.tokens[token[0] === 'OUTDENT' ? i - 1 : i][0] = 'CALL_END';
+    };
+    return this.scanTokens(function(token, i) {
+      if (token[0] === 'CALL_START') {
+        this.detectEnd(i + 1, condition, action);
+      }
+      return 1;
+    });
+  };
+
+  Rewriter.prototype.closeOpenIndexes = function() {
+    var action, condition;
+    condition = function(token, i) {
+      var _ref;
+      return (_ref = token[0]) === ']' || _ref === 'INDEX_END';
+    };
+    action = function(token, i) {
+      return token[0] = 'INDEX_END';
+    };
+    return this.scanTokens(function(token, i) {
+      if (token[0] === 'INDEX_START') {
+        this.detectEnd(i + 1, condition, action);
+      }
+      return 1;
+    });
+  };
+
+  Rewriter.prototype.matchTags = function() {
+    var fuzz, i, j, pattern, _i, _ref, _ref1;
+    i = arguments[0], pattern = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+    fuzz = 0;
+    for (j = _i = 0, _ref = pattern.length; 0 <= _ref ? _i < _ref : _i > _ref; j = 0 <= _ref ? ++_i : --_i) {
+      while (this.tag(i + j + fuzz) === 'HERECOMMENT') {
+        fuzz += 2;
+      }
+      if (pattern[j] == null) {
+        continue;
+      }
+      if (typeof pattern[j] === 'string') {
+        pattern[j] = [pattern[j]];
+      }
+      if (_ref1 = this.tag(i + j + fuzz), __indexOf.call(pattern[j], _ref1) < 0) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  Rewriter.prototype.looksObjectish = function(j) {
+    return this.matchTags(j, '@', null, ':') || this.matchTags(j, null, ':');
+  };
+
+  Rewriter.prototype.findTagsBackwards = function(i, tags) {
+    var backStack, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    backStack = [];
+    while (i >= 0 && (backStack.length || (_ref2 = this.tag(i), __indexOf.call(tags, _ref2) < 0) && ((_ref3 = this.tag(i), __indexOf.call(EXPRESSION_START, _ref3) < 0) || this.tokens[i].generated) && (_ref4 = this.tag(i), __indexOf.call(LINEBREAKS, _ref4) < 0))) {
+      if (_ref = this.tag(i), __indexOf.call(EXPRESSION_END, _ref) >= 0) {
+        backStack.push(this.tag(i));
+      }
+      if ((_ref1 = this.tag(i), __indexOf.call(EXPRESSION_START, _ref1) >= 0) && backStack.length) {
+        backStack.pop();
+      }
+      i -= 1;
+    }
+    return _ref5 = this.tag(i), __indexOf.call(tags, _ref5) >= 0;
+  };
+
+  Rewriter.prototype.addImplicitBracesAndParens = function() {
+    var stack;
+    stack = [];
+    return this.scanTokens(function(token, i, tokens) {
+      var endImplicitCall, endImplicitObject, forward, inImplicit, inImplicitCall, inImplicitControl, inImplicitObject, nextTag, offset, prevTag, s, sameLine, stackIdx, stackTag, stackTop, startIdx, startImplicitCall, startImplicitObject, startsLine, tag, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+      tag = token[0];
+      prevTag = (i > 0 ? tokens[i - 1] : [])[0];
+      nextTag = (i < tokens.length - 1 ? tokens[i + 1] : [])[0];
+      stackTop = function() {
+        return stack[stack.length - 1];
+      };
+      startIdx = i;
+      forward = function(n) {
+        return i - startIdx + n;
+      };
+      inImplicit = function() {
+        var _ref, _ref1;
+        return (_ref = stackTop()) != null ? (_ref1 = _ref[2]) != null ? _ref1.ours : void 0 : void 0;
+      };
+      inImplicitCall = function() {
+        var _ref;
+        return inImplicit() && ((_ref = stackTop()) != null ? _ref[0] : void 0) === '(';
+      };
+      inImplicitObject = function() {
+        var _ref;
+        return inImplicit() && ((_ref = stackTop()) != null ? _ref[0] : void 0) === '{';
+      };
+      inImplicitControl = function() {
+        var _ref;
+        return inImplicit && ((_ref = stackTop()) != null ? _ref[0] : void 0) === 'CONTROL';
+      };
+      startImplicitCall = function(j) {
+        var idx;
+        idx = j != null ? j : i;
+        stack.push([
+          '(', idx, {
+            ours: true
+          }
+        ]);
+        tokens.splice(idx, 0, generate('CALL_START', '('));
+        if (j == null) {
+          return i += 1;
+        }
+      };
+      endImplicitCall = function() {
+        stack.pop();
+        tokens.splice(i, 0, generate('CALL_END', ')'));
+        return i += 1;
+      };
+      startImplicitObject = function(j, startsLine) {
+        var idx;
+        if (startsLine == null) {
+          startsLine = true;
+        }
+        idx = j != null ? j : i;
+        stack.push([
+          '{', idx, {
+            sameLine: true,
+            startsLine: startsLine,
+            ours: true
+          }
+        ]);
+        tokens.splice(idx, 0, generate('{', generate(new String('{'))));
+        if (j == null) {
+          return i += 1;
+        }
+      };
+      endImplicitObject = function(j) {
+        j = j != null ? j : i;
+        stack.pop();
+        tokens.splice(j, 0, generate('}', '}'));
+        return i += 1;
+      };
+      if (inImplicitCall() && (tag === 'IF' || tag === 'TRY' || tag === 'FINALLY' || tag === 'CATCH' || tag === 'CLASS' || tag === 'SWITCH')) {
+        stack.push([
+          'CONTROL', i, {
+            ours: true
+          }
+        ]);
+        return forward(1);
+      }
+      if (tag === 'INDENT' && inImplicit()) {
+        if (prevTag !== '=>' && prevTag !== '->' && prevTag !== '[' && prevTag !== '(' && prevTag !== ',' && prevTag !== '{' && prevTag !== 'TRY' && prevTag !== 'ELSE' && prevTag !== '=') {
+          while (inImplicitCall()) {
+            endImplicitCall();
+          }
+        }
+        if (inImplicitControl()) {
+          stack.pop();
+        }
+        stack.push([tag, i]);
+        return forward(1);
+      }
+      if (__indexOf.call(EXPRESSION_START, tag) >= 0) {
+        stack.push([tag, i]);
+        return forward(1);
+      }
+      if (__indexOf.call(EXPRESSION_END, tag) >= 0) {
+        while (inImplicit()) {
+          if (inImplicitCall()) {
+            endImplicitCall();
+          } else if (inImplicitObject()) {
+            endImplicitObject();
+          } else {
+            stack.pop();
+          }
+        }
+        stack.pop();
+      }
+      if ((__indexOf.call(IMPLICIT_FUNC, tag) >= 0 && token.spaced && !token.stringEnd || tag === '?' && i > 0 && !tokens[i - 1].spaced) && (__indexOf.call(IMPLICIT_CALL, nextTag) >= 0 || __indexOf.call(IMPLICIT_UNSPACED_CALL, nextTag) >= 0 && !((_ref = tokens[i + 1]) != null ? _ref.spaced : void 0) && !((_ref1 = tokens[i + 1]) != null ? _ref1.newLine : void 0))) {
+        if (tag === '?') {
+          tag = token[0] = 'FUNC_EXIST';
+        }
+        startImplicitCall(i + 1);
+        return forward(2);
+      }
+      if (__indexOf.call(IMPLICIT_FUNC, tag) >= 0 && this.matchTags(i + 1, 'INDENT', null, ':') && !this.findTagsBackwards(i, ['CLASS', 'EXTENDS', 'IF', 'CATCH', 'SWITCH', 'LEADING_WHEN', 'FOR', 'WHILE', 'UNTIL'])) {
+        startImplicitCall(i + 1);
+        stack.push(['INDENT', i + 2]);
+        return forward(3);
+      }
+      if (tag === ':') {
+        if (this.tag(i - 2) === '@') {
+          s = i - 2;
+        } else {
+          s = i - 1;
+        }
+        while (this.tag(s - 2) === 'HERECOMMENT') {
+          s -= 2;
+        }
+        startsLine = s === 0 || (_ref2 = this.tag(s - 1), __indexOf.call(LINEBREAKS, _ref2) >= 0) || tokens[s - 1].newLine;
+        if (stackTop()) {
+          _ref3 = stackTop(), stackTag = _ref3[0], stackIdx = _ref3[1];
+          if ((stackTag === '{' || stackTag === 'INDENT' && this.tag(stackIdx - 1) === '{') && (startsLine || this.tag(s - 1) === ',' || this.tag(s - 1) === '{')) {
+            return forward(1);
+          }
+        }
+        startImplicitObject(s, !!startsLine);
+        return forward(2);
+      }
+      if (prevTag === 'OUTDENT' && inImplicitCall() && (tag === '.' || tag === '?.' || tag === '::' || tag === '?::')) {
+        endImplicitCall();
+        return forward(1);
+      }
+      if (inImplicitObject() && __indexOf.call(LINEBREAKS, tag) >= 0) {
+        stackTop()[2].sameLine = false;
+      }
+      if (__indexOf.call(IMPLICIT_END, tag) >= 0) {
+        while (inImplicit()) {
+          _ref4 = stackTop(), stackTag = _ref4[0], stackIdx = _ref4[1], (_ref5 = _ref4[2], sameLine = _ref5.sameLine, startsLine = _ref5.startsLine);
+          if (inImplicitCall() && prevTag !== ',') {
+            endImplicitCall();
+          } else if (inImplicitObject() && sameLine && !startsLine) {
+            endImplicitObject();
+          } else if (inImplicitObject() && tag === 'TERMINATOR' && prevTag !== ',' && !(startsLine && this.looksObjectish(i + 1))) {
+            endImplicitObject();
+          } else {
+            break;
+          }
+        }
+      }
+      if (tag === ',' && !this.looksObjectish(i + 1) && inImplicitObject() && (nextTag !== 'TERMINATOR' || !this.looksObjectish(i + 2))) {
+        offset = nextTag === 'OUTDENT' ? 1 : 0;
+        while (inImplicitObject()) {
+          endImplicitObject(i + offset);
+        }
+      }
+      return forward(1);
+    });
+  };
+
+  Rewriter.prototype.addLocationDataToGeneratedTokens = function() {
+    return this.scanTokens(function(token, i, tokens) {
+      var column, line, nextLocation, prevLocation, _ref, _ref1;
+      if (token[2]) {
+        return 1;
+      }
+      if (!(token.generated || token.explicit)) {
+        return 1;
+      }
+      if (token[0] === '{' && (nextLocation = (_ref = tokens[i + 1]) != null ? _ref[2] : void 0)) {
+        line = nextLocation.first_line, column = nextLocation.first_column;
+      } else if (prevLocation = (_ref1 = tokens[i - 1]) != null ? _ref1[2] : void 0) {
+        line = prevLocation.last_line, column = prevLocation.last_column;
+      } else {
+        line = column = 0;
+      }
+      token[2] = {
+        first_line: line,
+        first_column: column,
+        last_line: line,
+        last_column: column
+      };
+      return 1;
+    });
+  };
+
+  Rewriter.prototype.addImplicitIndentation = function() {
+    var action, condition, indent, outdent, starter;
+    starter = indent = outdent = null;
+    condition = function(token, i) {
+      var _ref, _ref1;
+      return token[1] !== ';' && (_ref = token[0], __indexOf.call(SINGLE_CLOSERS, _ref) >= 0) && !(token[0] === 'ELSE' && starter !== 'THEN') && !(((_ref1 = token[0]) === 'CATCH' || _ref1 === 'FINALLY') && (starter === '->' || starter === '=>'));
+    };
+    action = function(token, i) {
+      return this.tokens.splice((this.tag(i - 1) === ',' ? i - 1 : i), 0, outdent);
+    };
+    return this.scanTokens(function(token, i, tokens) {
+      var j, tag, _i, _ref, _ref1;
+      tag = token[0];
+      if (tag === 'TERMINATOR' && this.tag(i + 1) === 'THEN') {
+        tokens.splice(i, 1);
+        return 0;
+      }
+      if (tag === 'ELSE' && this.tag(i - 1) !== 'OUTDENT') {
+        tokens.splice.apply(tokens, [i, 0].concat(__slice.call(this.indentation())));
+        return 2;
+      }
+      if (tag === 'CATCH') {
+        for (j = _i = 1; _i <= 2; j = ++_i) {
+          if (!((_ref = this.tag(i + j)) === 'OUTDENT' || _ref === 'TERMINATOR' || _ref === 'FINALLY')) {
+            continue;
+          }
+          tokens.splice.apply(tokens, [i + j, 0].concat(__slice.call(this.indentation())));
+          return 2 + j;
+        }
+      }
+      if (__indexOf.call(SINGLE_LINERS, tag) >= 0 && this.tag(i + 1) !== 'INDENT' && !(tag === 'ELSE' && this.tag(i + 1) === 'IF')) {
+        starter = tag;
+        _ref1 = this.indentation(true), indent = _ref1[0], outdent = _ref1[1];
+        if (starter === 'THEN') {
+          indent.fromThen = true;
+        }
+        tokens.splice(i + 1, 0, indent);
+        this.detectEnd(i + 2, condition, action);
+        if (tag === 'THEN') {
+          tokens.splice(i, 1);
+        }
+        return 1;
+      }
+      return 1;
+    });
+  };
+
+  Rewriter.prototype.tagPostfixConditionals = function() {
+    var action, condition, original;
+    original = null;
+    condition = function(token, i) {
+      var prevTag, tag;
+      tag = token[0];
+      prevTag = this.tokens[i - 1][0];
+      return tag === 'TERMINATOR' || (tag === 'INDENT' && __indexOf.call(SINGLE_LINERS, prevTag) < 0);
+    };
+    action = function(token, i) {
+      if (token[0] !== 'INDENT' || (token.generated && !token.fromThen)) {
+        return original[0] = 'POST_' + original[0];
+      }
+    };
+    return this.scanTokens(function(token, i) {
+      if (token[0] !== 'IF') {
+        return 1;
+      }
+      original = token;
+      this.detectEnd(i + 1, condition, action);
+      return 1;
+    });
+  };
+
+  Rewriter.prototype.indentation = function(implicit) {
+    var indent, outdent;
+    if (implicit == null) {
+      implicit = false;
+    }
+    indent = ['INDENT', 2];
+    outdent = ['OUTDENT', 2];
+    if (implicit) {
+      indent.generated = outdent.generated = true;
+    }
+    if (!implicit) {
+      indent.explicit = outdent.explicit = true;
+    }
+    return [indent, outdent];
+  };
+
+  Rewriter.prototype.generate = generate;
+
+  Rewriter.prototype.tag = function(i) {
+    var _ref;
+    return (_ref = this.tokens[i]) != null ? _ref[0] : void 0;
+  };
+
+  return Rewriter;
+
+})();
+
+BALANCED_PAIRS = [['(', ')'], ['[', ']'], ['{', '}'], ['INDENT', 'OUTDENT'], ['CALL_START', 'CALL_END'], ['PARAM_START', 'PARAM_END'], ['INDEX_START', 'INDEX_END']];
+
+exports.INVERSES = INVERSES = {};
+
+EXPRESSION_START = [];
+
+EXPRESSION_END = [];
+
+for (_i = 0, _len = BALANCED_PAIRS.length; _i < _len; _i++) {
+  _ref = BALANCED_PAIRS[_i], left = _ref[0], rite = _ref[1];
+  EXPRESSION_START.push(INVERSES[rite] = left);
+  EXPRESSION_END.push(INVERSES[left] = rite);
+}
+
+EXPRESSION_CLOSE = ['CATCH', 'WHEN', 'ELSE', 'FINALLY'].concat(EXPRESSION_END);
+
+IMPLICIT_FUNC = ['IDENTIFIER', 'SUPER', ')', 'CALL_END', ']', 'INDEX_END', '@', 'THIS'];
+
+IMPLICIT_CALL = ['IDENTIFIER', 'NUMBER', 'STRING', 'JS', 'REGEX', 'NEW', 'PARAM_START', 'CLASS', 'IF', 'TRY', 'SWITCH', 'THIS', 'BOOL', 'NULL', 'UNDEFINED', 'UNARY', 'SUPER', 'THROW', '@', '->', '=>', '[', '(', '{', '--', '++'];
+
+IMPLICIT_UNSPACED_CALL = ['+', '-'];
+
+IMPLICIT_END = ['POST_IF', 'FOR', 'WHILE', 'UNTIL', 'WHEN', 'BY', 'LOOP', 'TERMINATOR'];
+
+SINGLE_LINERS = ['ELSE', '->', '=>', 'TRY', 'FINALLY', 'THEN'];
+
+SINGLE_CLOSERS = ['TERMINATOR', 'CATCH', 'FINALLY', 'ELSE', 'OUTDENT', 'LEADING_WHEN'];
+
+LINEBREAKS = ['TERMINATOR', 'INDENT', 'OUTDENT'];
+
+});

@@ -1,1 +1,81 @@
-define(function(require,exports,module){{var e,t,n,r,i,o,s,a=module.uri||"";a.substring(0,a.lastIndexOf("/")+1)}s=r=require("hyper"),i=s._div,o=s._input,t=require("React"),n=t.addons.classSet,module.exports=r(e=function(){function e(){}return e.prototype.componentDidUpdate=function(){return this.props.focus?this.refs.fakeInput.getDOMNode().focus():void 0},e.prototype.handleKeyPress=function(e){switch(e.key){case"Backspace":return this.props.onDelete(this.props.key,this.props.position),e.preventDefault();case"ArrowRight":case"Tab":return this.props.onFocusSibling(this.props.position,1),e.preventDefault();case"ArrowLeft":return this.props.onFocusSibling(this.props.position,-1),e.preventDefault()}},e.prototype.handleClick=function(e){return e.target===this.getDOMNode()?this.props.onFocusSibling(this.props.position,0):this.props.onRemoveFocus()},e.prototype.render=function(){return i({id:this.props.key,key:this.props.key,className:n({log:!0,selected:this.props.focus}),style:{"max-width":this.props.width,cursor:"pointer"},onClick:this.handleClick},i({style:{overflow:"hidden",height:0,width:0}},o({ref:"fakeInput",style:{outline:"none"},onKeyDown:this.handleKeyPress})),i({style:{cursor:"auto"},dangerouslySetInnerHTML:this.props.html?{__html:this.props.html}:void 0},this.props.children))},e}())});
+define(function (require, exports, module) {
+  var __filename = module.uri || "", __dirname = __filename.substring(0, __filename.lastIndexOf("/") + 1);
+  var OutputDisplay, React, cx, hyper, _div, _input, _ref;
+
+_ref = hyper = require('hyper'), _div = _ref._div, _input = _ref._input;
+
+React = require('React');
+
+cx = React.addons.classSet;
+
+module.exports = hyper(OutputDisplay = (function() {
+  function OutputDisplay() {}
+
+  OutputDisplay.prototype.componentDidUpdate = function(prevProps, prevState) {
+    if (this.props.focus) {
+      return this.refs.fakeInput.getDOMNode().focus();
+    }
+  };
+
+  OutputDisplay.prototype.handleKeyPress = function(e) {
+    switch (e.key) {
+      case 'Backspace':
+        this.props.onDelete(this.props.outputId, this.props.position);
+        return e.preventDefault();
+      case 'ArrowRight':
+      case 'Tab':
+        this.props.onFocusSibling(this.props.position, 1);
+        return e.preventDefault();
+      case 'ArrowLeft':
+        this.props.onFocusSibling(this.props.position, -1);
+        return e.preventDefault();
+    }
+  };
+
+  OutputDisplay.prototype.handleClick = function(e) {
+    if (e.target === this.getDOMNode()) {
+      return this.props.onFocusSibling(this.props.position, 0);
+    } else {
+      return this.props.onRemoveFocus();
+    }
+  };
+
+  OutputDisplay.prototype.render = function() {
+    return _div({
+      id: this.props.outputId,
+      className: cx({
+        log: true,
+        selected: this.props.focus
+      }),
+      style: {
+        maxWidth: this.props.width,
+        cursor: 'pointer'
+      },
+      onClick: this.handleClick
+    }, _div({
+      style: {
+        overflow: 'hidden',
+        height: 0,
+        width: 0
+      }
+    }, _input({
+      ref: 'fakeInput',
+      style: {
+        outline: 'none'
+      },
+      onKeyDown: this.handleKeyPress
+    })), _div({
+      style: {
+        cursor: 'auto'
+      },
+      dangerouslySetInnerHTML: this.props.html ? {
+        __html: this.props.html
+      } : void 0
+    }, this.props.children));
+  };
+
+  return OutputDisplay;
+
+})());
+
+});

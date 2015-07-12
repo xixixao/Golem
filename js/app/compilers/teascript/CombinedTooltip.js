@@ -1,1 +1,47 @@
-define(function(require,exports,module){var e,t,n,i=module.uri||"",r=(i.substring(0,i.lastIndexOf("/")+1),{}.hasOwnProperty),o=function(e,t){function n(){this.constructor=e}for(var i in t)r.call(t,i)&&(e[i]=t[i]);return n.prototype=t.prototype,e.prototype=new n,e.__super__=t.prototype,e};n=require("ace/ace"),t=require("ace/token-tooltip").TokenTooltip,module.exports=e=function(e){function t(){return t.__super__.constructor.apply(this,arguments)}return o(t,e),t.prototype.getTokenAt=function(e){var t,n,i,r,o,s,a;for(o=e.row,t=e.column,r=this.editor.session.getMarkers(!0),a=function(){var e;e=[];for(n in r)i=r[n],e.push(i);return e}(),s=a.length-1;s>=0;s+=-1)if(i=a[s],i.range.contains(o,t))return i;return this.editor.session.getMode().getTokenAt({row:o,column:t})},t}(t)});
+define(function (require, exports, module) {
+  var __filename = module.uri || "", __dirname = __filename.substring(0, __filename.lastIndexOf("/") + 1);
+  var CombinedTooltip, TokenTooltip, ace,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+ace = require("ace/ace");
+
+TokenTooltip = require("ace/token-tooltip").TokenTooltip;
+
+module.exports = CombinedTooltip = (function(_super) {
+  __extends(CombinedTooltip, _super);
+
+  function CombinedTooltip() {
+    return CombinedTooltip.__super__.constructor.apply(this, arguments);
+  }
+
+  CombinedTooltip.prototype.getTokenAt = function(_arg) {
+    var column, id, marker, markers, row, _i, _ref;
+    row = _arg.row, column = _arg.column;
+    markers = this.editor.session.getMarkers(true);
+    _ref = (function() {
+      var _results;
+      _results = [];
+      for (id in markers) {
+        marker = markers[id];
+        _results.push(marker);
+      }
+      return _results;
+    })();
+    for (_i = _ref.length - 1; _i >= 0; _i += -1) {
+      marker = _ref[_i];
+      if (marker.range.contains(row, column)) {
+        return marker;
+      }
+    }
+    return this.editor.session.getMode().getTokenAt({
+      row: row,
+      column: column
+    });
+  };
+
+  return CombinedTooltip;
+
+})(TokenTooltip);
+
+});

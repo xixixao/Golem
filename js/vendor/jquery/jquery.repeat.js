@@ -1,1 +1,12 @@
-(function(){!function(e){return e.repeat=function(e,t){return Array(e+1).join(t)},e.join=function(e){return e.join("")}}(jQuery)}).call(this);
+(function() {
+
+  (function($) {
+    $.repeat = function(num, what) {
+      return Array(num + 1).join(what);
+    };
+    return $.join = function(array) {
+      return array.join('');
+    };
+  })(jQuery);
+
+}).call(this);

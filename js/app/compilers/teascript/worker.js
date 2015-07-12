@@ -1,1 +1,261 @@
-define(function(require,exports,module){var e,t,n,i,r,o,s,a,l,c,u,h=module.uri||"",d=(h.substring(0,h.lastIndexOf("/")+1),function(e,t){return function(){return e.apply(t,arguments)}}),p={}.hasOwnProperty,f=function(e,t){function n(){this.constructor=e}for(var i in t)p.call(t,i)&&(e[i]=t[i]);return n.prototype=t.prototype,e.prototype=new n,e.__super__=t.prototype,e};n=require("ace/worker/mirror").Mirror,c=window.require("ace/lib/oop"),e=require("ace/lib/event_emitter").EventEmitter,s=require("./compiler"),window.addEventListener=function(){},exports.Worker=function(e){function t(e){this.compile=d(this.compile,this),t.__super__.constructor.call(this,e),this.setTimeout(20),this.compiler=s}return f(t,e),t.prototype.setModuleName=function(e){this.moduleName=e},t.prototype.compileModule=function(e,t){return this._compile(e,t,!1)},t.prototype.onUpdate=function(){return this.compile()},t.prototype.compile=function(){var e;return e=this.doc.getValue(),this._compile(e,this.moduleName,!0)},t.prototype._compile=function(e,t,n){var i,r,a;console.log("worker: compiling "+t+", current: "+n);try{return a=o(s.compileTopLevel,e,t),a.request?(r=this.sender.on("ok",function(i){return function(o){return o.moduleName===a.request?(i.sender.off("ok",r),i._compile(e,t,n)):void 0}}(this)),this.sender.emit("request",{moduleName:a.request})):(this.sender.emit("ok",{result:a,source:e}),this.sender._emit("ok",{moduleName:t}))}catch(l){return i=l,console.log(i.stack),this.sender.emit("error",{text:i.message,type:"error",source:e,inDependency:!n})}},t.prototype.matchingDefinitions=function(e,t){var n;return n=s.findMatchingDefinitions(this.moduleName,e),this.sender.callback(n,t)},t.prototype.availableTypes=function(e,t){var n;return n=s.findAvailableTypes(this.moduleName,e),this.sender.callback(n,t)},t.prototype.docsFor=function(e,t){var n;return n=s.findDocsFor(this.moduleName,e),this.sender.callback(n,t)},t.prototype.expand=function(e,t){var n;return n=s.expand(this.moduleName,e),this.sender.callback(n,t)},t.prototype.compileBuild=function(e,t){var n;return n=s.compileModule(e),this.sender.callback(n,t)},t}(n),a=function(e){var t,n,i;return i=void 0,t=!0,n=function(e,n){return function(){return t=!0,e?void 0:n()}},function(r,o){var s;return null==o&&(o=!1),null!=i&&clearTimeout(i),s=t||o,s&&r(),i=setTimeout(n(s,r),e),t=!1}},t=function(e){function t(e){t.__super__.constructor.call(this,e)}return f(t,e),t.prototype.onUpdate=function(e){var t,n;if(n=this.doc.getValue(),":"===n[0]){if(e)return this.sender.emit("ok",{result:n.slice(1),commandSource:n,type:"command"})}else try{return console.log("expression worker compiling",this.moduleName),this.sender.emit("ok",{type:e?"execute":"normal",commandSource:n,result:this.compiler.compileExpression(n,this.moduleName)})}catch(i){t=i,console.log(t.stack),this.sender.emit("error",{text:t.message,type:"error",commandSource:n})}},t}(exports.Worker),r={},o=function(e,t,n){var i,o,s;return(null!=(s=i=r[n])?s.source:void 0)===t&&i?(console.log(""+n+" was cached."),i.result):(o=e(t,n),o.request||(r[n]={source:t,result:o}),o)},i=function(){function t(t){this.id=t,c.implement(this,e)}return t.prototype.callback=function(e,t){return postMessage({type:"call",identifier:this.id,id:t,data:e})},t.prototype.emit=function(e,t){return postMessage({type:"event",identifier:this.id,name:e,data:t})},t}(),u={},l=window.onmessage,window.onmessage=function(e){var n,r,o,s,a;if(o=e.data,r=window.main,s=window.sender,n=o.identifier,!s||!n)return l(e);if((a=u[n])||(a=u[n]=new t(new i(n))),o.command){if(a[o.command])return a[o.command].apply(a,o.args);throw new Error("Unknown command:"+o.command)}return o.event?a.sender._signal(o.event,o.data):void 0}});
+define(function (require, exports, module) {
+  var __filename = module.uri || "", __dirname = __filename.substring(0, __filename.lastIndexOf("/") + 1);
+  var AdhocWorker, EventEmitter, Mirror, Sender, cache, cacheModule, compiler, delay, inheritedOnMessage, oop, workers,
+  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+Mirror = require("ace/worker/mirror").Mirror;
+
+oop = window.require("ace/lib/oop");
+
+EventEmitter = require("ace/lib/event_emitter").EventEmitter;
+
+compiler = require("./compiler");
+
+window.addEventListener = function() {};
+
+exports.Worker = (function(_super) {
+  __extends(_Class, _super);
+
+  function _Class(sender) {
+    this.compile = __bind(this.compile, this);
+    _Class.__super__.constructor.call(this, sender);
+    this.setTimeout(20);
+  }
+
+  _Class.prototype.setModuleName = function(moduleName) {
+    this.moduleName = moduleName;
+  };
+
+  _Class.prototype.compileModule = function(value, moduleName) {
+    return this._compile(value, moduleName, false);
+  };
+
+  _Class.prototype.onUpdate = function() {
+    return this.compile();
+  };
+
+  _Class.prototype.compile = function() {
+    var value;
+    value = this.doc.getValue();
+    return this._compile(value, this.moduleName, true);
+  };
+
+  _Class.prototype._compile = function(value, moduleName, current) {
+    var e, listening, result;
+    console.log("worker: compiling " + moduleName + ", current: " + current);
+    try {
+      result = cacheModule(compiler.compileModuleTopLevel, value, moduleName);
+      if (result.request) {
+        listening = this.sender.on('ok', (function(_this) {
+          return function(requested) {
+            if (requested.moduleName === result.request) {
+              _this.sender.off('ok', listening);
+              return _this._compile(value, moduleName, current);
+            }
+          };
+        })(this));
+        return this.sender.emit("request", {
+          moduleName: result.request
+        });
+      } else {
+        this.sender.emit("ok", {
+          result: result,
+          source: value
+        });
+        return this.sender._emit("ok", {
+          moduleName: moduleName
+        });
+      }
+    } catch (_error) {
+      e = _error;
+      console.log(e.stack);
+      return this.sender.emit("error", {
+        text: e.message,
+        type: 'error',
+        source: value,
+        inDependency: !current
+      });
+    }
+  };
+
+  _Class.prototype.methods = {
+    parseExpression: function(source) {
+      return compiler.parseExpression(this.moduleName, source);
+    },
+    matchingDefinitions: function(reference) {
+      return compiler.findMatchingDefinitions(this.moduleName, reference);
+    },
+    availableTypes: function(inferredType) {
+      return compiler.findAvailableTypes(this.moduleName, inferredType);
+    },
+    docsFor: function(reference) {
+      return compiler.findDocsFor(this.moduleName, reference);
+    },
+    expand: function(expression) {
+      return compiler.expand(this.moduleName, expression);
+    },
+    compileBuild: function(moduleName) {
+      return compiler.compileModuleWithDependencies(moduleName);
+    }
+  };
+
+  return _Class;
+
+})(Mirror);
+
+delay = function(duration) {
+  var ready, reset, timeout;
+  timeout = void 0;
+  ready = true;
+  reset = function(executed, fn) {
+    return function() {
+      ready = true;
+      if (!executed) {
+        return fn();
+      }
+    };
+  };
+  return function(fn, force) {
+    var run;
+    if (force == null) {
+      force = false;
+    }
+    if (timeout != null) {
+      clearTimeout(timeout);
+    }
+    run = ready || force;
+    if (run) {
+      fn();
+    }
+    timeout = setTimeout(reset(run, fn), duration);
+    return ready = false;
+  };
+};
+
+AdhocWorker = (function(_super) {
+  __extends(AdhocWorker, _super);
+
+  function AdhocWorker(sender) {
+    AdhocWorker.__super__.constructor.call(this, sender);
+    this.compilationFn = compiler.compileExpression;
+  }
+
+  AdhocWorker.prototype.onUpdate = function(execute) {
+    var e, value;
+    value = this.doc.getValue();
+    if (value[0] === ':') {
+      if (execute) {
+        return this.sender.emit("ok", {
+          result: value.slice(1),
+          commandSource: value,
+          type: 'command'
+        });
+      }
+    } else if (value !== '') {
+      try {
+        console.log("expression worker compiling", this.moduleName);
+        return this.sender.emit("ok", {
+          type: (execute ? 'execute' : 'normal'),
+          commandSource: value,
+          result: this.compilationFn(value, this.moduleName)
+        });
+      } catch (_error) {
+        e = _error;
+        console.log(e.stack);
+        console.log(e);
+        this.sender.emit("error", {
+          text: e.message,
+          type: 'error',
+          commandSource: value
+        });
+      }
+    }
+  };
+
+  AdhocWorker.prototype.parseOnly = function(isTopLevel) {
+    return this.compilationFn = isTopLevel ? compiler.parseTopLevel : compiler.parseExpression;
+  };
+
+  return AdhocWorker;
+
+})(exports.Worker);
+
+cache = {};
+
+cacheModule = function(fn, source, moduleName) {
+  var old, result, _ref;
+  if (((_ref = (old = cache[moduleName])) != null ? _ref.source : void 0) === source && old) {
+    console.log("" + moduleName + " was cached.");
+    return old.result;
+  } else {
+    result = fn(source, moduleName);
+    if (!result.request) {
+      cache[moduleName] = {
+        source: source,
+        result: result
+      };
+    }
+    return result;
+  }
+};
+
+Sender = (function() {
+  function Sender(id) {
+    this.id = id;
+    oop.implement(this, EventEmitter);
+  }
+
+  Sender.prototype.callback = function(data, callbackId) {
+    return postMessage({
+      type: "call",
+      identifier: this.id,
+      id: callbackId,
+      data: data
+    });
+  };
+
+  Sender.prototype.emit = function(name, data) {
+    return postMessage({
+      type: "event",
+      identifier: this.id,
+      name: name,
+      data: data
+    });
+  };
+
+  return Sender;
+
+})();
+
+workers = {};
+
+inheritedOnMessage = window.onmessage;
+
+window.onmessage = function(e) {
+  var id, main, msg, sender, worker, _ref;
+  msg = e.data;
+  main = window.main;
+  sender = window.sender;
+  id = msg.identifier;
+  if (sender && (id != null) || main && msg.command) {
+    worker = id != null ? workers[id] != null ? workers[id] : workers[id] = new AdhocWorker(new Sender(id), msg) : main;
+    if (msg.command) {
+      if (worker.methods[msg.command]) {
+        _ref = msg.args, id = _ref[_ref.length - 1];
+        return worker.sender.callback(worker.methods[msg.command].apply(worker, msg.args), id);
+      } else if (worker[msg.command]) {
+        return worker[msg.command].apply(worker, msg.args);
+      } else {
+        throw new Error("Unknown command: " + msg.command);
+      }
+    } else if (msg.event) {
+      return worker.sender._signal(msg.event, msg.data);
+    }
+  } else {
+    return inheritedOnMessage(e);
+  }
+};
+
+});

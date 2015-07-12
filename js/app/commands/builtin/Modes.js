@@ -1,1 +1,155 @@
-define(function(require,exports,module){{var e,t,n,r,i,o,s,a,l,c,u,h,d,p,f,m,g=module.uri||"";g.substring(0,g.lastIndexOf("/")+1)}h=require("hyper"),c=h._div,u=h._p,d=h._table,p=h._tbody,m=h._tr,f=h._td,l=h._code,a=h._b,s=hyper(r=function(){function e(){}return e.prototype.render=function(){return d(p({},this.props.modes.map(function(e){return function(t){var n,r;return n=t.id,r=t.name,m({},f(n===e.props.current?">":void 0),f(r))}}(this))))},e}()),i=function(){function e(){}return e.defaultSymbols=["mode"],e.description="Switch to a different compiler",e.symbols=e.defaultSymbols,e.execute=function(e,t,n){var r,i;return i=e[0],r=t.modes.getId(i),r?n.refs.sourceEditor.setMode(r):n.log(c({},"Wrong mode name, choose from:",s({modes:t.modes.getAll()}))),{}},e}(),n=function(){function e(){}return e.defaultSymbols=["modes","m"],e.description="List all available modes",e.symbols=e.defaultSymbols,e.execute=function(e,t,n){return n.log(s({modes:t.modes.getAll(),current:n.refs.sourceEditor.mode}))},e}(),o=hyper(e=function(){function e(){}return e.prototype.shouldList=function(e,t){return e.bindKey&&e.document!==!1&&/\s/.test(t)},e.prototype.highlight=function(e){return e.replace(/([A-Z])/g,"<u>$1</u>")},e.prototype.shortcut=function(e){var t,n;return t=this.props.platform,(null!=(n=e.logicalKey)?n[t]:void 0)||e.bindKey[t]},e.prototype.render=function(){var e,t;return d(p({},function(){var n,r;n=this.props.commands,r=[];for(t in n)e=n[t],this.shouldList(e,t)&&r.push(m({key:t},f({style:{"vertical-align":"top"}},""+this.shortcut(e)+" "),f({style:{"vertical-align":"top"},dangerouslySetInnerHTML:{__html:this.highlight(t)}})));return r}.call(this)))},e}()),t=function(){function e(){}return e.defaultSymbols=["keys"],e.description="List editing keyboard shortcuts",e.symbols=e.defaultSymbols,e.execute=function(e,t,n){return n.log(o({commands:t.mode.editor.commands.commands,platform:t.mode.editor.commands.platform}))},e}(),module.exports=[t]});
+define(function (require, exports, module) {
+  var __filename = module.uri || "", __dirname = __filename.substring(0, __filename.lastIndexOf("/") + 1);
+  var KeyboardShortcutsList, ListKeyboardShortcutsCommand, ListModesCommand, ModeBrowser, SwitchModeCommand, _KeyboardShortcutsList, _ModeBrowser, _b, _code, _div, _p, _ref, _table, _tbody, _td, _tr;
+
+_ref = require('hyper'), _div = _ref._div, _p = _ref._p, _table = _ref._table, _tbody = _ref._tbody, _tr = _ref._tr, _td = _ref._td, _code = _ref._code, _b = _ref._b;
+
+_ModeBrowser = hyper(ModeBrowser = (function() {
+  function ModeBrowser() {}
+
+  ModeBrowser.prototype.render = function() {
+    return _table(_tbody({}, this.props.modes.map((function(_this) {
+      return function(_arg) {
+        var id, name;
+        id = _arg.id, name = _arg.name;
+        return _tr({}, _td(id === _this.props.current ? '>' : void 0), _td(name));
+      };
+    })(this))));
+  };
+
+  return ModeBrowser;
+
+})());
+
+SwitchModeCommand = (function() {
+  function SwitchModeCommand() {}
+
+  SwitchModeCommand.defaultSymbols = ['mode'];
+
+  SwitchModeCommand.description = 'Switch to a different compiler';
+
+  SwitchModeCommand.symbols = SwitchModeCommand.defaultSymbols;
+
+  SwitchModeCommand.execute = function(_arg, state, editor) {
+    var modeId, name;
+    name = _arg[0];
+    modeId = state.modes.getId(name);
+    if (modeId) {
+      editor.refs.sourceEditor.setMode(modeId);
+    } else {
+      editor.log(_div({}, "Wrong mode name, choose from:", _ModeBrowser({
+        modes: state.modes.getAll()
+      })));
+    }
+    return {};
+  };
+
+  return SwitchModeCommand;
+
+})();
+
+ListModesCommand = (function() {
+  function ListModesCommand() {}
+
+  ListModesCommand.defaultSymbols = ['modes', 'm'];
+
+  ListModesCommand.description = 'List all available modes';
+
+  ListModesCommand.symbols = ListModesCommand.defaultSymbols;
+
+  ListModesCommand.execute = function(args, state, editor) {
+    return editor.log(_ModeBrowser({
+      modes: state.modes.getAll(),
+      current: editor.refs.sourceEditor.mode
+    }));
+  };
+
+  return ListModesCommand;
+
+})();
+
+_KeyboardShortcutsList = hyper(KeyboardShortcutsList = (function() {
+  function KeyboardShortcutsList() {}
+
+  KeyboardShortcutsList.prototype.shouldList = function(command, name) {
+    return command.bindKey && command.document !== false && /\s/.test(name);
+  };
+
+  KeyboardShortcutsList.prototype.highlight = function(name) {
+    return name.replace(/([A-Z])/g, "<u>$1</u>");
+  };
+
+  KeyboardShortcutsList.prototype.shortcut = function(command) {
+    var platform, _ref1;
+    platform = this.props.platform;
+    return ((_ref1 = command.logicalKey) != null ? _ref1[platform] : void 0) || command.bindKey[platform];
+  };
+
+  KeyboardShortcutsList.prototype.executeShortcut = function(command) {
+    return (function(_this) {
+      return function() {
+        return _this.props.editor.execCommand(command);
+      };
+    })(this);
+  };
+
+  KeyboardShortcutsList.prototype.render = function() {
+    var command, name;
+    return _table(_tbody({}, (function() {
+      var _ref1, _results;
+      _ref1 = this.props.commands;
+      _results = [];
+      for (name in _ref1) {
+        command = _ref1[name];
+        if (this.shouldList(command, name)) {
+          _results.push(_tr({
+            key: name
+          }, _td({
+            className: 'colorHighlightHover',
+            onClick: this.executeShortcut(command),
+            style: {
+              verticalAlign: 'top',
+              cursor: 'pointer'
+            }
+          }, "" + (this.shortcut(command)) + " "), _td({
+            style: {
+              verticalAlign: 'top'
+            },
+            dangerouslySetInnerHTML: {
+              __html: this.highlight(name)
+            }
+          })));
+        }
+      }
+      return _results;
+    }).call(this)));
+  };
+
+  return KeyboardShortcutsList;
+
+})());
+
+ListKeyboardShortcutsCommand = (function() {
+  function ListKeyboardShortcutsCommand() {}
+
+  ListKeyboardShortcutsCommand.defaultSymbols = ['keys'];
+
+  ListKeyboardShortcutsCommand.description = 'List editing keyboard shortcuts';
+
+  ListKeyboardShortcutsCommand.symbols = ListKeyboardShortcutsCommand.defaultSymbols;
+
+  ListKeyboardShortcutsCommand.execute = function(args, state, editor) {
+    return editor.log(_KeyboardShortcutsList({
+      editor: state.mode.editor,
+      commands: state.mode.editor.commands.commands,
+      platform: state.mode.editor.commands.platform
+    }));
+  };
+
+  return ListKeyboardShortcutsCommand;
+
+})();
+
+module.exports = [ListKeyboardShortcutsCommand];
+
+});

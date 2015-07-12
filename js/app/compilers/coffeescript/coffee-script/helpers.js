@@ -1,1 +1,223 @@
-define(function(require,exports,module){{var e,t,n,r,i,o,s=module.uri||"";s.substring(0,s.lastIndexOf("/")+1)}exports.starts=function(e,t,n){return t===e.substr(n,t.length)},exports.ends=function(e,t,n){var r;return r=t.length,t===e.substr(e.length-r-(n||0),r)},exports.repeat=i=function(e,t){var n;for(n="";t>0;)1&t&&(n+=e),t>>>=1,e+=e;return n},exports.compact=function(e){var t,n,r,i;for(i=[],n=0,r=e.length;r>n;n++)t=e[n],t&&i.push(t);return i},exports.count=function(e,t){var n,r;if(n=r=0,!t.length)return 1/0;for(;r=1+e.indexOf(t,r);)n++;return n},exports.merge=function(e,n){return t(t({},e),n)},t=exports.extend=function(e,t){var n,r;for(n in t)r=t[n],e[n]=r;return e},exports.flatten=n=function(e){var t,r,i,o;for(r=[],i=0,o=e.length;o>i;i++)t=e[i],t instanceof Array?r=r.concat(n(t)):r.push(t);return r},exports.del=function(e,t){var n;return n=e[t],delete e[t],n},exports.last=r=function(e,t){return e[e.length-(t||0)-1]},exports.some=null!=(o=Array.prototype.some)?o:function(e){var t,n,r;for(n=0,r=this.length;r>n;n++)if(t=this[n],e(t))return!0;return!1},exports.invertLiterate=function(e){var t,n,r;return r=!0,n=function(){var n,i,o,s;for(o=e.split("\n"),s=[],n=0,i=o.length;i>n;n++)t=o[n],s.push(r&&/^([ ]{4}|[ ]{0,3}\t)/.test(t)?t:(r=/^\s*$/.test(t))?t:"# "+t);return s}(),n.join("\n")},e=function(e,t){return t?{first_line:e.first_line,first_column:e.first_column,last_line:t.last_line,last_column:t.last_column}:e},exports.addLocationDataFn=function(t,n){return function(r){return"object"==typeof r&&r.updateLocationDataIfMissing&&r.updateLocationDataIfMissing(e(t,n)),r}},exports.locationDataToString=function(e){var t;return"2"in e&&"first_line"in e[2]?t=e[2]:"first_line"in e&&(t=e),t?""+(t.first_line+1)+":"+(t.first_column+1)+"-"+(""+(t.last_line+1)+":"+(t.last_column+1)):"No location data"},exports.baseFileName=function(e,t,n){var r,i;return null==t&&(t=!1),null==n&&(n=!1),i=n?/\\|\//:/\//,r=e.split(i),e=r[r.length-1],t?(r=e.split("."),r.pop(),"coffee"===r[r.length-1]&&r.length>1&&r.pop(),r.join(".")):e},exports.isCoffee=function(e){return/\.((lit)?coffee|coffee\.md)$/.test(e)},exports.isLiterate=function(e){return/\.(litcoffee|coffee\.md)$/.test(e)},exports.throwSyntaxError=function(e,t){var n;throw null==t.last_line&&(t.last_line=t.first_line),null==t.last_column&&(t.last_column=t.first_column),n=new SyntaxError(e),n.location=t,n},exports.prettyErrorMessage=function(e,t,n,r){var o,s,a,l,c,u,h,d,p,f,m;return e.location?(m=e.location,c=m.first_line,l=m.first_column,h=m.last_line,u=m.last_column,o=n.split("\n")[c],f=l,a=c===h?u+1:o.length,d=i(" ",f)+i("^",a-f),r&&(s=function(e){return"[1;31m"+e+"[0m"},o=o.slice(0,f)+s(o.slice(f,a))+o.slice(a),d=s(d)),p=""+t+":"+(c+1)+":"+(l+1)+": error: "+e.message+"\n"+o+"\n"+d):e.stack||""+e}});
+define(function (require, exports, module) {
+  var __filename = module.uri || "", __dirname = __filename.substring(0, __filename.lastIndexOf("/") + 1);
+  var buildLocationData, extend, flatten, last, repeat, _ref;
+
+exports.starts = function(string, literal, start) {
+  return literal === string.substr(start, literal.length);
+};
+
+exports.ends = function(string, literal, back) {
+  var len;
+  len = literal.length;
+  return literal === string.substr(string.length - len - (back || 0), len);
+};
+
+exports.repeat = repeat = function(str, n) {
+  var res;
+  res = '';
+  while (n > 0) {
+    if (n & 1) {
+      res += str;
+    }
+    n >>>= 1;
+    str += str;
+  }
+  return res;
+};
+
+exports.compact = function(array) {
+  var item, _i, _len, _results;
+  _results = [];
+  for (_i = 0, _len = array.length; _i < _len; _i++) {
+    item = array[_i];
+    if (item) {
+      _results.push(item);
+    }
+  }
+  return _results;
+};
+
+exports.count = function(string, substr) {
+  var num, pos;
+  num = pos = 0;
+  if (!substr.length) {
+    return 1 / 0;
+  }
+  while (pos = 1 + string.indexOf(substr, pos)) {
+    num++;
+  }
+  return num;
+};
+
+exports.merge = function(options, overrides) {
+  return extend(extend({}, options), overrides);
+};
+
+extend = exports.extend = function(object, properties) {
+  var key, val;
+  for (key in properties) {
+    val = properties[key];
+    object[key] = val;
+  }
+  return object;
+};
+
+exports.flatten = flatten = function(array) {
+  var element, flattened, _i, _len;
+  flattened = [];
+  for (_i = 0, _len = array.length; _i < _len; _i++) {
+    element = array[_i];
+    if (element instanceof Array) {
+      flattened = flattened.concat(flatten(element));
+    } else {
+      flattened.push(element);
+    }
+  }
+  return flattened;
+};
+
+exports.del = function(obj, key) {
+  var val;
+  val = obj[key];
+  delete obj[key];
+  return val;
+};
+
+exports.last = last = function(array, back) {
+  return array[array.length - (back || 0) - 1];
+};
+
+exports.some = (_ref = Array.prototype.some) != null ? _ref : function(fn) {
+  var e, _i, _len;
+  for (_i = 0, _len = this.length; _i < _len; _i++) {
+    e = this[_i];
+    if (fn(e)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+exports.invertLiterate = function(code) {
+  var line, lines, maybe_code;
+  maybe_code = true;
+  lines = (function() {
+    var _i, _len, _ref1, _results;
+    _ref1 = code.split('\n');
+    _results = [];
+    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+      line = _ref1[_i];
+      if (maybe_code && /^([ ]{4}|[ ]{0,3}\t)/.test(line)) {
+        _results.push(line);
+      } else if (maybe_code = /^\s*$/.test(line)) {
+        _results.push(line);
+      } else {
+        _results.push('# ' + line);
+      }
+    }
+    return _results;
+  })();
+  return lines.join('\n');
+};
+
+buildLocationData = function(first, last) {
+  if (!last) {
+    return first;
+  } else {
+    return {
+      first_line: first.first_line,
+      first_column: first.first_column,
+      last_line: last.last_line,
+      last_column: last.last_column
+    };
+  }
+};
+
+exports.addLocationDataFn = function(first, last) {
+  return function(obj) {
+    if (((typeof obj) === 'object') && (!!obj['updateLocationDataIfMissing'])) {
+      obj.updateLocationDataIfMissing(buildLocationData(first, last));
+    }
+    return obj;
+  };
+};
+
+exports.locationDataToString = function(obj) {
+  var locationData;
+  if (("2" in obj) && ("first_line" in obj[2])) {
+    locationData = obj[2];
+  } else if ("first_line" in obj) {
+    locationData = obj;
+  }
+  if (locationData) {
+    return ("" + (locationData.first_line + 1) + ":" + (locationData.first_column + 1) + "-") + ("" + (locationData.last_line + 1) + ":" + (locationData.last_column + 1));
+  } else {
+    return "No location data";
+  }
+};
+
+exports.baseFileName = function(file, stripExt, useWinPathSep) {
+  var parts, pathSep;
+  if (stripExt == null) {
+    stripExt = false;
+  }
+  if (useWinPathSep == null) {
+    useWinPathSep = false;
+  }
+  pathSep = useWinPathSep ? /\\|\// : /\//;
+  parts = file.split(pathSep);
+  file = parts[parts.length - 1];
+  if (!stripExt) {
+    return file;
+  }
+  parts = file.split('.');
+  parts.pop();
+  if (parts[parts.length - 1] === 'coffee' && parts.length > 1) {
+    parts.pop();
+  }
+  return parts.join('.');
+};
+
+exports.isCoffee = function(file) {
+  return /\.((lit)?coffee|coffee\.md)$/.test(file);
+};
+
+exports.isLiterate = function(file) {
+  return /\.(litcoffee|coffee\.md)$/.test(file);
+};
+
+exports.throwSyntaxError = function(message, location) {
+  var error;
+  if (location.last_line == null) {
+    location.last_line = location.first_line;
+  }
+  if (location.last_column == null) {
+    location.last_column = location.first_column;
+  }
+  error = new SyntaxError(message);
+  error.location = location;
+  throw error;
+};
+
+exports.prettyErrorMessage = function(error, fileName, code, useColors) {
+  var codeLine, colorize, end, first_column, first_line, last_column, last_line, marker, message, start, _ref1;
+  if (!error.location) {
+    return error.stack || ("" + error);
+  }
+  _ref1 = error.location, first_line = _ref1.first_line, first_column = _ref1.first_column, last_line = _ref1.last_line, last_column = _ref1.last_column;
+  codeLine = code.split('\n')[first_line];
+  start = first_column;
+  end = first_line === last_line ? last_column + 1 : codeLine.length;
+  marker = repeat(' ', start) + repeat('^', end - start);
+  if (useColors) {
+    colorize = function(str) {
+      return "\x1B[1;31m" + str + "\x1B[0m";
+    };
+    codeLine = codeLine.slice(0, start) + colorize(codeLine.slice(start, end)) + codeLine.slice(end);
+    marker = colorize(marker);
+  }
+  message = "" + fileName + ":" + (first_line + 1) + ":" + (first_column + 1) + ": error: " + error.message + "\n" + codeLine + "\n" + marker;
+  return message;
+};
+
+});

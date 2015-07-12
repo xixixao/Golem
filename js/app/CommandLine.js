@@ -1,1 +1,198 @@
-define(function(require,exports,module){{var e,t,n,r,i,o,a,s=module.uri||"";s.substring(0,s.lastIndexOf("/")+1)}r=require("React"),a=(o=require("hyper"))._div,e=require("ejquery"),i=require("./AceEditor"),n=require("./CommandMode"),module.exports=o(t=function(){function t(){}return t.prototype.propTypes={timeline:r.PropTypes.object.isRequired,onCommandExecution:r.PropTypes.func.isRequired,onCommandCompiled:r.PropTypes.func.isRequired,onCommandFailed:r.PropTypes.func.isRequired},t.prototype.getInitialState=function(){return{backgroundColor:"#222"}},t.prototype.handleMouseEnter=function(){return this.editor.focus(),this.props.onFocus()},t.prototype._getEditorNode=function(){return this.refs.ace.getDOMNode()},t.prototype.componentWillReceiveProps=function(t){var n,r,i;return n=t.focus,r=t.moduleName,i=t.updatedSource,n?this.editor.focus():e("input").blur(),i!==this.props.updatedSource&&this.editor.session.getMode().updateWorker(!1),this.editor.session.getMode().reportModuleName(r)},t.prototype.componentDidMount=function(){var t,r,o,a;return o=new n("COMMAND_LINE",this.props.completers),this.editor=r=i.edit(this._getEditorNode(),o,"ace/theme/tea"),r.setFontSize(13),r.renderer.setScrollMargin(2,2),r.setHighlightActiveLine(!1),r.setShowPrintMargin(!1),r.renderer.setShowGutter(!1),o.registerWithWorker(this.props.worker),o.setContent("",null,this.props.moduleName),r.renderer.on("themeLoaded",function(t){return function(){return t.setState({backgroundColor:e(t._getEditorNode()).css("background-color")})}}(this)),r.commands.addCommand({name:"execute",bindKey:{win:"Enter",mac:"Enter"},exec:function(){return function(){return o.handleEnter(),o.updateWorker(!0)}}(this)}),a=this.props.timeline,r.commands.addCommand({name:"previous",bindKey:{win:"Up",mac:"Up"},exec:function(){return a.isInPast()||a.temp(r.getValue()),o.setContent(a.goBack())}}),r.commands.addCommand({name:"following",bindKey:{win:"Down",mac:"Down"},exec:function(){return a.isInPast()?o.setContent(a.goForward()):void 0}}),r.commands.addCommand({name:"leave",bindKey:{win:"Esc",mac:"Esc"},exec:this.props.onLeave}),r.commands.addCommand({name:"jump to output",bindKey:{win:"Tab",mac:"Tab"},exec:function(e){return function(){return e.props.onFocusOutput(0)}}(this)}),r.commands.addCommand({name:"erase all output",bindKey:{win:"Ctrl-Shift-Backspace",mac:"Command-Shift-Backspace"},exec:function(e){return function(){return e.props.onRemoveAll()}}(this)}),t=o.worker,this.props.memory.loadCommands(a),t.on("ok",function(e){return function(t){var n,i,s,u,l;return l=t.data,i=l.result,u=l.type,n=l.commandSource,s=r.getValue(),s===n?"execute"===u||"command"===u?s.length>0?(a.push(s),"command"!==u&&o.setContent(""),o.resetEditing(),e.props.onCommandExecution(s,e.props.moduleName,i,u),e.props.memory.saveCommands(a)):e.props.onCommandCompiled():(o.updateAst(i.ast),e.props.onCommandCompiled()):void 0}}(this)),t.on("error",function(e){return function(t){var n;return n=t.data.text,console.log("command line error",n),e.props.onCommandFailed(n)}}(this))},t.prototype.render=function(){return a({onMouseEnter:this.handleMouseEnter},a({className:"areaBorder",style:{backgroundColor:this.state.backgroundColor}},a({ref:"ace",style:{width:"100%",height:23}})))},t}())});
+define(function (require, exports, module) {
+  var __filename = module.uri || "", __dirname = __filename.substring(0, __filename.lastIndexOf("/") + 1);
+  var $, CommandLine, CommandMode, React, ace, hyper, _div;
+
+React = require('React');
+
+_div = (hyper = require('hyper'))._div;
+
+$ = require('ejquery');
+
+ace = require('./AceEditor');
+
+CommandMode = require('./CommandMode');
+
+module.exports = hyper(CommandLine = (function() {
+  function CommandLine() {}
+
+  CommandLine.prototype.propTypes = {
+    timeline: React.PropTypes.object.isRequired,
+    onCommandExecution: React.PropTypes.func.isRequired,
+    onCommandCompiled: React.PropTypes.func.isRequired,
+    onCommandFailed: React.PropTypes.func.isRequired
+  };
+
+  CommandLine.prototype.getInitialState = function() {
+    return {
+      backgroundColor: '#222'
+    };
+  };
+
+  CommandLine.prototype.handleMouseEnter = function() {
+    this.editor.focus();
+    return this.props.onFocus();
+  };
+
+  CommandLine.prototype._getEditorNode = function() {
+    return this.refs.ace.getDOMNode();
+  };
+
+  CommandLine.prototype.componentWillReceiveProps = function(_arg) {
+    var focus, moduleName, updatedSource;
+    focus = _arg.focus, moduleName = _arg.moduleName, updatedSource = _arg.updatedSource;
+    if (focus) {
+      this.editor.focus();
+    } else {
+      $('input').blur();
+    }
+    if (updatedSource !== this.props.updatedSource) {
+      this.editor.session.getMode().updateWorker(false);
+    }
+    return this.editor.session.getMode().assignModuleName(moduleName);
+  };
+
+  CommandLine.prototype.componentDidMount = function() {
+    var commandWorker, editor, mode, timeline;
+    mode = new CommandMode("COMMAND_LINE", this.props.completers);
+    this.editor = editor = ace.edit(this._getEditorNode(), mode, "ace/theme/tea");
+    editor.setFontSize(13);
+    editor.renderer.setScrollMargin(2, 2);
+    editor.setHighlightActiveLine(false);
+    editor.setShowPrintMargin(false);
+    editor.renderer.setShowGutter(false);
+    mode.registerWithWorker(this.props.worker);
+    mode.setContent("", null, this.props.moduleName);
+    editor.renderer.on('themeLoaded', (function(_this) {
+      return function() {
+        return _this.setState({
+          backgroundColor: $(_this._getEditorNode()).css('background-color')
+        });
+      };
+    })(this));
+    editor.commands.addCommand({
+      name: 'execute',
+      bindKey: {
+        win: 'Enter',
+        mac: 'Enter'
+      },
+      exec: (function(_this) {
+        return function() {
+          mode.handleEnter();
+          return mode.updateWorker(true);
+        };
+      })(this)
+    });
+    timeline = this.props.timeline;
+    editor.commands.addCommand({
+      name: 'previous',
+      bindKey: {
+        win: 'Up',
+        mac: 'Up'
+      },
+      exec: function() {
+        if (!timeline.isInPast()) {
+          timeline.temp(editor.getValue());
+        }
+        return mode.setContent(timeline.goBack());
+      }
+    });
+    editor.commands.addCommand({
+      name: 'following',
+      bindKey: {
+        win: 'Down',
+        mac: 'Down'
+      },
+      exec: function() {
+        if (timeline.isInPast()) {
+          return mode.setContent(timeline.goForward());
+        }
+      }
+    });
+    editor.commands.addCommand({
+      name: 'leave',
+      bindKey: {
+        win: 'Esc',
+        mac: 'Esc'
+      },
+      exec: this.props.onLeave
+    });
+    editor.commands.addCommand({
+      name: 'jump to output',
+      bindKey: {
+        win: 'Tab',
+        mac: 'Tab'
+      },
+      exec: (function(_this) {
+        return function() {
+          return _this.props.onFocusOutput(0);
+        };
+      })(this)
+    });
+    editor.commands.addCommand({
+      name: 'erase all output',
+      bindKey: {
+        win: 'Ctrl-Shift-Backspace',
+        mac: 'Command-Shift-Backspace'
+      },
+      exec: (function(_this) {
+        return function() {
+          return _this.props.onRemoveAll();
+        };
+      })(this)
+    });
+    commandWorker = mode.worker;
+    this.props.memory.loadCommands(timeline);
+    commandWorker.on('ok', (function(_this) {
+      return function(_arg) {
+        var commandSource, result, source, type, _ref;
+        _ref = _arg.data, result = _ref.result, type = _ref.type, commandSource = _ref.commandSource;
+        source = editor.getValue();
+        if (source === commandSource) {
+          if (type === 'execute' || type === 'command') {
+            if (source.length > 0) {
+              timeline.push(source);
+              mode.resetEditing();
+              _this.props.onCommandExecution(source, _this.props.moduleName, result, type);
+              return _this.props.memory.saveCommands(timeline);
+            } else {
+              return _this.props.onCommandCompiled();
+            }
+          } else {
+            mode.updateAst(result.ast);
+            return _this.props.onCommandCompiled();
+          }
+        }
+      };
+    })(this));
+    return commandWorker.on('error', (function(_this) {
+      return function(_arg) {
+        var text;
+        text = _arg.data.text;
+        console.log("command line error", text);
+        return _this.props.onCommandFailed(text);
+      };
+    })(this));
+  };
+
+  CommandLine.prototype.render = function() {
+    return _div({
+      onMouseEnter: this.handleMouseEnter
+    }, _div({
+      className: 'areaBorder',
+      style: {
+        backgroundColor: this.state.backgroundColor
+      }
+    }, _div({
+      ref: 'ace',
+      style: {
+        width: '100%',
+        height: 23
+      }
+    })));
+  };
+
+  return CommandLine;
+
+})());
+
+});

@@ -1,1 +1,118 @@
-define(function(require,exports,module){var e,t,n,r,i,o,a,s=module.uri||"",u=(s.substring(0,s.lastIndexOf("/")+1),{}.hasOwnProperty),l=function(e,t){function n(){this.constructor=e}for(var r in t)u.call(t,r)&&(e[r]=t[r]);return n.prototype=t.prototype,e.prototype=new n,e.__super__=t.prototype,e};e=require("tinyemitter"),n=require("./Memory"),requireNode&&(i=requireNode("fs"),a=requireNode("path"),o=requireNode("mkdirp")),r=function(e,t){var n,r,i;n={};for(r in e)i=e[r],t(r,i)&&(n[r]=i);return n},module.exports=t=function(e){function t(){return t.__super__.constructor.apply(this,arguments)}return l(t,e),t.prototype._directory=function(){var e;return e=a.join(process.env.PWD,window.GolemOpenFilePath,"src"),o.sync(e),e},t.prototype._countLines=function(e,t){return this._readFile(a.join(e,t)).split("\n").length},t.prototype.fileTable=function(){},t.prototype._fileTableStorage=function(e){var t,n,r,o,s,u,l,c;if(void 0!==e&&this.emitter.emit("fileTable"),!e){for(s={},o=this._directory(),c=i.readdirSync(o),u=0,l=c.length;l>u;u++)n=c[u],t=a.extname(n),"shem"===t.slice(1)&&(r=a.basename(n,t),s[r]={name:r,numLines:this._countLines(o,r)});return s}},t.prototype._fileStorage=function(e,t){var n,r,i,o;if(o=this._directory(),r=a.join(o,e),void 0!==t&&this.emitter.emit("file"),t)return n=t.value,delete t.value,this._writeFile(r,n),$.totalStorage("GolemFile_"+r,t);if(i=$.totalStorage("GolemFile_"+r))try{i.value=this._readFile(r)}catch(s){}return i},t.prototype._writeFile=function(e,t){return i.writeFileSync(""+e+".shem",t)},t.prototype._readFile=function(e){return i.readFileSync(""+e+".shem",{encoding:"utf8"})},t.prototype.writeBuilt=function(e){var t;return t=this._directory(),i.writeFileSync(a.join(t,"..","index.js"),e)},t}(n)});
+define(function (require, exports, module) {
+  var __filename = module.uri || "", __dirname = __filename.substring(0, __filename.lastIndexOf("/") + 1);
+  var Emitter, FileSystemMemory, Memory, findAll, fs, mkdirp, path,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+Emitter = require('tinyemitter');
+
+Memory = require('./Memory');
+
+if (requireNode) {
+  fs = requireNode('fs');
+  path = requireNode('path');
+  mkdirp = requireNode('mkdirp');
+}
+
+findAll = function(object, filter) {
+  var found, k, v;
+  found = {};
+  for (k in object) {
+    v = object[k];
+    if (filter(k, v)) {
+      found[k] = v;
+    }
+  }
+  return found;
+};
+
+module.exports = FileSystemMemory = (function(_super) {
+  __extends(FileSystemMemory, _super);
+
+  function FileSystemMemory() {
+    return FileSystemMemory.__super__.constructor.apply(this, arguments);
+  }
+
+  FileSystemMemory.prototype._directory = function() {
+    var srcPath;
+    srcPath = path.join(process.env.PWD, window.GolemOpenFilePath, 'src');
+    mkdirp.sync(srcPath);
+    return srcPath;
+  };
+
+  FileSystemMemory.prototype._countLines = function(srcPath, name) {
+    return (this._readFile(path.join(srcPath, name))).split('\n').length;
+  };
+
+  FileSystemMemory.prototype.fileTable = function(fileName, fileData) {};
+
+  FileSystemMemory.prototype._fileTableStorage = function(table) {
+    var ext, fileName, name, srcPath, stats, _i, _len, _ref;
+    if (table !== void 0) {
+      this.emitter.emit('fileTable');
+    }
+    if (!table) {
+      stats = {};
+      srcPath = this._directory();
+      _ref = fs.readdirSync(srcPath);
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        fileName = _ref[_i];
+        ext = path.extname(fileName);
+        if (ext.slice(1) === 'shem') {
+          name = path.basename(fileName, ext);
+          stats[name] = {
+            name: name,
+            numLines: this._countLines(srcPath, name)
+          };
+        }
+      }
+      return stats;
+    } else {
+
+    }
+  };
+
+  FileSystemMemory.prototype._fileStorage = function(name, value) {
+    var fileContent, filePath, info, srcPath;
+    srcPath = this._directory();
+    filePath = path.join(srcPath, name);
+    if (value !== void 0) {
+      this.emitter.emit('file');
+    }
+    if (value) {
+      fileContent = value.value;
+      delete value.value;
+      this._writeFile(filePath, fileContent);
+      return $.totalStorage("GolemFile_" + filePath, value);
+    } else {
+      info = $.totalStorage("GolemFile_" + filePath);
+      if (info) {
+        try {
+          info.value = this._readFile(filePath);
+        } catch (_error) {}
+      }
+      return info;
+    }
+  };
+
+  FileSystemMemory.prototype._writeFile = function(path, content) {
+    return fs.writeFileSync("" + path + ".shem", content);
+  };
+
+  FileSystemMemory.prototype._readFile = function(path) {
+    return fs.readFileSync("" + path + ".shem", {
+      encoding: 'utf8'
+    });
+  };
+
+  FileSystemMemory.prototype.writeBuilt = function(js) {
+    var srcPath;
+    srcPath = this._directory();
+    return fs.writeFileSync(path.join(srcPath, '..', 'index.js'), js);
+  };
+
+  return FileSystemMemory;
+
+})(Memory);
+
+});

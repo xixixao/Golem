@@ -1,1 +1,146 @@
-define(function(require,exports,module){{var e,t,n,i,r=module.uri||"";r.substring(0,r.lastIndexOf("/")+1)}i=require("./helpers"),t=i.extend,n=i.last,exports.Scope=e=function(){function e(t,n,i){this.parent=t,this.expressions=n,this.method=i,this.variables=[{name:"arguments",type:"arguments"}],this.positions={},this.parent||(e.root=this)}return e.root=null,e.prototype.add=function(e,t,n){return this.shared&&!n?this.parent.add(e,t,n):Object.prototype.hasOwnProperty.call(this.positions,e)?this.variables[this.positions[e]].type=t:this.positions[e]=this.variables.push({name:e,type:t})-1},e.prototype.namedMethod=function(){var e;return(null!=(e=this.method)?e.name:void 0)||!this.parent?this.method:this.parent.namedMethod()},e.prototype.find=function(e){return this.check(e)?!0:(this.add(e,"var"),!1)},e.prototype.parameter=function(e){return this.shared&&this.parent.check(e,!0)?void 0:this.add(e,"param")},e.prototype.check=function(e){var t;return!!(this.type(e)||(null!=(t=this.parent)?t.check(e):void 0))},e.prototype.temporary=function(e,t){return e.length>1?"_"+e+(t>1?t-1:""):"_"+(t+parseInt(e,36)).toString(36).replace(/\d/g,"a")},e.prototype.type=function(e){var t,n,i,r;for(r=this.variables,n=0,i=r.length;i>n;n++)if(t=r[n],t.name===e)return t.type;return null},e.prototype.freeVariable=function(e,t){var n,i;for(null==t&&(t=!0),n=0;this.check(i=this.temporary(e,n));)n++;return t&&this.add(i,"var",!0),i},e.prototype.assign=function(e,t){return this.add(e,{value:t,assigned:!0},!0),this.hasAssignments=!0},e.prototype.hasDeclarations=function(){return!!this.declaredVariables().length},e.prototype.declaredVariables=function(){var e,t,n,i,r,o;for(e=[],t=[],o=this.variables,i=0,r=o.length;r>i;i++)n=o[i],"var"===n.type&&("_"===n.name.charAt(0)?t:e).push(n.name);return e.sort().concat(t.sort())},e.prototype.assignedVariables=function(){var e,t,n,i,r;for(i=this.variables,r=[],t=0,n=i.length;n>t;t++)e=i[t],e.type.assigned&&r.push(""+e.name+" = "+e.type.value);return r},e}()});
+define(function (require, exports, module) {
+  var __filename = module.uri || "", __dirname = __filename.substring(0, __filename.lastIndexOf("/") + 1);
+  var Scope, extend, last, _ref;
+
+_ref = require('./helpers'), extend = _ref.extend, last = _ref.last;
+
+exports.Scope = Scope = (function() {
+  Scope.root = null;
+
+  function Scope(parent, expressions, method) {
+    this.parent = parent;
+    this.expressions = expressions;
+    this.method = method;
+    this.variables = [
+      {
+        name: 'arguments',
+        type: 'arguments'
+      }
+    ];
+    this.positions = {};
+    if (!this.parent) {
+      Scope.root = this;
+    }
+  }
+
+  Scope.prototype.add = function(name, type, immediate) {
+    if (this.shared && !immediate) {
+      return this.parent.add(name, type, immediate);
+    }
+    if (Object.prototype.hasOwnProperty.call(this.positions, name)) {
+      return this.variables[this.positions[name]].type = type;
+    } else {
+      return this.positions[name] = this.variables.push({
+        name: name,
+        type: type
+      }) - 1;
+    }
+  };
+
+  Scope.prototype.namedMethod = function() {
+    var _ref1;
+    if (((_ref1 = this.method) != null ? _ref1.name : void 0) || !this.parent) {
+      return this.method;
+    }
+    return this.parent.namedMethod();
+  };
+
+  Scope.prototype.find = function(name) {
+    if (this.check(name)) {
+      return true;
+    }
+    this.add(name, 'var');
+    return false;
+  };
+
+  Scope.prototype.parameter = function(name) {
+    if (this.shared && this.parent.check(name, true)) {
+      return;
+    }
+    return this.add(name, 'param');
+  };
+
+  Scope.prototype.check = function(name) {
+    var _ref1;
+    return !!(this.type(name) || ((_ref1 = this.parent) != null ? _ref1.check(name) : void 0));
+  };
+
+  Scope.prototype.temporary = function(name, index) {
+    if (name.length > 1) {
+      return '_' + name + (index > 1 ? index - 1 : '');
+    } else {
+      return '_' + (index + parseInt(name, 36)).toString(36).replace(/\d/g, 'a');
+    }
+  };
+
+  Scope.prototype.type = function(name) {
+    var v, _i, _len, _ref1;
+    _ref1 = this.variables;
+    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+      v = _ref1[_i];
+      if (v.name === name) {
+        return v.type;
+      }
+    }
+    return null;
+  };
+
+  Scope.prototype.freeVariable = function(name, reserve) {
+    var index, temp;
+    if (reserve == null) {
+      reserve = true;
+    }
+    index = 0;
+    while (this.check((temp = this.temporary(name, index)))) {
+      index++;
+    }
+    if (reserve) {
+      this.add(temp, 'var', true);
+    }
+    return temp;
+  };
+
+  Scope.prototype.assign = function(name, value) {
+    this.add(name, {
+      value: value,
+      assigned: true
+    }, true);
+    return this.hasAssignments = true;
+  };
+
+  Scope.prototype.hasDeclarations = function() {
+    return !!this.declaredVariables().length;
+  };
+
+  Scope.prototype.declaredVariables = function() {
+    var realVars, tempVars, v, _i, _len, _ref1;
+    realVars = [];
+    tempVars = [];
+    _ref1 = this.variables;
+    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+      v = _ref1[_i];
+      if (v.type === 'var') {
+        (v.name.charAt(0) === '_' ? tempVars : realVars).push(v.name);
+      }
+    }
+    return realVars.sort().concat(tempVars.sort());
+  };
+
+  Scope.prototype.assignedVariables = function() {
+    var v, _i, _len, _ref1, _results;
+    _ref1 = this.variables;
+    _results = [];
+    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+      v = _ref1[_i];
+      if (v.type.assigned) {
+        _results.push("" + v.name + " = " + v.type.value);
+      }
+    }
+    return _results;
+  };
+
+  return Scope;
+
+})();
+
+});

@@ -1,1 +1,30 @@
-var createProjectMenu,maximizeWindow,setFilePath;maximizeWindow=function(){var e,r;return e=require("nw.gui"),r=e.Window.get(),r.maximize()},createProjectMenu=function(){var e,r;return e=require("nw.gui"),r=new e.Menu({type:"menubar"}),r.createMacBuiltin("Golem"),e.Window.get().menu=r},setFilePath=function(){var e;return e=require("nw.gui"),window.GolemOpenFilePath=e.App.argv[0]},window.require&&(maximizeWindow(),createProjectMenu(),setFilePath());
+var createProjectMenu, maximizeWindow, setFilePath;
+
+maximizeWindow = function() {
+  var gui, window;
+  gui = require('nw.gui');
+  window = gui.Window.get();
+  return window.maximize();
+};
+
+createProjectMenu = function() {
+  var gui, mainMenu;
+  gui = require('nw.gui');
+  mainMenu = new gui.Menu({
+    type: 'menubar'
+  });
+  mainMenu.createMacBuiltin("Golem");
+  return gui.Window.get().menu = mainMenu;
+};
+
+setFilePath = function() {
+  var gui;
+  gui = require('nw.gui');
+  return window.GolemOpenFilePath = gui.App.argv[0];
+};
+
+if (window.require) {
+  maximizeWindow();
+  createProjectMenu();
+  setFilePath();
+}

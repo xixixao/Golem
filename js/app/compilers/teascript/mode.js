@@ -1,2 +1,4239 @@
-define(function(require,exports,module){var e,t,n,i,r,o,s,a,c,l,u,h,d,p,f,g,m,v,y,b,w,C,E,A,x,S,_,F,D,k,T,R,M,L,B,$,O,N,P,I,j,W,H,U,K,z,q,V,G,Y,X,Q,J,Z,et,tt,nt,it,rt,ot,st,at,ct,lt,ut,ht,dt,pt,ft,gt,mt,vt,yt,bt,wt,Ct,Et,At,xt,St,_t,Ft,Dt,kt,Tt,Rt,Mt,Lt,Bt,$t,Ot,Nt,Pt,It,jt,Wt,Ht,Ut,Kt,zt,qt,Vt,Gt,Yt,Xt,Qt,Jt,Zt,en,tn,nn,rn,on,sn,an,cn,ln,un,hn,dn,pn,fn,gn,mn,vn,yn,bn,wn,Cn,En,An,xn,Sn,_n,Fn,Dn,kn,Tn,Rn,Mn,Ln,Bn,$n,On,Nn,Pn,In,jn,Wn,Hn,Un,Kn,zn,qn,Vn,Gn,Yn,Xn,Qn,Jn,Zn,ei,ti,ni,ii,ri,oi,si,ai,ci,li,ui,hi,di,pi,fi,gi,mi,vi,yi,bi,wi,Ci,Ei,Ai=module.uri||"",xi=(Ai.substring(0,Ai.lastIndexOf("/")+1),function(e,t){return function(){return e.apply(t,arguments)}}),Si={}.hasOwnProperty,_i=function(e,t){function n(){this.constructor=e}for(var i in t)Si.call(t,i)&&(e[i]=t[i]);return n.prototype=t.prototype,e.prototype=new n,e.__super__=t.prototype,e},Fi=[].indexOf||function(e){for(var t=0,n=this.length;n>t;t++)if(t in this&&this[t]===e)return t;return-1},Di=[].slice;v=require("ace/ace"),f=require("ace/range").Range,m=require("ace/mode/text").Mode,t=require("ace/mode/behaviour").Behaviour,g=require("ace/selection").Selection,pn=require("ace/lib/oop"),a=require("ace/lib/event_emitter").EventEmitter,u=require("ace/keyboard/hash_handler").HashHandler,i=require("./CustomAutocomplete"),r=require("./CustomSearchBox"),n=require("./CombinedTooltip"),s=require("app/DistributingWorkerClient"),tn=function(e){return console.log(e),e},vi=P=require("./compiler"),Lt=vi.isForm,Ft=vi.isCall,Ut=vi.isNotCapital,I=vi.concat,nn=vi.map,j=vi.concatMap,ci=vi.zipWith,si=vi.unzip,nt=vi.filter,Jt=vi.join,y=vi.all,li=vi.__,Hn=vi.sortedArgs,gn=vi.originOf,pi=vi._is,gi=vi._notEmpty,hi=vi._empty,mi=vi._operator,ui=vi._arguments,wi=vi._terms,Ei=vi._validTerms,yi=vi._snd,di=vi._fst,fi=vi._labelName,bi=vi._symbol,T=vi.call_,ri=vi.token_,function(){var e,t;return e=this.fromOrientedRange,this.fromOrientedRange=function(t){return e.call(this,t),this.$nodes=t.$nodes,this.$editing=t.$editing,this.$editMarker=t.$editMarker},t=this.toOrientedRange,this.toOrientedRange=function(e){return e=t.call(this,e),e.$nodes=this.$nodes,e.$editing=this.$editing,e.$editMarker=this.$editMarker,e}}.call(g.prototype),exports.Mode=function(t){function g(e,t){this.isSingleLineInput=e,this.editorInstance=t,this.handleRangeDeselect=xi(this.handleRangeDeselect,this),this.handleCommandExecution=xi(this.handleCommandExecution,this),this.replay=xi(this.replay,this),this.removeMultiSelectKeyboardHandler=xi(this.removeMultiSelectKeyboardHandler,this),this.addMultiSelectKeyboardHandler=xi(this.addMultiSelectKeyboardHandler,this),this.createMultiSelectKeyboardHandler=xi(this.createMultiSelectKeyboardHandler,this),this.handlePaste=xi(this.handlePaste,this),this.handleCopy=xi(this.handleCopy,this),this.handleClick=xi(this.handleClick,this),this.handleMouseUp=xi(this.handleMouseUp,this),this.handleMouseDown=xi(this.handleMouseDown,this),this.detach=xi(this.detach,this),this.closeTooltip=xi(this.closeTooltip,this),this.docsTooltip=xi(this.docsTooltip,this),this.createCompleter=xi(this.createCompleter,this),this.tokensOnLine=xi(this.tokensOnLine,this),this.$tokenizer={getLineTokens:function(e){return function(t,n,i,r){var o;return null==r&&(r=e.editor.session.getDocument()),(o=e.tokensOnLine(i,r))?{tokens:H(o)}:{tokens:[{value:t,type:"text"}]}}}(this)},pn.implement(this.$tokenizer,a),this.$behaviour=void 0,this.completers=[this.completer=this.createCompleter()]}var m,v,y;return _i(g,t),g.prototype.tokensOnLine=function(e,t){var n,i;return i=t.positionToIndex({row:e,column:0}),n=t.positionToIndex({row:e+1,column:0}),this.ast?lt(oi(this.ast),i,n):void 0},g.prototype.getTokenAt=function(e){var t,n,i;return i=this.tokensSurroundingPos(e),n=i[0],t=i[1],t&&Mt(t)?t:n||t},g.prototype.getNextLineIndent=function(e,t,n){var i,r,o;return i=this.$getIndent(t),o=(t.match(/[\(\[\{]/g)||[]).length,r=(t.match(/[\)\]\}]/g)||[]).length,new Array(o-r+i.length/n.length+1).join(n)},m=/^(\s*)# ?/,v=/^\s*###(?!#)/,y=/^\s*/,g.prototype.toggleCommentLines=function(e,t,n,i){var r,o,s,a;for(s=new f(0,0,0,0),r=a=n;i>=n?i>=a:a>=i;r=i>=n?++a:--a)o=t.getLine(r),v.test(o)||(o=m.test(o)?o.replace(m,"$1"):o.replace(y,"$&# "),s.end.row=s.start.row=r,s.end.column=o.length+2,t.replace(s,o))},g.prototype.detachFromSession=function(){return this.editor.removeListener("mousedown",this.handleMouseDown),this.editor.removeListener("mouseup",this.handleMouseUp),this.editor.tokenTooltip.destroy(),this.editor.onPaste=this.__editorOnPaste,this.editor.getCopyText=this.__editorCopyText,this.editor.setOption("dragEnabled",!0),this.editor.setOption("enableBlockSelect",!0)},g.prototype.attachToEditor=function(e){var t;return t=e.session,this.editor=e,this.editor.completers=this.completers,this.editor.session.setUndoManager(this.createUndoManager()),e.setOption("dragEnabled",!1),e.setOption("enableBlockSelect",!1),this.editor.on("mousedown",this.handleMouseDown),this.editor.on("mouseup",this.handleMouseUp),this.editor.tokenTooltip=new n(this.editor),this.editor.tokenTooltip.setTooltipContentForToken=this.docsTooltip,this.__editorOnPaste=this.editor.onPaste,this.editor.onPaste=this.handlePaste,this.__editorCopyText=this.editor.getCopyText,this.editor.getCopyText=this.handleCopy,this.editor.selection.on("removeRange",this.handleRangeDeselect),this.editor.commands.on("afterExec",this.handleCommandExecution),this.createMultiSelectKeyboardHandler(),t.multiSelect.on("multiSelect",this.addMultiSelectKeyboardHandler),t.multiSelect.on("singleSelect",this.removeMultiSelectKeyboardHandler),this.editor.on("blur",this.detach),this.isSingleLineInput||this.addVerticalCommands(t),this.addCommands(t),this.initAst("")},g.prototype.setContent=function(e,t,n){var i,r,o;try{return null!=n&&this.reportModuleName(n),i=x(e,this.ast),o=At(this.ast),this.mutate(et({changeInTree:{added:i,at:o}},t?{selectionRange:t}:{tangibleSelection:{"in":i,out:o.out}})),this.handleCommandExecution()}catch(s){return r=s,console.error(r,r.stack),console.error(e),this.editor.insert(e)}},g.prototype.selectInitially=function(e){return this.initialSelection=e},g.prototype.tangibleSelectionFromRange=function(e){var t,n,i,r;return i=this.tangibleAtPos(e.start),t=this.tangibleAtPos(e.end),gi(i["in"])?(n=M(i["in"][0]),r=M(t.out[0]),{"in":wn(i).slice(n,r),out:t.out}):t},g.prototype.initAst=function(e){return this.ast=this.isSingleLineInput?P.astizeExpressionWithWrapper(e):P.astizeList(e),""===e?this.mutate({tangibleSelection:At(this.ast)}):void 0},g.prototype.updateAst=function(e,t){var n;return null==t&&(t=[]),q(e,this.ast),this.$tokenizer._signal("update",{data:{rows:{first:1}}}),(hi(t)||!this.isAutocompleting())&&this.updateAutocomplete(),this.addErrorMarkers(t),(n=this.initialSelection)?(this.initialSelection=null,this.mutate({inSelection:at(n.name,this.ast)})):void 0},g.prototype.repositionAst=function(){var e,t,n,i,r,o,s,a;for(e=this.ast.start,s=[[this.ast,!0]],a=[];n=s.pop();)i=n[0],o=n[1],Lt(i)?o?(i.start=e,s.push([i,!1]),a.push(function(){var e,n;for(n=[],e=i.length-1;e>=0;e+=-1)t=i[e],n.push(s.push([t,!0]));return n}())):a.push(i.end=e):(r=e-i.start,i.start=e,i.end+=r,a.push(e=i.end));return a},g.prototype.addErrorMarkers=function(e){var t,n,i,r,o,s,a,c;return this.removeErrorMarkers(),this.errorMarkers=[],n=e[0],n&&(r=n.message,t=n.conflicts,r)?(this.errorMarkers=function(){var e,n,r;for(r=[],i=e=0,n=t.length;n>e;i=++e)c=t[i],c&&(s=gn(c))&&(a=Ci(s),o=ct(this.ast,a.start,a.end)[0],r.push({node:o}));return r}.call(this),this.updateErrorMarkers()):void 0},g.prototype.updateErrorMarkers=function(){var e,t,n,i,r,o,s,a;for(this.removeErrorMarkers(),s=this.errorMarkers||[],a=[],r=0,o=s.length;o>r;r++)t=s[r],t.node&&(n=t.node,i=this.nodeRange(n),e=this.errorMarkerRange(i),a.push(t.id=this.editor.session.addMarker(e,"clazz",this.showError(i,e,n.tea),!0)));return a},g.prototype.removeErrorMarkers=function(){var e,t,n,i,r;for(i=this.errorMarkers||[],r=[],t=0,n=i.length;n>t;t++)e=i[t].id,e&&r.push(this.editor.session.removeMarker(e));return r},g.prototype.showError=function(e,t,n){var i;return i=function(){return function(n,i,r,o,s,a){var c;return c=e.isMultiLine()?" golem_error-origin-open":"",a.drawSingleLineMarker(n,t,"golem_error-origin"+c,s)}}(this),i.type=n,i},g.prototype.errorMarkerRange=function(e){var t;return e.isMultiLine()?(t=e.start.row,new f(t,e.start.column,t,this.editor.session.getScreenLastRowColumn(t))):e},g.prototype.doAutocomplete=function(e){var t,n,i,r;return n=this.editor,i=["Up","Down","Ctrl-Up|Ctrl-Home","Ctrl-Down|Ctrl-End","PageUp","PageDown"],(null!=e?e.command.autocomplete:void 0)&&((t=this.editedAtom())&&!Ot(t)&&!Kt(t)&&this.offsetToCursor(t)===t.symbol.length||this.isInserting())?this.openAutocomplete():n.completer&&(r=null!=e?e.command.name:void 0,Fi.call(i,r)<0||t&&Kt(t))?n.completer.detach():void 0},g.prototype.openAutocomplete=function(){var e;return e=this.editor,!this.isAutocompleting()||this.isInserting()?(e.completer||(e.completer=new i(!this.isSingleLineInput)),this.closeTooltip(),e.completer.showPopup(e)):void 0},g.prototype.updateAutocomplete=function(){var e;return this.isAutocompleting()?this.editor.completer.updateCompletions():this.editor.isFocused()&&(this.isInserting()||(e=this.onlySelectedExpression())&&!e.tea)?this.openAutocomplete():void 0},g.prototype.isAutocompleting=function(){return this.editor.completer&&this.editor.completer.activated},g.prototype.createCompleter=function(){var e;return e={getCompletions:function(t){return function(n,i,r,o,s){var a,c,l,u,h,d;if(!(o&&(null!=(h=n.completer.completions)?h.filtered.length:void 0)>0))return l=i.getMode(),l.isEditing()?(u=l.editedAtom(),a=u.symbol):u=ni(l.selectedTangible()),!u.tea||u.tea.ForAll||(null!=(d=u.assignable)?d.top:0)?u.inferredType?t.worker.call("availableTypes",[u.inferredType],function(t){var n,i,r;return s(null,function(){var o,s;s=[];for(i in t)o=t[i],r=o.type,n=o.docs,s.push({name:r,value:r,completer:e,docs:n});return s}())}):void s("error",[]):(c={type:u.tea,scope:u.scope,pattern:u.assignable,emptyCall:Rt(u.parent)},t.worker.call("matchingDefinitions",[c],function(t){var n,i,r,o,a,c;return s(null,function(){var s,l;l=[];for(a in t)s=t[a],c=s.type,o=s.score,r=s.rawType,n=s.arity,i=s.docs,l.push({name:a,value:a,completer:e,score:o,meta:c,rawType:r,arity:n,docs:i});return l}())}))}}(this),getDocTooltip:function(e){return function(t){t.rawType&&!t.docHTML&&(t.docHTML=e.createDocTooltipHtml(t))}}(this),insertMatch:function(){return function(e,t){var n,i,r;return r=t.value,n=e.session.getMode(),n.startGroupMutation(),n.removeSelected(),n.insertStringForward(r),Lt(i=n.onlySelectedExpression())&&n.mutate({tangibleSelection:ft(l,i)}),n.finishGroupMutation()}}(this)}},g.prototype.docsTooltip=function(e,t){var n,i,r,o,s;return n=function(e){return function(n){return t.setHtml(n),t.open(),e.activeTooltip=t}}(this),t.hideAndRemoveMarker(),(i=e.malformed)||kt(e)&&(i=e.parent.malformed)?n(i):null!=e.scope?(r={name:e.symbol,scope:e.scope},this.worker.call("docsFor",[r],function(t){return function(i){return null!=i?n("name"===e.label&&i.rawType?t.prettyPrintTypeForDoc(i):t.createDocTooltipHtml(i)):void 0}}(this))):(o=(null!=(s=e.type)?s.type:void 0)||e.tea)?n(this.prettyPrintTypeForDoc({rawType:o})):void 0},g.prototype.lookupSource=function(e,t){var n;return n={name:e.symbol,scope:e.scope},this.worker.call("docsFor",[n],function(){return function(e){var n,i,r,o,s;return o=e.source,Bt(o)&&(s=wi(o),n=s[0],i=s[1],r=3<=s.length?Di.call(s,2):[],o=T(n,Jt([i],nt($t,r)))),t(J(o))}}(this))},g.prototype.closeTooltip=function(){return this.detach()},g.prototype.detach=function(){var e;return null!=(e=this.activeTooltip)?e.hideAndRemoveMarker():void 0},g.prototype.createDocTooltipHtml=function(e){var t;return"<span style='color: #9EE062'>"+e.name+"</span>"+(e.arity?(t=e.arity||[]," <span style='color: #9C49B6'>"+t.join(" ")+"</span>"):"")+"\n"+(e.rawType?""+this.prettyPrintTypeForDoc(e)+"\n":"")+(e.docs?P.labelDocs(e.docs,t):"")},g.prototype.prettyPrintTypeForDoc=function(e){var t;return t=e.rawType,P.prettyPrint(t)},g.prototype.handleMouseDown=function(){return this.mouseDownTime=+new Date},g.prototype.handleMouseUp=function(e){return e.duration=new Date-this.mouseDownTime,e.preventDefault(),this.handleClick(e)},g.prototype.handleClick=function(e){var t;return t=200,e.duration>t?this.editor.execCommand("edit by click"):e.domEvent.shiftKey?this.editor.execCommand("expand selection by click"):this.ast?this.editor.execCommand("select by click"):void 0},g.prototype.handleCopy=function(){var e,t;return t=this.editor.getSelectedText(),e=z(ni(this.selectedTangible())),e>0?t.replace(new RegExp("\\n"+Array(2*e+1).join(" "),"g"),"\n"):t},g.prototype.handlePaste=function(e){var t,n;return t=e.split(/(?:\r\n|\r|\n)(?!\s)/),n=this.editor.selection.rangeList.ranges,t.length>n.length||t.length<2||!t[1]?this.editor.commands.exec("insertstring",this.editor,e):(this.startGroupMutation(),this.editor.forEachSelection({exec:function(e){return function(){return e.insertStringForward(t[e.editor.selection.index])}}(this)}),this.finishGroupMutation(),this.handleCommandExecution({command:{name:"paste"}}))},g.prototype.undoManager=function(){var e;return e=this.editor.session.getUndoManager()},g.prototype.createUndoManager=function(){return new o(this)},g.prototype.addVerticalCommands=function(){return this.editor.commands.addCommands({"move up to atom or position":{bindKey:{win:"Up",mac:"Up"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.selectLineAdjecentAtomOrPosition(p)}}(this)},"move down to atom or position":{bindKey:{win:"Down",mac:"Down"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.selectLineAdjecentAtomOrPosition(d)}}(this)},"add a new sibling expression on the next line":{bindKey:{win:"Enter",mac:"Enter"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.replaceSpace(l,"\n")}}(this)},"add a new sibling expression on the previous line":{bindKey:{win:"Shift-Enter",mac:"Shift-Enter"},multiSelectAction:"forEach",exec:function(t){return function(){return t.replaceSpace(e,"\n")}}(this)},"select the next reference of selection":{bindKey:{win:"Tab",mac:"Tab"},scrollIntoView:"center",multiSelectAction:"forEach",exec:function(e){return function(){return e.selectReferenceInDirection(l)}}(this)},"select the previous reference of selection":{bindKey:{win:"Shift-Tab",mac:"Shift-Tab"},scrollIntoView:"center",multiSelectAction:"forEach",exec:function(t){return function(){return t.selectReferenceInDirection(e)}}(this)}})},g.prototype.createMultiSelectKeyboardHandler=function(){return this.multiSelectKeyboardHandler=new u([{name:"escape multi select",bindKey:"esc",scrollIntoView:"cursor",readonly:!0,exec:function(e){return function(){var t,n,i;return n=e.editor.selection,i=n.ranges,t=i[i.length-1],n.toSingleRange(t)}}(this),isAvailable:function(e){return function(){return e.isMultiSelecting()}}(this)}])},g.prototype.addMultiSelectKeyboardHandler=function(){return this.editor.keyBinding.addKeyboardHandler(this.multiSelectKeyboardHandler)},g.prototype.removeMultiSelectKeyboardHandler=function(){return this.editor.keyBinding.removeKeyboardHandler(this.multiSelectKeyboardHandler)},g.prototype.addCommands=function(){return this.editor.commands.addCommands({insertstring:{multiSelectAction:"forEach",scrollIntoView:"cursor",autocomplete:!0,exec:function(e){return function(t,n){return e.insertStringForward(n)}}(this)}}),this.editor.commands.addCommands(this.commands={ignoretheseshortcuts:{bindKey:{win:"Ctrl-Shift-E",mac:"Ctrl-Shift-E|Command-G|Command-Shift-G|Ctrl-G|Ctrl-Shift-G|Command-Shift-Up|Shift-Up|Shift-Down|Ctrl-N|Option-Shift-Left|Option-Shift-Right|Command-Shift-Left|Command-Shift-Right|Ctrl-B|Ctrl-V|Command-Option-E|Command-Shift-E|Command-D|Command-Shift-D duplicateSelection|Command-Alt-S|Command-/|Command-Shift-/|Command-Option-Up|Command-Option-Down|Command-Delete|Ctrl-H|Alt-Delete|Alt-Backspace|Ctrl-Alt-Backspace|Ctrl-[|Ctrl-]|Ctrl-Shift-U|Command-Shift-L|Ctrl-Alt-Up|Ctrl-Alt-Down|Ctrl-Alt-Shift-Up|Ctrl-Alt-Shift-Down|Ctrl-Alt-Left|Ctrl-Alt-Right|Ctrl-Alt-Shift-Left|Ctrl-Alt-Shift-Right|Ctrl-Alt-L|Ctrl-Alt-A|Ctrl-Alt-G"},exec:function(){return function(){}}(this)},"select by click":{autocomplete:!0,exec:function(e){return function(){return e.mutate({tangibleSelection:e.tangibleAtPos(e.cursorPosition())})}}(this)},"edit by click":{multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){var t,n;return n=e.tangibleAtPos(e.cursorPosition()),t=dn(n),e.mutate(t&&xt(t)?{withinAtom:t,withinAtomPos:e.offsetToCursor(t)}:{tangibleSelection:n})}}(this)},"expand selection by click":{multiSelectAction:"forEach",exec:function(e){return function(){var t,n,i;return i=Pn([e.selectedTangible(),e.tangibleAtPos(e.cursorPosition())]),t=i[0],n=i[1],e.mutate({tangibleSelection:zn(t,n)})}}(this)},cut:{scrollIntoView:"cursor",multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){var t;return t=e.editor.getSelectionRange(),e.editor._emit("cut",t),e.remove(l)}}(this)},find:{bindKey:{win:"Ctrl-Shift-F",mac:"Command-F"},readOnly:!0,exec:function(e){return function(){return e.isSingleLineInput?void 0:r.Search(e.editor)}}(this)},selectall:{bindKey:{win:"Ctrl-A",mac:"Command-A"},readOnly:!0,exec:function(e){return function(){return e.mutate({tangibleSelection:At(e.ast)})}}(this)},"select enclosing expression":{bindKey:{win:"Ctrl-Up",mac:"Command-Up"},multiSelectAction:"forEach",exec:function(e){return function(){return e.mutate({inSelection:e.isEditing()?e.editedAtom():e.realParentOfSelected()})}}(this)},"select the first expression inside selection":{bindKey:{win:"Ctrl-Down",mac:"Command-Down"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.moveDown(c,h)}}(this)},"select the last expression inside selection":{bindKey:{win:"Ctrl-Shift-Down",mac:"Command-Shift-Down"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.moveDown(h,c)}}(this)},"move to next atom or position":{bindKey:{win:"Right",mac:"Right"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.selectFollowingAtomOrPosition(d)}}(this)},"move to previous atom or position":{bindKey:{win:"Left",mac:"Left"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.selectFollowingAtomOrPosition(p)}}(this)},"select next sibling expression":{bindKey:{win:"Ctrl-Right",mac:"Command-Right"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.selectSibling(d)}}(this)},"select previous sibling expression":{bindKey:{win:"Ctrl-Left",mac:"Command-Left"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.selectSibling(p)}}(this)},"include next expression in selection":{bindKey:{win:"Shift-Right",mac:"Shift-Right"},multiSelectAction:"forEach",exec:function(e){return function(){return e.expandSelection(d)}}(this)},"include previous expression in selection":{bindKey:{win:"Shift-Left",mac:"Shift-Left"},multiSelectAction:"forEach",exec:function(e){return function(){return e.expandSelection(p)}}(this)},"add new sibling expression":{bindKey:{win:"Space",mac:"Space"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.insertSpace(l," ")}}(this)},"add new sibling expression before current":{bindKey:{win:"Shift-Space",mac:"Shift-Space"},multiSelectAction:"forEach",autocomplete:!0,exec:function(t){return function(){return t.insertSpace(e," ")}}(this)},removeback:{bindKey:{win:"Backspace",mac:"Backspace"},multiSelectAction:"forEach",autocomplete:!0,exec:function(t){return function(){return t.remove(e)}}(this)},removeforward:{bindKey:{win:"Delete",mac:"Delete|Shift-Delete|Ctrl-Backspace|Shift-Backspace"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.remove(l)}}(this)},"flatten onto a single line":{bindKey:{win:"Ctrl-Space",mac:"Ctrl-Space"},multiSelectAction:"forEach",exec:function(e){return function(){return e.removeNewLines()}}(this)},"jump to next occurence of the selection":{bindKey:{win:"Ctrl-Tab",mac:"Alt-Tab"},scrollIntoView:"center",multiSelectAction:"forEach",exec:function(e){return function(){return e.selectOccurenceInDirection(l)}}(this)},"jump to previous occurence of the selection":{bindKey:{win:"Ctrl-Shift-Tab",mac:"Alt-Shift-Tab"},scrollIntoView:"center",multiSelectAction:"forEach",exec:function(t){return function(){return t.selectOccurenceInDirection(e)}}(this)},"multiselect next reference":{bindKey:{win:"Ctrl-S",mac:"Ctrl-S"},scrollIntoView:"center",exec:function(e){return function(){return e.multiSelectReferenceInDirection(l)}}(this)},"multiselect previous reference":{bindKey:{win:"Ctrl-Shift-S",mac:"Ctrl-Shift-S"},scrollIntoView:"center",exec:function(t){return function(){return t.multiSelectReferenceInDirection(e)}}(this)},"shift expression backward":{bindKey:{win:"Alt-Left",mac:"Alt-Left"},multiSelectAction:"forEach",autocomplete:!0,exec:function(t){return function(){return t.moveSelection(e)}}(this)},"shift expression forward":{bindKey:{win:"Alt-Right",mac:"Alt-Right"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.moveSelection(l)}}(this)},"shift all expressions on a line up":{bindKey:{win:"Alt-Up",mac:"Alt-Up"},multiSelectAction:"forEach",autocomplete:!0,exec:function(t){return function(){return t.moveSelectionByLine(e)}}(this)},"shift all expressions on a line down":{bindKey:{win:"Alt-Down",mac:"Alt-Down"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.moveSelectionByLine(l)}}(this)},"insert a character":{bindKey:{win:"\\",mac:"\\"},multiSelectAction:"forEach",exec:function(e){return function(){return e.insertStringForward(e.isEditingHalfDelimited()?"\\":"\\_")}}(this)},"wrap in a call":{bindKey:{win:"Ctrl-Shift-9",mac:"Command-Shift-9"},logicalKey:{win:"Ctrl-(",mac:"Command-("},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.wrap("(",{insert:!0}," ",{selected:!0},")")}}(this)},"wrap in parentheses":{bindKey:{win:"(",mac:"("},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.insertOpeningDelim("(",")")}}(this)},"wrap in brackets":{bindKey:{win:"[",mac:"["},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.insertOpeningDelim("[","]")}}(this)},"wrap in braces":{bindKey:{win:"{",mac:"{"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.insertOpeningDelim("{","}")}}(this)},"insert or surround by quotes":{bindKey:{win:'"',mac:'"'},multiSelectAction:"forEach",exec:function(e){return function(){var t,n;return e.isEditingHalfDelimited()?"string"===(t=e.editedAtom()).label&&e.isAtLimit(l,t)?e.mutate({inSelection:t}):e.insertStringForward('"'):(n=Z('"',e.selectedText()),t=x('"'+n+'"',e.parentOfSelected())[0],e.mutate(et({changeInTree:{added:[t],at:e.selectedTangible()}},e.isSelecting()?{inSelection:t}:{withinAtom:t,withinAtomPos:n.length+1})))}}(this)},"select enclosing form or insert )":{bindKey:{win:")",mac:")"},multiSelectAction:"forEach",exec:function(e){return function(){return e.closeParentOrInsert(")")}}(this)},"select enclosing form or insert }":{bindKey:{win:"}",mac:"}"},multiSelectAction:"forEach",exec:function(e){return function(){return e.closeParentOrInsert("}")}}(this)},"select enclosing form or insert ]":{bindKey:{win:"]",mac:"]"},multiSelectAction:"forEach",exec:function(e){return function(){return e.closeParentOrInsert("]")}}(this)},"increment a number":{bindKey:{win:"Ctrl-Shift-Up",mac:"Alt-Shift-Up"},multiSelectAction:"forEach",exec:function(e){return function(){return e.changeNumerical(1)}}(this)},"decrement a number":{bindKey:{win:"Ctrl-Shift-Down",mac:"Alt-Shift-Down"},multiSelectAction:"forEach",exec:function(e){return function(){return e.changeNumerical(-1)}}(this)},"select enclosing definition":{bindKey:{win:"Ctrl-Shift-0",mac:"Command-Shift-0"},logicalKey:{win:"Ctrl-)",mac:"Command-)"},multiSelectAction:"forEach",exec:function(e){return function(){return e.mutate({inSelection:K(cn(c,e.selectedTangible()))})}}(this)},addlabel:{bindKey:{win:":",mac:":"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){var t,n,i,r;return e.isSingleLineInput&&""===e.editor.getValue()?!1:e.isEditingHalfDelimited()?e.insertStringForward(":"):(t=e.onlySelectedExpression(),e.mutate(e.isEditing()||t&&xt(t)?(n=t.symbol.length,{changeWithinAtom:{string:":",atom:t,range:[n,n]}}):(r=x(":",e.parentOfSelected()),i=r[0],r,{changeInTree:{added:[i],at:e.selectedTangible()},withinAtom:i,withinAtomPos:0})))}}(this)},"insert a comment":{bindKey:{win:"#",mac:"#"},multiSelectAction:"forEach",exec:function(e){return function(){return e.isEditingHalfDelimited()?e.insertStringForward("#"):e.wrap("(","#"," ",{selected:!0,select:!0},")")}}(this)},"go to definition":{bindKey:{win:"Ctrl-E",mac:"Ctrl-E"},multiSelectAction:"forEach",exec:function(e){return function(){var t,n,i,r,o,s,a,c;if(n=function(t){return e.editorInstance.executeCommand("load",t)},o=e.onlySelectedExpression(),o&&xt(t=o)){if(null!=t.id){for(r=ot(t)(e.ast),c=[],s=0,a=r.length;a>s;s++)if(i=r[s],jt(i)){i.imported?(e.selectInitially({name:i.imported.name}),n(i.imported.module)):e.mutate({inSelection:i});break}return c}if("module"===t.label)return e.editorInstance.executeCommand("load",t.symbol)}}}(this)},"insert call-site type":{bindKey:{win:"Ctrl-T",mac:"Ctrl-T"},indirect:!0,autocomplete:!0,exec:function(e){return function(t,n){var i,r,o,s,a;return r=(null!=n?n:{}).targetEditor,r&&(o=r.session.getMode(),i=o.onlySelectedExpression(),i&&i.tea)?(s=P.plainPrettyPrint(i.tea),a=s.replace(/_\d+/,""),e.startGroupMutation(),e.insertStringForward("(: "+a+")"),e.mutate({tangibleSelection:mt(l,di(ui(e.onlySelectedExpression())))}),e.finishGroupMutation()):void 0}}(this)},"show type of an expression":{bindKey:{win:"Ctrl-Shift-T",mac:"Ctrl-Shift-T"},multiSelectAction:"forEach",exec:function(e){return function(){var t,n;if(n=e.selectedTangible(),t=dn(n)||tt(n)){if(t.malformed)return window.log(t.malformed);if(t.tea)return window.log(P.prettyPrint(t.tea))}}}(this)},"remove all source":{bindKey:{win:"Ctrl-Shift-Backspace",mac:"Ctrl-Shift-Backspace"},document:!1,exec:function(e){return function(){return e.editor.setValue(""),e.initAst("")}}(this)},"replace enclosing Parent expression with current selection":{bindKey:{win:"Ctrl-P",mac:"Ctrl-P"},multiSelectAction:"forEach",exec:function(e){return function(){var t,n,i,r;return r=e.realParentOfSelected(),r?(t=e.selectedTangible(),i=Rn(t,r.parent),n=Ct([r]),e.mutate({changeInTree:{added:i,at:n},inSelections:gi(i)?i:void 0,tangibleSelection:hi(i)?mn(n.out):void 0})):void 0}}(this)},"wrap current selection in a Function":{bindKey:{win:"Ctrl-F",mac:"Ctrl-F"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){var t;return t=!Xt(e.selectedTangible())||e.isSingleLineInput?[" "]:["\n","  "],e.isInserting()?e.wrap.apply(e,["(","fn"," ",["[",{insert:!0},"]"]].concat(Di.call(t),[{selected:!0}],[")"])):e.wrap("(","fn"," ","[]"," ",{selected:!0,select:!0},")")}}(this)},"Match on current selection":{bindKey:{win:"Ctrl-M",mac:"Ctrl-M"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.isInserting()?e.wrap("(","match"," ",{selected:!0,insert:!0},"\n","  "," ",")"):e.wrap("(","match"," ",{selected:!0},"\n","  ",{insert:!0}," ",")")}}(this)},"wrap in a Match to return current selection":{bindKey:{win:"Ctrl-Shift-M",mac:"Ctrl-Shift-M"},multiSelectAction:"forEach",autocomplete:!0,exec:function(e){return function(){return e.wrap("(","match"," ",{insert:!0},"\n","  "," ",{selected:!0},")")}}(this)},"replace selection with an Added function parameter":{bindKey:{win:"Ctrl-Shift-A",mac:"Ctrl-A"},exec:function(e){return function(){var t,n,i,r;return r=Pn(e.selectedTangiblesList())[0],r&&(n=dt(ni(r))),n&&(i=ht(n)),i?(t=mn(i.slice(-1)),e.mutate(et(gi(wi(i))?{changeInTree:{added:x(" ",i),at:t}}:{},{newSelections:[t]}))):void 0}}(this)},"select all occurences of selection to Rename":{bindKey:{win:"Ctrl-R",mac:"Ctrl-R"},multiSelectAction:"forEach",exec:function(e){return function(){var t,n,i,r;return i=e.onlySelectedExpression(),i&&xt(t=i)?(n=ut(t)(e.ast),r=nn(ii,n),e.mutate({inSelection:t,newSelections:r})):void 0}}(this)},"Define selected token":{bindKey:{win:"Ctrl-D",mac:"Ctrl-D"},indirect:!0,exec:function(e){return function(t,n){var i,r,o,s,a,c,u,d,p,f,g,m,v,y,b,w,E;return b=(null!=n?n:{}).targetEditor,null==b&&(b=e.editor),w=b.session.getMode(),g=w.onlySelectedExpression(),g&&xt(r=g)&&r.malformed?(e.startGroupMutation(),b!==e.editor?e.insertStringForward(qt(r)?(i=A(r.parent),""+r.symbol+" (fn ["+i.join(" ")+"]\n  )"):""+r.symbol+" "):(E=C(g),c=cn(h,ii(E)),y=bn(E)?"\n":"\n\n",e.insertSpaceAt(l,y,c),e.insertStringForward(qt(r)?(i=A(r.parent),""+r.symbol+" (fn ["+i.join(" ")+"]\n  )"):""+r.symbol+" ")),s=o=e.selectableEdge(h),qt(r)&&(s=Gn(h,ni(o))),e.mutate({tangibleSelection:s}),e.finishGroupMutation()):g?b!==e.editor?(a=Rn(ii(g),e.parentOfSelected()),e.startGroupMutation(),d=k(e.selectedTangible()),e.insertSpace(l," "),e.mutate({changeInTree:{added:a,at:e.selectedTangible()},tangibleSelection:d()}),e.finishGroupMutation()):(E=C(g),c=cn(h,ii(E)),a=Rn(e.selectedTangible(),E.parent),y=bn(E)?"\n":"\n\n",e.startGroupMutation(),v=e.selectedTangiblesList(),p=function(){var e,t,n;for(n=[],e=0,t=v.length;t>e;e++)m=v[e],this.mutate(this.removeSelectable(m)),n.push(k(this.selectedTangible()));return n}.call(e),e.insertSpaceAt(l,y,c),u=k(e.selectedTangible()),e.insertSpaceAt(l," ",c),f=Cn(p),e.mutate({changeInTree:{added:a,at:{"in":[],out:[c]}},tangibleSelection:f[0],newSelections:Jt(f.slice(1),[u()])}),e.finishGroupMutation()):void 0}}(this)},"Inline selected expression or replace a name by its definition":{bindKey:{win:"Ctrl-I",mac:"Ctrl-I"},multiSelectAction:"forEach",exec:function(t){return function(){var n,i,r,o,s,a,c,u,h,d,p,f,g,m,v,y,b,w,C,E,A,x,S,_,F,D,k,T;if(E=t.onlySelectedExpression(),E&&xt(r=E)){if(!jt(r))return It(r)?t.worker.call("expand",[r.parent],function(e){var n;return e?(n=kn([J(e)],r.parent.parent),t.mutate({changeInTree:{added:n,at:ii(r.parent)},inSelections:n})):void 0}):t.lookupSource(r,function(e){var n;return n=kn([e],r.parent),t.mutate({changeInTree:{added:n,at:t.selectedTangible()},inSelections:n})});if(g=ut(r)(t.ast),t.startGroupMutation(),(v=bn(r))&&(c=bn(v))&&qt(c)&&Bt(c)&&ht(c)===v?(i=Hn(nn(bi,Ei(v)),c.parent),m=wi(v).indexOf(r),m<i.length&&i[m]&&(d=ii(i[m]),t.mutate({changeInTree:{at:ei(d)}}),t.mutate({changeInTree:{at:ei(ii(r))}}))):(s=In(l,r))&&Mt(s)&&(d=ii(s),t.mutate(t.removeSelectable(zn(ii(r),d))),t.mutate(t.remove(e)),t.isInserting()&&t.mutate(t.remove(e))),d){for(u=S=0,D=g.length;D>S;u=++S)f=g[u],h=Rn(d,f.parent),t.mutate({changeInTree:{added:h,at:ii(f)}}),t.mutate(0===u?{inSelections:h}:{newSelections:[Ct(h)]});return t.finishGroupMutation()}}else if(E&&_t(b=E)||bn(E)&&_t(b=bn(E))){for(a=mi(b),y=Ei(ht(a)),i=ui(b),t.startGroupMutation(),u=_=0,k=i.length;k>_;u=++_)if(n=i[u],u<y.length)for(x=ut(y[u])(b),F=0,T=x.length;T>F;F++)A=x[F],h=Rn(ii(n),A.parent),t.mutate({changeInTree:{added:h,at:ii(A)}});return i.length===y.length?(o=wi(a)[2],w=Rn(ii(o),b.parent),t.mutate({changeInTree:{added:w,at:ii(b)},inSelections:w})):(p=Math.min(i.length,y.length),t.mutate({changeInTree:{at:Zn(zn(ii(y[0]),ii(y[p-1])))}}),t.mutate({changeInTree:{at:Zn(zn(ii(i[0]),ii(i[p-1])))}}),i.length<y.length&&(C=Rn(ii(a),b.parent),t.mutate({changeInTree:{added:C,at:ii(b)},inSelections:C}))),t.finishGroupMutation()}}}(this)},"abstract an operator with a Lambda":{bindKey:{win:"Ctrl-L",mac:"Ctrl-L"},multiSelectAction:"forEach",exec:function(e){return function(){var t,n,i,r,o;if(t=function(t,n){var i,r,o,s,a,c;return i=n.join(" "),a=x("(fn ["+i+"] ( "+i+"))",t[0].parent),e.startGroupMutation(),e.mutate({changeInTree:{added:a,at:Ct(t)},inSelections:a}),c=wi(a[0]),o=c[0],s=c[1],r=c[2],e.mutate({changeInTree:{added:kn(t,r),at:mn([r[1]])}}),e.finishGroupMutation()
-},Ft(r=e.parentOfSelected())){if(qt(ni(o=e.selectedTangible())))return i=o["in"],n=A(r).slice(Ei(i).length-1),t(i,n);if((i=e.onlySelectedExpression())&&xt(i))return e.worker.call("docsFor",[D(i)],function(e){return e.arity?(n=e.arity,t([i],n)):void 0})}}}(this)},"push a lambda inside of a call to the Outer expression":{bindKey:{win:"Ctrl-O",mac:"Ctrl-O"},multiSelectAction:"forEach",exec:function(e){return function(){var t,n,i,r,o,s,a;return(n=e.onlySelectedExpression())&&Bt(n)&&qt(n)&&(t=bn(n.parent))?(e.startGroupMutation(),a=kn([st(n)],t),e.mutate({changeInTree:{added:a,at:ii(n.parent)}}),s=kn([n.parent],t.parent),i=s[0],r=mi(i),e.mutate({changeInTree:{added:s,at:ii(t)}}),o=kn([t],i),e.mutate({changeInTree:{added:o,at:ii(st(r))},inSelection:r}),e.finishGroupMutation()):void 0}}(this)},"push definition Up":{bindKey:{win:"Ctrl-U",mac:"Ctrl-U"},multiSelectAction:"forEach",exec:function(t){return function(){var n,i;return i=t.selectedTangible(),(n=function(r){var o,s,a,c,u,d,p,f,g,m,v,y,b;return v=C(r),s=jt(v)?Mt(o=In(l,v))?zn(ii(v),ii(o)):void 0:jt(u=In(e,v))?zn(ii(u),ii(v)):void 0,s&&bn(v)?(p=C(v.parent),c=cn(h,ii(p)),y=rn(i),g=y[0],f=y[1],b=Mn(s,p.parent,g),a=b[0],d=b[1],m=bn(p)?"\n":"\n\n",t.startGroupMutation(),t.mutate(t.removeSelectable(s)),t.isInserting()&&t.mutate(t.remove(e)),t.insertSpaceAt(l,m,c),t.mutate({changeInTree:{added:a,at:{"in":[],out:[c]}},memorableSelection:[f,d]}),t.finishGroupMutation()):n(bn(r))})(ni(t.selectedTangible()))}}(this)}})},g.prototype.multiSelectReferenceInDirection=function(e){var t,n,i;return i=this.onlySelectedExpression(),i&&xt(t=i)&&null!=t.id?(n=ot(t)(this.ast),this.mutate({newSelections:[ii(it(e,t,n))]})):this.multiSelectOccurenceInDirection(e)},g.prototype.multiSelectOccurenceInDirection=function(e){var t,n;return this.isInserting()?void 0:(n=this.selectedTangible()["in"],t=rt(n)(this.ast),this.mutate({newSelections:[Ct(it(e,n,t))]}))},g.prototype.selectReferenceInDirection=function(e){var t,n,i;return i=this.onlySelectedExpression(),i&&xt(t=i)&&null!=t.id?(n=ot(t)(this.ast),this.mutate({inSelection:it(e,t,n)})):this.selectOccurenceInDirection(e)},g.prototype.selectOccurenceInDirection=function(e){var t,n;return this.isInserting()?void 0:(n=this.selectedTangible()["in"],t=rt(n)(this.ast),this.mutate({inSelections:it(e,n,t)}))},g.prototype.moveDown=function(e,t){var n;return this.mutate(this.isSelectingMultiple()?{tangibleSelection:this.selectableEdge(e)}:(n=this.onlySelectedExpression())?Lt(n)?{tangibleSelection:Gn(e,n)}:{withinAtom:n,withinAtomPos:X(t,n)}:{})},g.prototype.changeNumerical=function(e){var t,n,i,r,o;return(t=this.onlySelectedExpression())&&Kt(t)?(o=this.offsetToCursor(t),i=R(t.symbol,o,e),n=x(i,t.parent)[0],r=this.isEditing(),this.mutate({changeInTree:{added:[n],at:this.selectedTangible()},inSelection:r?void 0:n,withinAtom:r?n:void 0,withinAtomPos:r?n.symbol.length-(t.symbol.length-o):void 0})):void 0},g.prototype.closeParentOrInsert=function(e){return this.isEditingHalfDelimited()?this.insertStringForward(e):this.mutate({inSelection:this.realParentOfSelected()})},g.prototype.insertOpeningDelim=function(e,t){return this.isEditingHalfDelimited()?this.insertStringForward(e):this.wrap(e,{selected:!0,select:!0},t)},g.prototype.wrap=function(){var e,t,n,i,r;return r=1<=arguments.length?Di.call(arguments,0):[],n=function(e){return"string"==typeof e},e=function(t){var i,r,o,s,a,c,l,u,h,d,p,f,g;for(h={},c=0,o=d=0,f=t.length;f>d;o=++d)if(u=t[o],!n(u))if(Array.isArray(u)){a=e(u);for(s in a)for(r=a[s],p=0,g=r.length;g>p;p++)i=r[p],l={},(null!=h[s]?h[s]:h[s]=[]).push({parent:o-c,child:i})}else{for(s in u)(null!=h[s]?h[s]:h[s]=[]).push(o-c);c++}return h},i=e(r),t=function(e){var i,r;return Array.isArray(e)?function(){var n,o,s;for(s=[],n=0,o=e.length;o>n;n++)r=e[n],(i=t(r))&&s.push(i);return s}().join(""):n(e)?e:void 0},this.wrapIn(t(r),this.selectedTangible(),i)},g.prototype.wrapIn=function(e,t,n){var i,r,o,s,a,c,l,u;if(a=n.selected,s=n.select,o=n.insert,null==a)throw new Error("missing selected in wrapIn");return u=x(e,wn(t))[0],r=0===t["in"].length,i=function(e,t){return e.parent?i(e.child,t[e.parent]):t[e]},this.startGroupMutation(),this.mutate({changeInTree:{added:[u],at:t}}),l=Rn(t,u),c=Jt(s||[],o||[]),this.mutate({changeInTree:{added:l,at:{"in":[],out:[i(a[0],u)]}},inSelections:s&&!r?l:void 0,tangibleSelection:!s||r?{"in":[],out:[i(c[0],u)]}:void 0,newSelections:nn(function(e){return{"in":[],out:[i(e,u)]}},c.slice(1))}),this.finishGroupMutation()},g.prototype.removeNewLines=function(){var e,t,n,i;return i=this.selectedTangible(),t=i["in"],e=function(t){var n,i,r,o;for(o=[],i=0,r=t.length;r>i;i++)n=t[i],Nt(n)||o.push(Wt(n)?x(" ",n.parent)[0]:Lt(n)?en(e(n)):B(n));return o},n=e(t),this.mutate({changeInTree:{added:n,at:i},inSelections:n})},g.prototype.moveSelectionByLine=function(e){var t,n,i,r;return i=this.selectedTangible(),r=Ct(this.allOnLine(ni(i))),(t=$n(e,G(e,vn(e,r))))?(n=Ct(this.allOnLine(t)),this.swap(e,r,n)):void 0},g.prototype.allOnLine=function(e){var t,n,i,r;return n=function(e){return function(t){var n;return n=e.rangeOfNodes([t]),n.start.row===n.end.row}}(this),t=function(e){return Mt(e)||Yt(e)},r=function(n){var i,r,o;for(i=e,o=[];(r=$n(n,i))&&t(r);)o.push(i=r);return o},(i=bn(e))&&n(i)?this.allOnLine(i):I([r(c).reverse(),t(e)?[e]:[],r(h)])},g.prototype.moveSelection=function(e){var t,n,i;if(this.isEditing()){if(t=this.editedAtom(),!this.isAtLimit(e,t))return this.mutate({withinAtom:t,withinAtomPos:this.offsetToCursor(t)+e})}else if(i=this.selectedTangible(),n=this.selectedSibling(e))return this.swap(e,i,n)},g.prototype.swap=function(e,t,n){var i,r,o;return r=O(t["in"]),i=O(n["in"]),this.startGroupMutation(),this.mutate({changeInTree:{added:[],at:t}}),this.mutate({changeInTree:{added:i,at:{"in":[],out:t.out}}}),this.mutate({changeInTree:{added:[],at:n}}),o={"in":[],out:n.out},this.mutate({changeInTree:{added:r,at:o},inSelections:gi(r)?r:void 0,tangibleSelection:hi(r)?o:void 0}),this.finishGroupMutation()},g.prototype.insertStringForward=function(e){return this.insertString(l,e)},g.prototype.insertString=function(e,t){var n,i,r,o,s;if(null==t)throw"Missing string in insertString";return this.mutate(this.isEditing()?(i=this.editedAtom(),s=Tt(i)?(r=_(i),Z(r,t)):t,o=this.offsetToCursor(i),{changeWithinAtom:{string:s,range:"char"===i.label&&"\\_"===i.symbol?[1,2]:[o,o]}}):(n=x(t,this.parentOfSelected()),et({changeInTree:{added:n,at:this.selectedTangible()}},1===n.length&&xt(i=n[0])?{withinAtom:i,withinAtomPos:i.symbol.length}:{inSelections:n})))},g.prototype.insertSpace=function(e,t){return this.isEditing()&&Tt(this.editedAtom())?this.insertString(e,t):this.insertSpaceAt(e,t,this.selectedNodeEdge(e))},g.prototype.replaceSpace=function(e,t){var n,i,r;return r=this.toSelectionSibling(e),n=r.margin,i=r.siblingTangible,n&&Yt(G(fn(e),n["in"]))?this.mutate({changeInTree:{added:x(t,wn(n)),at:n},tangibleSelection:i}):this.insertSpace(e,t)},g.prototype.insertSpaceAt=function(e,t,n){var i,r;return r=n.parent,i=x(t,r),this.mutate({changeInTree:{added:i,at:{"in":[],out:[n]}},tangibleSelection:{"in":[],out:e===l?[n]:i}})},g.prototype.selectLineAdjecentAtomOrPosition=function(e){var t,n,i,r,o,s,a,l,u,h,d;return a=this.startPos(u=ni(this.selectedTangible())),n=null!=(d=this.editor.selection.$desiredColumn)?d:a.column,l=a.row+e,t=this.tangibleAtPos({row:l,column:n+1}),h=Lt(i=ni(t))?(o=this.startPos(i),r=this.edgeOfNode(e,i),s=r.row===l&&o.column>n?c:Ht(u,i)?e:fn(e),ti(Zt(s,ni(t)))):t,this.mutate({tangibleSelection:h,desiredColumn:n})},g.prototype.selectFollowingAtomOrPosition=function(e){return this.isSelectingMultiple()?this.selectSibling(e):this.mutate({tangibleSelection:yt(e,this.selectedTangible())})},g.prototype.selectSibling=function(e){var t;return this.mutate(this.isSelectingMultiple()?{tangibleSelection:this.selectableEdge(e)}:(t=this.selectedSibling(e),!t&&Gt(this.parentOfSelected())?{inSelection:this.parentOfSelected()}:{tangibleSelection:t}))},g.prototype.expandSelection=function(e){var t,n,i,r;return r=this.toSelectionSibling(e),t=r.margin,n=r.siblingTangible,this.mutate(n?(i=E(e,t,n),{tangibleSelection:E(e,this.selectedTangible(),i)}):{inSelection:this.realParentOfSelected()})},g.prototype.tangibleAtPos=function(e){var t,n,i,r;return r=this.tokensSurroundingPos(e),n=r[0],t=r[1],i=Qn(l,n,t||n)},g.prototype.tokenFollowingPos=function(e){var t,n,i;return i=this.tokensSurroundingPos(e),n=i[0],t=i[1],t||n},g.prototype.tokensSurroundingPos=function(e){var t;return t=this.trimmedPosToIdx(e),lt(this.ast,t-1,t+1)},g.prototype.tangibleRange=function(e){var t,n,i;return i=ln(e),n=i[0],t=i[1],En(this.startPos(n),this.startPos(t))},g.prototype.remove=function(e){var t,n,i,r,o,s,a,u,d,f;return this.mutate((n=this.editedAtom())?t=Q(n)===(Tt(n)?0:1)?this.removeSelectable(this.selectedTangible()):(o=this.offsetToCursor(n),u=this.isAtLimit(e,n)?fn(e):e,{changeWithinAtom:{string:"",range:[o,o+u]}}):this.isSelecting()?this.removeSelectable(this.selectedTangible()):(f=this.selectedTangible(),i=this.selectionMargin(e),u=i?e:fn(e),d=this.selectionMargin(u),d?(a=$n(p,cn(c,d)),r=cn(h,d),{changeInTree:{at:d},tangibleSelection:Qn(l,a,r)}):Gt(s=this.parentOfSelected())?this.removeSelectable(Ct([s])):{}))},g.prototype.removeSelected=function(){return this.isInserting()?void 0:this.mutate(this.removeSelectable(this.selectedTangible()))},g.prototype.removeSelectable=function(e){return{changeInTree:{at:e},tangibleSelection:{"in":[],out:e.out}}},g.prototype.isAtLimit=function(e,t){var n;return n=this.distance(this.cursorPosition(),this.editableEdge(e,t)),0===n},g.prototype.offsetToCursor=function(e){return this.distance(this.cursorPosition(),this.startPos(e))},g.prototype.selectedText=function(){return this.isEditing()?this.editedAtom().symbol:this.editor.getSelectedText()},g.prototype.selectableEdge=function(e){return qn(e,this.selectedTangible())},g.prototype.editableEdge=function(e,t){return Tt(t)?this.idxToPos(V(e,t)+fn(e)):this.edgeOfNode(e,t)},g.prototype.realParentOfSelected=function(){var e;return Gt(e=this.parentOfSelected())?e:void 0},g.prototype.parentOfSelected=function(){return wn(this.selectedTangible())},g.prototype.selectedSibling=function(e){return this.toSelectionSibling(e).siblingTangible},g.prototype.toSelectionSibling=function(e){var t,n;return t=this.selectionMargin(e),t?(n=vn(e,t),{margin:t,siblingTangible:Qn(e,G(e,t["in"]),G(fn(e),n))}):{}},g.prototype.selectionMargin=function(e){return Yn(e,this.selectedTangible())},g.prototype.selectedNodeEdge=function(e){return cn(e,this.selectedTangible())},g.prototype.editedAtom=function(){return this.isEditing()?this.onlySelectedExpression():void 0},g.prototype.onlySelectedExpression=function(){return dn(this.selectedTangible())},g.prototype.startGroupMutation=function(){return this.groupMutating=!0},g.prototype.finishGroupMutation=function(){return this.groupMutating=!1,this.undoManager().packGroupMutation()},g.prototype.registerMutation=function(e,t){var n,i,r;return i=this.isEditing()?(n=this.editedAtom(),{withinAtom:n,withinAtomPos:this.distance(this.startPos(n),this.editor.selection.getRange().end)}):{tangibleSelection:this.selectedTangible()},"function"==typeof(r=this.undoManager()).registerMutation?r.registerMutation(e,i,t):void 0},g.prototype.replay=function(e,t){var n,i,r,o;if(i=e.pop()){for(this.startGroupMutation(),r=0,o=i.length;o>r;r++)n=i[r],this.mutate(n,t);return this.finishGroupMutation()}},g.prototype.mutate=function(e,t){var n,i,r,o,s,a,c,l,u,h,d,p,f,g,m,v,y;if(null==t&&(t={undo:!0}),this.registerMutation(e,t),this.groupMutating||"function"==typeof(f=this.undoManager()).packGroupMutation&&f.packGroupMutation(),e.changeInTree&&(l=e.changeInTree.at,n=e.changeInTree.added||[],c=this.rangeOfTangible(l),i=hn(n),b(l,n)),e.changeWithinAtom){if(c)throw"atom edit during tree edit not supported";l=e.changeWithinAtom.range,n=e.changeWithinAtom.string,r=e.changeWithinAtom.atom||this.editedAtom(),c=this.rangeWithingAtom(r,l),i=n,w(r,l,n)}if(null!=i&&(this.repositionAst(),this.docReplace(c,i)),(e.inSelection||e.inSelections||e.tangibleSelection||e.selectionRange||e.memorableSelection)&&(d=e.tangibleSelection||e.selectionRange&&this.tangibleSelectionFromRange(e.selectionRange)||e.memorableSelection&&(v=e.memorableSelection,a=v[0],u=v[1],v)&&a(u)||Ct(e.inSelections||[e.inSelection]),h=this.rangeOfTangible(d),o=!1),e.withinAtom){if(d)throw"shouldn't set both withinAtom and selection";d=Ct([e.withinAtom]),h=this.rangeWithingAtom(e.withinAtom,[e.withinAtomPos,e.withinAtomPos]),o=!0}if(d&&(this.select(d,o),this.setSelectionRange(h,e.desiredColumn)),e.newSelections)for(y=e.newSelections,g=0,m=y.length;m>g;g++)p=y[g],s=this.tangibleRange(p),this.selectFor(p,!1,s),this.editor.selection.addRange(s);return!0},g.prototype.handleCommandExecution=function(e){return this.updateEditingMarkers(),this.updateErrorMarkers(),this.closeTooltip(),this.doAutocomplete(e)},g.prototype.select=function(e,t){return this.editor.selection.$nodes=e,this.editor.selection.$editing=t},g.prototype.selectFor=function(e,t,n){return n.$nodes=e,n.$editing=t},g.prototype.setSelectionRange=function(e,t){return this.editor.selection.setSelectionRange(e),this.editor.selection.$desiredColumn=t},g.prototype.updateEditingMarkers=function(){var e,t,n,i,r;for(e=this.isMultiSelecting()?this.editor.multiSelect.ranges:[this.editor.selection],t=i=0,r=e.length;r>i;t=++i)n=e[t],this.updateEditingMarkerFor(this.isEditingFor(n),n)},g.prototype.updateEditingMarkerFor=function(e,t){var n,i,r;return(i=t.$editMarker)&&(this.editor.session.removeMarker(i),t.$editMarker=void 0),e?(n=dn(t.$nodes),r=this.editableRange(n),i=this.editor.session.addMarker(r,"ace_active-token"),t.$editMarker=i):void 0},g.prototype.isMultiSelecting=function(){return this.editor.multiSelect.inMultiSelectMode},g.prototype.selectedTangiblesList=function(){var e,t,n,i;if(this.isMultiSelecting()){for(n=this.editor.multiSelect.ranges,i=[],t=n.length-1;t>=0;t+=-1)e=n[t],i.push(e.$nodes);return i}return[this.selectedTangible()]},g.prototype.selectedTangible=function(){return this.editor.selection.$nodes},g.prototype.isEditing=function(){return this.editor.selection.$editing},g.prototype.isEditingFor=function(e){return e.$editing},g.prototype.isEditingDelimited=function(){return this.isEditing()&&Tt(this.editedAtom())},g.prototype.isEditingHalfDelimited=function(){return this.isEditing()&&Ot(this.editedAtom())},g.prototype.isSelecting=function(){return!this.isEditing()&&this.selectedTangible()["in"].length>0},g.prototype.isSelectingMultiple=function(){return this.isSelecting()&&this.selectedTangible()["in"].length>1},g.prototype.isInserting=function(){return 0===this.selectedTangible()["in"].length},g.prototype.toText=function(e){return this.editor.session.doc.getTextRange(this.range(e))},g.prototype.editableRange=function(e){return Tt(e)?this.delimitedAtomRange(e):this.range(e)},g.prototype.cursorPosition=function(){return this.editor.getCursorPosition()},g.prototype.handleRangeDeselect=function(e){var t,n,i,r,o;for(n=e.ranges,o=[],i=0,r=n.length;r>i;i++)t=n[i],o.push(this.updateEditingMarkerFor(!1,t));return o},g.prototype.delimitedAtomRange=function(e){var t,n,i;return i=this.range(e),n=i.start,t=i.end,f.fromPoints(this.shiftPosBy(n,1),this.shiftPosBy(t,-1))},g.prototype.rangeWithingAtom=function(e,t){var n,i,r;return r=Wn(t),i=r[0],n=r[1],f.fromPoints(this.idxToPos(e.start+i),this.idxToPos(e.start+n))},g.prototype.rangeOfNodes=function(e){var t,n;return t=e[0],n=e[e.length-1],En(this.startPos(t),this.endPos(n))},g.prototype.rangeOfTangible=function(e){var t,n,i;return i=ln(e),t=i[0],n=i[1],En(this.startPos(t),this.startPos(n))},g.prototype.range=function(e){var t,n;return n=this.startPos(e),t=this.endPos(e),f.fromPoints(n,t)},g.prototype.endOfLine=function(e){return this.idxToPos(this.posToIdx({row:e.row+1,column:0})-1)},g.prototype.edgeOfNode=function(e,t){return this.idxToPos(V(e,t))},g.prototype.nodeRange=function(e){return En(this.startPos(e),this.endPos(e))},g.prototype.startPos=function(e){return this.idxToPos(e.start)},g.prototype.endPos=function(e){return this.idxToPos(e.end)},g.prototype.distance=function(e,t){return Math.abs(this.posToIdx(t)-this.posToIdx(e))},g.prototype.idxToPos=function(e){return this.editor.session.doc.indexToPosition(e)},g.prototype.posToIdx=function(e){return this.editor.session.doc.positionToIndex(e)},g.prototype.trimmedPosToIdx=function(e){return this.posToIdx(this.editor.session.$clipPositionToDocument(e.row,e.column))},g.prototype.shiftPosBy=function(e,t){return this.idxToPos(this.posToIdx(e)+t)},g.prototype.docReplace=function(e,t){var n;return n=this.editor.session.doc,n.remove(e),n.insert(e.start,t)},g.prototype.prepareWorker=function(){var e;return e=new s(["ace","compilers"],"compilers/teascript/worker","Worker",null),this.worker=e},g.prototype.createWorker=function(e){if(!this.worker)throw new Error("Missing worker in mode");return this.worker.attachToDocument(e.getDocument()),this.worker.on("error",function(t){return e.setAnnotations([t.data])}),this.worker.on("ok",function(){return function(){return e.clearAnnotations()}}(this)),this.worker},g.prototype.reportModuleName=function(e){return e!==this.moduleName?(this.moduleName=e,this.worker.call("setModuleName",[e])):void 0},g}(m),o=function(){function e(e){this.mode=e,this.reset=xi(this.reset,this),this.redo=xi(this.redo,this),this.undo=xi(this.undo,this),this.packGroupMutation=xi(this.packGroupMutation,this),this.registerMutation=xi(this.registerMutation,this),this.execute=xi(this.execute,this),this.reset()}return e.prototype.execute=function(){},e.prototype.registerMutation=function(e,t,n){var i,r,o,s,a,c,l,u;return c=n.undo?this.undoStack:this.redoStack,a=[],e.changeInTree&&(s=e.changeInTree.at,i=e.changeInTree.added||[],a.push({changeInTree:{at:{"in":i,out:s.out},added:s["in"]}})),e.changeWithinAtom&&(u=Wn(e.changeWithinAtom.range),o=u[0],l=u[1],i=e.changeWithinAtom.string,r=e.changeWithinAtom.atom||this.mode.editedAtom(),a.push({changeWithinAtom:{range:[o,o+i.length],string:r.symbol.slice(o,l),atom:r}})),a.push(t),this.groupMutationRegister.stack=c,this.groupMutationRegister.states.push(on(a))},e.prototype.packGroupMutation=function(){var e,t,n,i;return i=this.groupMutationRegister,t=i.stack,n=i.states,n.reverse(),t.push(this.sameKindMutation(n,t[t.length-1]||[])?e=n.concat(t.pop()):n),this.groupMutationRegister={states:[]}},e.prototype.undo=function(){return this.mode.replay(this.undoStack,{redo:!0})},e.prototype.redo=function(){return this.mode.replay(this.redoStack,{undo:!0})},e.prototype.reset=function(){return this.undoStack=[],this.redoStack=[],this.groupMutationRegister={states:[]}},e.prototype.sameKindMutation=function(e,t){var n,i,r,o,s,a,c,l,u,h,d;return e.length>0&&t.length>0?(r=e[0],i=t[0],(n=null!=(o=r.changeInTree)?o.added[0]:void 0)&&n===(null!=(s=i.changeWithinAtom)?s.atom:void 0)||(n=null!=(a=r.changeWithinAtom)?a.atom:void 0)&&r.changeWithinAtom.string.length>0&&n===(null!=(c=i.changeWithinAtom)?c.atom:void 0)&&i.changeWithinAtom.string.length>0||(n=null!=(l=r.changeWithinAtom)?l.atom:void 0)&&0===r.changeWithinAtom.string.length&&n===(null!=(u=i.changeInTree)?u.at["in"][0]:void 0)||(n=null!=(h=r.changeWithinAtom)?h.atom:void 0)&&0===r.changeWithinAtom.string.length&&n===(null!=(d=i.changeWithinAtom)?d.atom:void 0)&&0===i.changeWithinAtom.string.length):!1},e}(),A=function(e){var t,n,i,r,o,s,a,c,l,u;for(r="xyzwtuvmnopqrs",s=!1,o=0,n={},i=[],t=function(e){var t;return i.push((t=n[e])?(n[e]++,e+t):(n[e]=2,e))},u=ui(e),c=0,l=u.length;l>c;c++)a=u[c],s?s=!1:t(Pt(a)?(s=!0,fi(a)):!xt(a)||Ot(a)||Kt(a)?r[o++]:a.symbol);return i},Xt=function(e){var t;return Gt(t=wn(e))?Vt(t):!0},C=function(e){var t;return(t=bn(e))?Vt(t)&&Mt(e)?e:C(t):e},pt=function(e,t){return dt(t)||e},dt=function(e){return Bt(e)?e:Gt(e.parent)?dt(e.parent):void 0},ht=function(e){var t;return t=ui(e)[0]},st=function(e){var t,n;return n=ui(e),t=n[n.length-1]},_t=function(e){return Ft(e)&&Bt(mi(e))},Vt=function(e){var t;return Bt(e)||Lt(e)&&"syntax"===(null!=(t=mi(e))?t.symbol:void 0)},Bt=function(e){var t;return Lt(e)&&"fn"===(null!=(t=mi(e))?t.symbol:void 0)},$t=function(e){var t,n;return!(Lt(e)&&("#"===(t=null!=(n=mi(e))?n.symbol:void 0)||":"===t))},J=function(e){var t,n,i,r,o,s,a,c,l;if(Lt(t=e)){for(o=t.slice(0,2),l=t.slice(2,-1),n=a=0,c=l.length;c>a;n=++a)s=l[n],Qt(s)||(i=t[n-1+2],r=Nt(i)?t.slice(n-2+2,n+2):Qt(i)?[i]:[ri(" ")],o.push.apply(o,Di.call(r).concat([J(s)])));return o.push(t[t.length-1]),en(o)}return e},K=function(e){var t;return(t=bn(e))?jt(In(p,t))?t:K(t):void 0},jt=function(e){return"name"===(null!=e?e.label:void 0)},It=function(e){return"keyword"===(null!=e?e.label:void 0)},rt=function(e){return function(t){var n,i,r,o,s;return o=e.length,i=function(){var n,i,a;if(1===o){if(un(e[0],t))return[[t]]}else if(Lt(t)&&t.length>=o){for(a=[],r=n=0,i=t.length-o;i>=0?i>=n:n>=i;r=i>=0?++n:--n)un(s=t.slice(r,r+o),e)&&a.push(s);return a}}(),n=Lt(t)?j(rt(e),t):void 0,Jt(i||[],n||[])}},un=function(e,t){return Lt(e)?Lt(t)&&e.length===t.length&&y(ci(un,e,t)):e.symbol===t.symbol},at=function(e,t){var n,i,r;for(i=0,r=t.length;r>i;i++)if(n=t[i],jt(n)&&n.symbol===e)return n},D=function(e){return{name:e.symbol,scope:e.scope}},ot=function(e){return function(t){return Lt(t)?j(ot(e),t):t.id===e.id?[t]:[]}},ut=function(e){return function(t){return Lt(t)?j(ut(e),t):t.id===e.id&&t!==e?[t]:[]}},In=function(e,t){var n,i,r,o,s;for(r=wi(t.parent),n=o=0,s=r.length;s>o;n=++o)if(i=r[n],i===t)return e===l?r[n+1]:r[n-1]},it=function(e,t,n){var i,r,o,s;for(e>0?(o=0,s=n.length):o=n.length-1;e>0?s>o:o>=0;o+=e){if(i=n[o],r)return i;(i===t||i[0]&&i[0]===t[0])&&(r=!0)}return G(fn(e),n)},dn=function(e){var t;return t=e["in"][0],1===e["in"].length&&Mt(t)?t:void 0},tt=function(e){var t;return t=e.out[0],t.fake?t:void 0},Pn=function(e){var t,n,i,r;return t=nn(li(z,wn),e),n=Math.min.apply(Math,t),i=function(){var t,i,o;for(o=[],t=0,i=e.length;i>t;t++)r=e[t],o.push(Kn(r,z(wn(r))-n));return o}(),On(i)},On=function(e){var t,n,i,r;for(t=wn(e[0]),i=0,r=e.length;r>i;i++)if(n=e[i],wn(n)!==t)return On(nn(Xn,e));return e},Kn=function(e,t){return 0===t?e:Kn(Xn(e),t-1)},zn=function(e,t){var n,i,r,o,s;return s=jn(e,t),n=s[0],o=s[1],r=wn(n),i=cn(c,n),{"in":r.slice(M(i),L(o)),out:o.out}},ei=function(e){var t;return W(nt(pi,[t=Yn(p,e),e,t?void 0:Yn(d,e)]))},Zn=function(e){return W(nt(pi,[Yn(p,e),e,Yn(d,e)]))},Yn=function(e,t){var n,i;return i=vn(e,t),n=G(e,i),Qt(n)?Ct(i):null},jn=function(e,t){return L(e)>L(t)?[t,e]:[e,t]},qn=function(e,t){var n;return n=G(e,t["in"]),e===l||0===t["in"].length?{"in":!n||Qt(n)?[]:[n],out:t.out}:Qt(n)?{"in":[],out:[n]}:Ct([n])},wn=function(e){return e.out[0].parent},L=function(e){return M(e.out[0])},cn=function(e,t){return G(e,ln(t))},ln=function(e){var t,n;return t=Jt(e["in"],e.out)[0],n=e.out[0],[t,n]},Ct=function(e){var t,n;return t=e[e.length-1],n=$n(d,t),{"in":e,out:ai(n)}},mn=function(e){return{"in":[],out:ai(e[0])}},W=function(e){var t,n,i;return t=2<=e.length?Di.call(e,0,i=e.length-1):(i=0,[]),n=e[i++],{"in":Jt(j(Jn,t),n["in"]),out:n.out}},Jn=function(e){return e["in"]},mt=function(e,t){var n;return n=function(e){return xt(e)&&!Ut(e)},gt(n,e,t)},ft=function(e,t){return gt(Mt,e,t)},gt=function(e,t,n){var i,r,o;for(r=Gn(fn(t),n);(o=e(i=ni(r)))&&Ht(i,n);)r=yt(t,r);return o?n:r},Ht=function(e,t){return e&&(e===t||Ht(e.parent,t))},yt=function(e,t){return F(e,Nn(e,cn(e,t)))},F=function(e,t){var n;return t?(n=St(t))?n:F(e,Nn(e,t)):void 0},St=function(e){var t;return t=An(e),(Qt(e)&&!Nt(e)||Dt(e))&&!Dt(t)?{"in":Mt(t)?[t]:[],out:ai(e)}:void 0},Xn=function(e){var t;return t=wn(e),Gt(t)?Ct([t]):void 0},Qn=function(e,t,n){var i,r,o;return o=bt(e,t,n),r=o[0],i=o[1],r===i&&Mt(r)?Ct([r]):Dt(r)?Ct([r.parent]):zt(i)?Ct([i.parent]):Mt(r)?{"in":[r],out:ai(i)}:Mt(i)?Ct([i]):zt(r)||!Nt(i)?{"in":[],out:ai(i)}:Vn(e,n)},Vn=function(e,t){var n;return(n=$n(e,t))&&Qn(e,t,n)},Gn=function(e,t){return qn(e,At(t))},bt=function(e,t,n){return e===l?[t,n]:[n,t]},At=function(e){return{"in":e.slice(1,-1),out:e.slice(-1)}},yn=function(e,t){return G(e,vn(e,t))},vn=function(e,t){return e===l?t.out:xn($n(p,ni(t)))},Cn=function(e){return nn(function(e){return e()},e)},k=function(e){var t;return t=An(ni(e)),function(){return{"in":[],out:ai(vt(t))}}},rn=function(e){return 0===e["in"].length?[[e.out[0]],mn]:[e["in"],Ct]},ti=function(e){return Mt(e)?ii(e):{"in":[],out:ai(e)}},ii=function(e){return Ct([e])},ni=function(e){return cn(c,e)},xn=function(e){return Nt(e)?[$n(p,e),e]:[e]},ai=function(e){var t;return t=$n(d,e),Qt(e)&&t&&Nt(t)?[e,t]:[e]},Zt=function(e,t){return Lt(t)?Zt(e,G(e,wi(t))):t},z=function(e){return Gt(e)?1+z(e.parent):-1},Et=function(e,t,n){return e.parent=t,t.splice(n,0,e)},b=function(e,t){var n,i,r,o,s;for(r=e.out[0].parent,o=0,s=t.length;s>o;o++)i=t[o],i.parent=r;return n=M(cn(c,e)),r.splice.apply(r,[n,e["in"].length].concat(Di.call(t)))},w=function(e,t,n){var i,r,o,s;return s=Wn(t),o=s[0],i=s[1],r=i-o,e.symbol=Un(e.symbol,o,r,n),e.end+=n.length-r},E=function(e,t,n){var i,r,o;return o=bt(e,t,n),r=o[0],i=o[1],{"in":Jt(r["in"],i["in"]),out:i.out}},Wn=function(e){var t,n;return t=e[0],n=e[1],[Math.min(t,n),Math.max(t,n)]},hn=function(e){var t,n,i,r;for(n="",i=0,r=e.length;r>i;i++)t=e[i],n+=Lt(t)?hn(t):t.symbol;return n},Q=function(e){return e.symbol.length-(Tt(e)?2:Ot(e)?1:0)},R=function(e,t,n){var i,r,o,s,a;return s=e.length,o=(i=e.indexOf("."))>=0?i+1:s,r=s-o,a=parseFloat(e),a*=Math.pow(10,r),n*=Math.pow(10,s-t-(o!==s&&o>t?1:0)),a+=n,a/=Math.pow(10,r),a.toFixed(r)},Mt=function(e){return!Qt(e)&&!kt(e)},xt=function(e){return Mt(e)&&!Lt(e)},Kt=function(e){return e.symbol&&/^-?\d/.test(e.symbol)},Tt=function(e){var t;return"string"===(t=e.label)||"regex"===t},Ot=function(e){return"char"===e.label||Tt(e)},_=function(e){return e.symbol[0]},kt=function(e){return/^[\(\)\[\]\{\}]$/.test(e.symbol)},Dt=function(e){return/^[\)\]\}]$/.test(e.symbol)},zt=function(e){return/^[\(\[\{]$/.test(e.symbol)},qt=function(e){var t;return t=bn(e),t&&Ft(t)&&di(wi(t))===e},Rt=function(e){return 2===e.length&&"("===e[0].symbol},Pt=function(e){return"label"===e.label},Qt=function(e){var t;return"whitespace"===(t=e.label)||"indent"===t},Nt=function(e){return"indent"===e.label},Yt=function(e){return" "===e.symbol},Wt=function(e){return"\n"===e.symbol},Gt=function(e){return e.start>=0},Z=function(e,t){return t.replace(RegExp(""+e,"g"),"\\"+e)},Ln=function(e,t){return new Array(e+1).join(t)},on=function(e){var t,n,i,r,o,s;for(n={},o=0,s=e.length;s>o;o++){t=e[o];for(i in t)r=t[i],n[i]=r}return n},et=function(e,t){return on([e,t])},Ci=function(e){return e.transformed?Ci(e.transformed):e},ct=function(e,t,n){var i;return t<e.end&&e.start<n?t===e.start&&n===e.end?[e]:I(function(){var r,o,s;for(s=[],r=0,o=e.length;o>r;r++)i=e[r],s.push(ct(i,t,n));return s}()):[]},lt=function(e,t,n){var i;return t<e.end&&e.start<n?Lt(e)?I(function(){var r,o,s;for(s=[],r=0,o=e.length;o>r;r++)i=e[r],s.push(lt(i,t,n));return s}()):[e]:[]},H=function(e){var t,n;return t=nn(U,e),(n=t[t.length-1])&&"\n"===n.value&&t.pop(),t},U=function(e){var t;return t=kt(e),{value:"string"===e.label?"“"+e.symbol.slice(1,-1)+"”":e.symbol,type:function(){if(t&&e.parent.malformed||!t&&e.malformed)return"token_malformed";switch(e.label){case"whitespace":return"text";default:return e.label?"token_"+e.label:"text"}}()+(e.fake?".token_fake":"")}},oi=function(e){var t;return t=e.slice(1,-1),t.start=e.start+1,t.end=e.end-1,t},V=function(e,t){return e===l?t.end:t.start},X=function(e,t){return Y(e,t)+(Tt(t)?fn(e):0)},Y=function(e,t){return e===l?t.symbol.length:0},G=function(e,t){var n,i;return n=t[0],i=t[t.length-1],e===l?i:n},En=function(e,t){return f.fromPoints(e,t)},Un=function(e,t,n,i){return e.slice(0,t)+i+e.slice(t+n)},_n=function(e){var t,n,i,r;for(n=!1,r=e.parent,i=r.length-1;i>=0;i+=-1){if(t=r[i],n&&Mt(t))return t;t===e&&(n=!0)}return e},an=function(e){var t,n,i,r,o;for(n=!1,o=e.parent,i=0,r=o.length;r>i;i++){if(t=o[i],n&&Mt(t))return t;t===e&&(n=!0)}return e},An=function(t){return Nn(e,t)},vt=function(e){return Nn(l,e)},Nn=function(e,t){var n;return n=$n(e,t)||Gt(t.parent)&&Nn(e,t.parent),n?Lt(n)?G(fn(e),n):n:void 0},bn=function(e){return Gt(e.parent)?e.parent:void 0},$n=function(e,t){return t.parent[M(t)+e]},Sn=function(e){return e.parent[M(e)-1]},sn=function(e){return e.parent[M(e)+1]},M=function(e){return wt(e,e.parent)},wt=function(e,t){var n,i,r,o;for(i=r=0,o=t.length;o>r;i=++r)if(n=t[i],n===e)return i;throw new Error("what is not inside of array in indexWithin")},q=function(e,t){var n,i,r,o,s;if(t.malformed=e.malformed,t.tea=e.tea,t.id=e.id,t.fake=e.fake,t.assignable=e.assignable,t.scope=e.scope,t.inferredType=e.inferredType,t.imported=e.imported,Lt(e)){for(s=[],n=r=0,o=e.length;o>r;n=++r)i=e[n],s.push(q(i,t[n]));return s}return t.label=e.label},Mn=function(e,t,n){return Tn(e["in"],t,n)},Rn=function(e,t){return kn(e["in"],t)},kn=function(e,t){var n;return n=Tn(e,t,[])[0]},Tn=function(e,t,n){var i,r,o,s,a,c;for(c=N(e,n),i=c[0],o=c[1],s=0,a=i.length;a>s;s++)r=i[s],r.parent=t;return[Dn(i,t),o]},x=function(e,t){var n,i,r,o,s;return o=P.astizeList(e),Fn(z(t),o),r=o[0],i=3<=o.length?Di.call(o,1,s=o.length-1):(s=1,[]),n=o[s++],i},O=function(e){var t;return t=N(e,[])[0]},N=function(e,t){var n,i,r;return r=si(nn($(t),e)),n=r[0],i=r[1],[n,I(i)]},B=function(e){var t;return t=$([])(e)[0]},$=function(e){return function(t){var n,i,r;return Lt(t)?(r=N(t,e),n=r[0],i=r[1],en(n)):(i=[],n={symbol:t.symbol,label:t.label}),n.start=t.start,n.end=t.end,n.malformed=t.malformed,n.tea=t.tea,n.id=t.id,Fi.call(e,t)>=0&&(i=[n]),[n,i]}},Dn=function(e,t){return Fn(z(t),e),e},Fn=function(e,t,n,i){var r,o,s,a,c,l;if(Lt(t))for(r=0;r<t.length;)Fn(e+1,t[r],t[r+1],r+1),++r;else n&&Wt(t)&&(o=Ln(e,"  "),c=e>0,Nt(n)?c?Bn(n,o):n.parent.splice(i,1):c&&(l=S("\n  "),a=l[0],s=l[1],Bn(s,o),Et(s,n.parent,M(n))))},en=function(e){var t,n,i;for(n=0,i=e.length;i>n;n++)t=e[n],t.parent=e;return e},Bn=function(e,t){return e.symbol=t,e.end=e.start+t.length},S=function(e){var t,n,i,r,o;return o=P.astizeExpression("("+e+")"),i=o[0],n=3<=o.length?Di.call(o,1,r=o.length-1):(r=1,[]),t=o[r++],n},h=l=d=1,c=e=p=-1,fn=function(e){return-1*e}});
+define(function (require, exports, module) {
+  var __filename = module.uri || "", __dirname = __filename.substring(0, __filename.lastIndexOf("/") + 1);
+  var BACKWARD, Behaviour, CombinedTooltip, CustomAutocomplete, CustomSearchBox, CustomUndoManager, DistributingWorkerClient, EventEmitter, FIRST, FORWARD, HashHandler, LAST, NEXT, PREVIOUS, Range, Selection, TextMode, ace, all, ammendAst, ammendToken, ancestorAtDefinitonList, append, argumentNamesFromCall, astize, astizeExpressions, atomDelimiter, atomOrPositionFrom, atomReference, bookmarkBefore, call_, changeNumericalAt, childIndex, childIndexOfTangible, cloneNode, cloneNodePreserving, cloneNodes, cloneNodesPreserving, compiler, concat, concatMap, concatTangibles, convertToAceLineTokens, convertToAceToken, definitionAncestorOf, depthOf, duplicateProperties, edgeIdxOfNode, edgeOfList, edgeWithinAtom, editableEdgeWithin, editableLength, enforceSpacing, escape, extend, fakeAtInsertion, filter, findAdjecentInList, findAllOccurences, findAllReferences, findFunctionBody, findName, findNodeWithPosition, findNodesBetween, findOtherReferences, findParamList, findParentFunction, findParentScope, firstFakeInside, firstNotMatchingInside, firstTypeVarInside, following, followingTangibleAtomOrPosition, inOrder, indexWithin, insToTangible, insertChildNodeAt, insideTangible, isAtom, isAtomOrPositionAt, isBetaReducible, isCall, isClosingDelim, isDelim, isDelimitedAtom, isEmptyCall, isExpression, isForm, isFunction, isFunctionBody, isHalfDelimitedAtom, isIndent, isLabel, isMacro, isName, isNewLine, isNodeInside, isNotCapital, isNumerical, isOpeningDelim, isOperator, isParentOfDefinitionList, isReal, isSpace, isTangibleAtDefinitionList, isWhitespace, join, limitTerm, listToForm, log, map, memorable, merge, next, nextExpression, nodeEdgeOfTangible, nodeEdgesOfTangible, nodesEqual, nodesToString, onlyExpression, oop, opposite, originOf, outsToTangible, padding, paddingEdge, parentOf, parentOfTangible, pickupBookmarks, positionsToRange, preceding, precedingWhitespace, previous, previousExpression, reindent, reindentMutateNodes, reindentNodes, reindentNodesPreserving, reindentTangible, reindentTangiblePreserving, repeat, setIndentTo, sibling, siblingAncestorsFrom, siblingLeaf, siblingTangibleAncestors, siblingTerm, sortSiblingTangibles, sortTuple, sortedArgs, spliceString, tangibleAncestor, tangibleBetween, tangibleEdge, tangibleInAfter, tangibleInside, tangibleMargin, tangibleParent, tangibleSurroundedBy, tangibleToIns, tangibleWithMargin, tangibleWithSomeMargin, termToTangible, toNode, toTangible, token_, topList, unzip, validOut, zipWith, __, _arguments, _empty, _fst, _is, _labelName, _notEmpty, _operator, _ref, _snd, _symbol, _terms, _transformed, _validTerms,
+  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  __slice = [].slice;
+
+ace = require("ace/ace");
+
+Range = require("ace/range").Range;
+
+TextMode = require("ace/mode/text").Mode;
+
+Behaviour = require("ace/mode/behaviour").Behaviour;
+
+Selection = require("ace/selection").Selection;
+
+oop = require("ace/lib/oop");
+
+EventEmitter = require("ace/lib/event_emitter").EventEmitter;
+
+HashHandler = require("ace/keyboard/hash_handler").HashHandler;
+
+CustomAutocomplete = require("./CustomAutocomplete");
+
+CustomSearchBox = require("./CustomSearchBox");
+
+CombinedTooltip = require("./CombinedTooltip");
+
+DistributingWorkerClient = require("app/DistributingWorkerClient");
+
+log = function(arg) {
+  console.log(arg);
+  return arg;
+};
+
+_ref = compiler = require('./compiler'), isForm = _ref.isForm, isCall = _ref.isCall, isNotCapital = _ref.isNotCapital, concat = _ref.concat, map = _ref.map, concatMap = _ref.concatMap, zipWith = _ref.zipWith, unzip = _ref.unzip, filter = _ref.filter, join = _ref.join, all = _ref.all, __ = _ref.__, sortedArgs = _ref.sortedArgs, originOf = _ref.originOf, _is = _ref._is, _notEmpty = _ref._notEmpty, _empty = _ref._empty, _operator = _ref._operator, _arguments = _ref._arguments, _terms = _ref._terms, _validTerms = _ref._validTerms, _snd = _ref._snd, _fst = _ref._fst, _labelName = _ref._labelName, _symbol = _ref._symbol, call_ = _ref.call_, token_ = _ref.token_;
+
+(function() {
+  var fromOrientedRange, toOrientedRange;
+  fromOrientedRange = this.fromOrientedRange;
+  this.fromOrientedRange = function(range) {
+    fromOrientedRange.call(this, range);
+    this.$nodes = range.$nodes;
+    this.$editing = range.$editing;
+    return this.$editMarker = range.$editMarker;
+  };
+  toOrientedRange = this.toOrientedRange;
+  return this.toOrientedRange = function(range) {
+    range = toOrientedRange.call(this, range);
+    range.$nodes = this.$nodes;
+    range.$editing = this.$editing;
+    range.$editMarker = this.$editMarker;
+    return range;
+  };
+}).call(Selection.prototype);
+
+exports.Mode = (function(_super) {
+  var commentLine, hereComment, indentation;
+
+  __extends(_Class, _super);
+
+  function _Class(isSingleLineInput, editorInstance) {
+    this.isSingleLineInput = isSingleLineInput;
+    this.editorInstance = editorInstance;
+    this.handleRangeDeselect = __bind(this.handleRangeDeselect, this);
+    this.handleCommandExecution = __bind(this.handleCommandExecution, this);
+    this.replay = __bind(this.replay, this);
+    this.removeMultiSelectKeyboardHandler = __bind(this.removeMultiSelectKeyboardHandler, this);
+    this.addMultiSelectKeyboardHandler = __bind(this.addMultiSelectKeyboardHandler, this);
+    this.createMultiSelectKeyboardHandler = __bind(this.createMultiSelectKeyboardHandler, this);
+    this.handlePaste = __bind(this.handlePaste, this);
+    this.handleCopy = __bind(this.handleCopy, this);
+    this.handleClick = __bind(this.handleClick, this);
+    this.handleMouseUp = __bind(this.handleMouseUp, this);
+    this.handleMouseDown = __bind(this.handleMouseDown, this);
+    this.detach = __bind(this.detach, this);
+    this.closeTooltip = __bind(this.closeTooltip, this);
+    this.docsTooltip = __bind(this.docsTooltip, this);
+    this.createCompleter = __bind(this.createCompleter, this);
+    this.tokensOnLine = __bind(this.tokensOnLine, this);
+    this.$tokenizer = {
+      getLineTokens: (function(_this) {
+        return function(line, state, row, doc) {
+          var tokens;
+          if (doc == null) {
+            doc = _this.editor.session.getDocument();
+          }
+          if (tokens = _this.tokensOnLine(row, doc)) {
+            return {
+              tokens: convertToAceLineTokens(tokens)
+            };
+          } else {
+            return {
+              tokens: [
+                {
+                  value: line,
+                  type: 'text'
+                }
+              ]
+            };
+          }
+        };
+      })(this)
+    };
+    oop.implement(this.$tokenizer, EventEmitter);
+    this.$behaviour = void 0;
+    this.completers = [this.completer = this.createCompleter()];
+  }
+
+  _Class.prototype.tokensOnLine = function(row, doc) {
+    var end, start;
+    start = doc.positionToIndex({
+      row: row,
+      column: 0
+    });
+    end = doc.positionToIndex({
+      row: row + 1,
+      column: 0
+    });
+    if (!this.ast) {
+      return void 0;
+    }
+    return findNodesBetween(topList(this.ast), start, end);
+  };
+
+  _Class.prototype.getTokenAt = function(pos) {
+    var after, before, _ref1;
+    _ref1 = this.tokensSurroundingPos(pos), before = _ref1[0], after = _ref1[1];
+    if (after && isExpression(after)) {
+      return after;
+    } else {
+      return before || after;
+    }
+  };
+
+  _Class.prototype.getNextLineIndent = function(state, line, tab) {
+    var indent, numClosed, numOpen;
+    indent = this.$getIndent(line);
+    numOpen = (line.match(/[\(\[\{]/g) || []).length;
+    numClosed = (line.match(/[\)\]\}]/g) || []).length;
+    return new Array(numOpen - numClosed + indent.length / tab.length + 1).join(tab);
+  };
+
+  commentLine = /^(\s*)# ?/;
+
+  hereComment = /^\s*###(?!#)/;
+
+  indentation = /^\s*/;
+
+  _Class.prototype.toggleCommentLines = function(state, doc, startRow, endRow) {
+    var i, line, range, _i;
+    range = new Range(0, 0, 0, 0);
+    for (i = _i = startRow; startRow <= endRow ? _i <= endRow : _i >= endRow; i = startRow <= endRow ? ++_i : --_i) {
+      line = doc.getLine(i);
+      if (hereComment.test(line)) {
+        continue;
+      }
+      if (commentLine.test(line)) {
+        line = line.replace(commentLine, '$1');
+      } else {
+        line = line.replace(indentation, '$&# ');
+      }
+      range.end.row = range.start.row = i;
+      range.end.column = line.length + 2;
+      doc.replace(range, line);
+    }
+  };
+
+  _Class.prototype.detachFromSession = function(session) {
+    this.editor.removeListener('mousedown', this.handleMouseDown);
+    this.editor.removeListener('mouseup', this.handleMouseUp);
+    this.editor.tokenTooltip.destroy();
+    this.editor.onPaste = this.__editorOnPaste;
+    this.editor.getCopyText = this.__editorCopyText;
+    this.editor.setOption('dragEnabled', true);
+    return this.editor.setOption('enableBlockSelect', true);
+  };
+
+  _Class.prototype.attachToEditor = function(editor) {
+    var session;
+    session = editor.session;
+    this.editor = editor;
+    this.editor.completers = this.completers;
+    this.editor.session.setUndoManager(this.createUndoManager());
+    editor.setOption('dragEnabled', false);
+    editor.setOption('enableBlockSelect', false);
+    this.editor.on('mousedown', this.handleMouseDown);
+    this.editor.on('mouseup', this.handleMouseUp);
+    this.editor.tokenTooltip = new CombinedTooltip(this.editor);
+    this.editor.tokenTooltip.setTooltipContentForToken = this.docsTooltip;
+    this.__editorOnPaste = this.editor.onPaste;
+    this.editor.onPaste = this.handlePaste;
+    this.__editorCopyText = this.editor.getCopyText;
+    this.editor.getCopyText = this.handleCopy;
+    this.editor.selection.on('removeRange', this.handleRangeDeselect);
+    this.editor.commands.on('afterExec', this.handleCommandExecution);
+    this.createMultiSelectKeyboardHandler();
+    session.multiSelect.on('multiSelect', this.addMultiSelectKeyboardHandler);
+    session.multiSelect.on('singleSelect', this.removeMultiSelectKeyboardHandler);
+    this.editor.on('blur', this.detach);
+    if (!this.isSingleLineInput) {
+      this.addVerticalCommands(session);
+    }
+    this.addCommands(session);
+    return this.initAst("");
+  };
+
+  _Class.prototype.setContent = function(string, selectedRange, moduleName) {
+    var added, e, inside;
+    try {
+      if (moduleName != null) {
+        this.assignModuleName(moduleName);
+      }
+      added = astize(string, this.ast);
+      inside = insideTangible(this.ast);
+      this.mutate(extend({
+        changeInTree: {
+          added: added,
+          at: inside
+        }
+      }, selectedRange ? {
+        selectionRange: selectedRange
+      } : {
+        tangibleSelection: {
+          "in": added,
+          out: inside.out
+        }
+      }));
+      return this.handleCommandExecution();
+    } catch (_error) {
+      e = _error;
+      console.error(e, e.stack);
+      console.error(string);
+      return this.editor.insert(string);
+    }
+  };
+
+  _Class.prototype.selectInitially = function(toSelect) {
+    return this.initialSelection = toSelect;
+  };
+
+  _Class.prototype.tangibleSelectionFromRange = function(range) {
+    var end, from, start, to;
+    start = this.tangibleAtPos(range.start);
+    end = this.tangibleAtPos(range.end);
+    if (_notEmpty(start["in"])) {
+      from = childIndex(start["in"][0]);
+      to = childIndex(end.out[0]);
+      return {
+        "in": (parentOfTangible(start)).slice(from, to),
+        out: end.out
+      };
+    } else {
+      return end;
+    }
+  };
+
+  _Class.prototype.initAst = function(value) {
+    this.ast = this.isSingleLineInput ? compiler.astizeExpressionWithWrapper(value) : compiler.astizeList(value);
+    if (value === '') {
+      return this.mutate({
+        tangibleSelection: insideTangible(this.ast)
+      });
+    }
+  };
+
+  _Class.prototype.updateAst = function(ast, errors) {
+    var e, toSelect;
+    if (errors == null) {
+      errors = [];
+    }
+    try {
+      duplicateProperties(ast, this.ast);
+    } catch (_error) {
+      e = _error;
+      console.error(ast, this.ast);
+    }
+    this.$tokenizer._signal('update', {
+      data: {
+        rows: {
+          first: 1
+        }
+      }
+    });
+    if ((_empty(errors)) || !this.isAutocompleting()) {
+      this.updateAutocomplete();
+    }
+    this.addErrorMarkers(errors);
+    if (toSelect = this.initialSelection) {
+      this.initialSelection = null;
+      return this.mutate({
+        inSelection: findName(toSelect.name, this.ast)
+      });
+    }
+  };
+
+  _Class.prototype.repositionAst = function() {
+    var currentPosition, n, next, node, offset, push, stack, _results;
+    currentPosition = this.ast.start;
+    stack = [[this.ast, true]];
+    _results = [];
+    while (next = stack.pop()) {
+      node = next[0], push = next[1];
+      if (isForm(node)) {
+        if (push) {
+          node.start = currentPosition;
+          stack.push([node, false]);
+          _results.push((function() {
+            var _i, _results1;
+            _results1 = [];
+            for (_i = node.length - 1; _i >= 0; _i += -1) {
+              n = node[_i];
+              _results1.push(stack.push([n, true]));
+            }
+            return _results1;
+          })());
+        } else {
+          _results.push(node.end = currentPosition);
+        }
+      } else {
+        offset = currentPosition - node.start;
+        node.start = currentPosition;
+        node.end += offset;
+        _results.push(currentPosition = node.end);
+      }
+    }
+    return _results;
+  };
+
+  _Class.prototype.addErrorMarkers = function(errors) {
+    var conflicts, firstError, i, message, node, origin, trueOrigin, type;
+    this.removeErrorMarkers();
+    this.errorMarkers = [];
+    firstError = errors[0];
+    if (firstError) {
+      message = firstError.message, conflicts = firstError.conflicts;
+      if (message) {
+        this.errorMarkers = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (i = _i = 0, _len = conflicts.length; _i < _len; i = ++_i) {
+            type = conflicts[i];
+            if (!(type && (origin = originOf(type)))) {
+              continue;
+            }
+            trueOrigin = _transformed(origin);
+            node = findNodeWithPosition(this.ast, trueOrigin.start, trueOrigin.end)[0];
+            _results.push({
+              node: node
+            });
+          }
+          return _results;
+        }).call(this);
+        return this.updateErrorMarkers();
+      }
+    }
+  };
+
+  _Class.prototype.updateErrorMarkers = function() {
+    var lineRange, marker, node, range, _i, _len, _ref1, _results;
+    this.removeErrorMarkers();
+    _ref1 = this.errorMarkers || [];
+    _results = [];
+    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+      marker = _ref1[_i];
+      if (!marker.node) {
+        continue;
+      }
+      node = marker.node;
+      range = this.nodeRange(node);
+      lineRange = this.errorMarkerRange(range);
+      _results.push(marker.id = this.editor.session.addMarker(lineRange, 'clazz', this.showError(range, lineRange, node.tea), true));
+    }
+    return _results;
+  };
+
+  _Class.prototype.removeErrorMarkers = function() {
+    var id, _i, _len, _ref1, _results;
+    _ref1 = this.errorMarkers || [];
+    _results = [];
+    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+      id = _ref1[_i].id;
+      if (id) {
+        _results.push(this.editor.session.removeMarker(id));
+      }
+    }
+    return _results;
+  };
+
+  _Class.prototype.showError = function(range, lineRange, type) {
+    var draw;
+    draw = (function(_this) {
+      return function(stringBuilder, r, l, t, config, layer) {
+        var subclass;
+        subclass = range.isMultiLine() ? ' golem_error-origin-open' : '';
+        return layer.drawSingleLineMarker(stringBuilder, lineRange, 'golem_error-origin' + subclass, config);
+      };
+    })(this);
+    draw.type = type;
+    return draw;
+  };
+
+  _Class.prototype.errorMarkerRange = function(range) {
+    var row;
+    if (range.isMultiLine()) {
+      row = range.start.row;
+      return new Range(row, range.start.column, row, this.editor.session.getScreenLastRowColumn(row));
+    } else {
+      return range;
+    }
+  };
+
+  _Class.prototype.doAutocomplete = function(e) {
+    var atom, editor, ignoredCommands, _ref1;
+    editor = this.editor;
+    ignoredCommands = ['Up', 'Down', 'Ctrl-Up|Ctrl-Home', 'Ctrl-Down|Ctrl-End', 'PageUp', 'PageDown'];
+    if ((e != null ? e.command.autocomplete : void 0) && ((atom = this.editedAtom()) && (!isHalfDelimitedAtom(atom)) && (!isNumerical(atom)) && (this.offsetToCursor(atom)) === atom.symbol.length || this.isInserting())) {
+      return this.openAutocomplete();
+    } else if (editor.completer && ((_ref1 = e != null ? e.command.name : void 0, __indexOf.call(ignoredCommands, _ref1) < 0) || atom && isNumerical(atom))) {
+      return editor.completer.detach();
+    }
+  };
+
+  _Class.prototype.openAutocomplete = function() {
+    var editor;
+    editor = this.editor;
+    if (!this.isAutocompleting() || this.isInserting()) {
+      if (!editor.completer) {
+        editor.completer = new CustomAutocomplete(!this.isSingleLineInput);
+      }
+      this.closeTooltip();
+      return editor.completer.showPopup(editor);
+    }
+  };
+
+  _Class.prototype.updateAutocomplete = function() {
+    var selected;
+    if (this.isAutocompleting()) {
+      return this.editor.completer.updateCompletions();
+    } else if (this.editor.isFocused() && (this.isInserting() || (selected = this.onlySelectedExpression()) && !selected.tea)) {
+      return this.openAutocomplete();
+    }
+  };
+
+  _Class.prototype.isAutocompleting = function() {
+    return this.editor.completer && this.editor.completer.activated;
+  };
+
+  _Class.prototype.createCompleter = function() {
+    var completer;
+    return completer = {
+      getCompletions: (function(_this) {
+        return function(editor, session, pos, prefix, callback) {
+          var editedSymbol, reference, targetMode, typed, _ref1, _ref2;
+          if (prefix && ((_ref1 = editor.completer.completions) != null ? _ref1.filtered.length : void 0) > 0) {
+            return;
+          }
+          targetMode = session.getMode();
+          if (targetMode.isEditing()) {
+            typed = targetMode.editedAtom();
+            editedSymbol = typed.symbol;
+          } else {
+            typed = toNode(targetMode.selectedTangible());
+          }
+          if (typed.tea && !typed.tea.ForAll && !((_ref2 = typed.assignable) != null ? _ref2.top : void 0)) {
+            reference = {
+              type: typed.tea,
+              scope: typed.scope,
+              pattern: typed.assignable,
+              emptyCall: isEmptyCall(typed.parent)
+            };
+            return _this.worker.call('matchingDefinitions', [reference], function(completions) {
+              var arity, docs, rawType, score, symbol, type;
+              return callback(null, (function() {
+                var _ref3, _results;
+                _results = [];
+                for (symbol in completions) {
+                  _ref3 = completions[symbol], type = _ref3.type, score = _ref3.score, rawType = _ref3.rawType, arity = _ref3.arity, docs = _ref3.docs;
+                  _results.push({
+                    name: symbol,
+                    value: symbol,
+                    completer: completer,
+                    score: score,
+                    meta: type,
+                    rawType: rawType,
+                    arity: arity,
+                    docs: docs
+                  });
+                }
+                return _results;
+              })());
+            });
+          } else if (typed.inferredType) {
+            return _this.worker.call('availableTypes', [typed.inferredType], function(completions) {
+              var docs, name, type;
+              return callback(null, (function() {
+                var _ref3, _results;
+                _results = [];
+                for (name in completions) {
+                  _ref3 = completions[name], type = _ref3.type, docs = _ref3.docs;
+                  _results.push({
+                    name: type,
+                    value: type,
+                    completer: completer,
+                    docs: docs
+                  });
+                }
+                return _results;
+              })());
+            });
+          } else {
+            callback("error", []);
+          }
+        };
+      })(this),
+      getDocTooltip: (function(_this) {
+        return function(selected) {
+          if (selected.rawType && !selected.docHTML) {
+            selected.docHTML = _this.createDocTooltipHtml(selected);
+          }
+        };
+      })(this),
+      insertMatch: (function(_this) {
+        return function(editor, _arg) {
+          var mode, selected, value;
+          value = _arg.value;
+          mode = editor.session.getMode();
+          mode.startGroupMutation();
+          mode.removeSelected();
+          mode.insertStringForward(value);
+          if (isForm(selected = mode.onlySelectedExpression())) {
+            mode.mutate({
+              tangibleSelection: firstFakeInside(FORWARD, selected)
+            });
+          }
+          return mode.finishGroupMutation();
+        };
+      })(this)
+    };
+  };
+
+  _Class.prototype.docsTooltip = function(token, tooltip) {
+    var activate, malformed, reference, type, _ref1;
+    activate = (function(_this) {
+      return function(html) {
+        tooltip.setHtml(html);
+        tooltip.open();
+        return _this.activeTooltip = tooltip;
+      };
+    })(this);
+    tooltip.hideAndRemoveMarker();
+    if ((malformed = token.malformed) || (isDelim(token)) && (malformed = token.parent.malformed)) {
+      return activate(malformed);
+    } else if (token.scope != null) {
+      reference = {
+        name: token.symbol,
+        scope: token.scope
+      };
+      return this.worker.call('docsFor', [reference], (function(_this) {
+        return function(info) {
+          if (info != null) {
+            return activate((token.label === 'name') && info.rawType ? _this.prettyPrintTypeForDoc(info) : _this.createDocTooltipHtml(info));
+          }
+        };
+      })(this));
+    } else if (type = ((_ref1 = token.type) != null ? _ref1.type : void 0) || token.tea) {
+      return activate(this.prettyPrintTypeForDoc({
+        rawType: type
+      }));
+    }
+  };
+
+  _Class.prototype.lookupSource = function(token, whenFound) {
+    var reference;
+    reference = {
+      name: token.symbol,
+      scope: token.scope
+    };
+    return this.worker.call('docsFor', [reference], (function(_this) {
+      return function(info) {
+        var fn, params, rest, source, _ref1;
+        source = info.source;
+        if (isFunction(source)) {
+          _ref1 = _terms(source), fn = _ref1[0], params = _ref1[1], rest = 3 <= _ref1.length ? __slice.call(_ref1, 2) : [];
+          source = call_(fn, join([params], filter(isFunctionBody, rest)));
+        }
+        return whenFound(enforceSpacing(source));
+      };
+    })(this));
+  };
+
+  _Class.prototype.closeTooltip = function() {
+    return this.detach();
+  };
+
+  _Class.prototype.detach = function() {
+    var _ref1;
+    return (_ref1 = this.activeTooltip) != null ? _ref1.hideAndRemoveMarker() : void 0;
+  };
+
+  _Class.prototype.createDocTooltipHtml = function(info) {
+    var paramNames;
+    return ("<span style='color: #9EE062'>" + info.name + "</span>") + (!info.arity ? '' : (paramNames = info.arity || [], " <span style='color: #9C49B6'>" + (paramNames.join(' ')) + "</span>")) + '\n' + (!info.rawType ? '' : "" + (this.prettyPrintTypeForDoc(info)) + "\n") + (!info.docs ? '' : compiler.labelDocs(info.docs, paramNames));
+  };
+
+  _Class.prototype.prettyPrintTypeForDoc = function(_arg) {
+    var rawType;
+    rawType = _arg.rawType;
+    return compiler.prettyPrint(rawType);
+  };
+
+  _Class.prototype.handleMouseDown = function(event) {
+    return this.mouseDownTime = +(new Date);
+  };
+
+  _Class.prototype.handleMouseUp = function(event) {
+    event.duration = (new Date) - this.mouseDownTime;
+    event.preventDefault();
+    return this.handleClick(event);
+  };
+
+  _Class.prototype.handleClick = function(event) {
+    var LONG_CLICK_DURATION;
+    LONG_CLICK_DURATION = 200;
+    if (event.duration > LONG_CLICK_DURATION) {
+      return this.editor.execCommand('edit by click');
+    } else if (event.domEvent.shiftKey) {
+      return this.editor.execCommand('expand selection by click');
+    } else {
+      if (this.ast) {
+        return this.editor.execCommand('select by click');
+      }
+    }
+  };
+
+  _Class.prototype.handleCopy = function() {
+    var indentSize, selectedText;
+    selectedText = this.editor.getSelectedText();
+    indentSize = depthOf(toNode(this.selectedTangible()));
+    if (indentSize > 0) {
+      return selectedText.replace(new RegExp("\\n" + (Array(indentSize * 2 + 1).join(' ')), 'g'), '\n');
+    } else {
+      return selectedText;
+    }
+  };
+
+  _Class.prototype.handlePaste = function(string) {
+    var expressions, selections;
+    expressions = string.split(/(?:\r\n|\r|\n)(?!\s)/);
+    selections = this.editor.selection.rangeList.ranges;
+    if (expressions.length > selections.length || expressions.length < 2 || !expressions[1]) {
+      return this.editor.commands.exec("insertstring", this.editor, string);
+    }
+    this.startGroupMutation();
+    this.editor.forEachSelection({
+      exec: (function(_this) {
+        return function() {
+          return _this.insertStringForward(expressions[_this.editor.selection.index]);
+        };
+      })(this)
+    });
+    this.finishGroupMutation();
+    return this.handleCommandExecution({
+      command: {
+        name: 'paste'
+      }
+    });
+  };
+
+  _Class.prototype.undoManager = function() {
+    var manager;
+    return manager = this.editor.session.getUndoManager();
+  };
+
+  _Class.prototype.createUndoManager = function() {
+    return new CustomUndoManager(this);
+  };
+
+  _Class.prototype.addVerticalCommands = function() {
+    return this.editor.commands.addCommands({
+      'move up to atom or position': {
+        bindKey: {
+          win: 'Up',
+          mac: 'Up'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.selectLineAdjecentAtomOrPosition(PREVIOUS);
+          };
+        })(this)
+      },
+      'move down to atom or position': {
+        bindKey: {
+          win: 'Down',
+          mac: 'Down'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.selectLineAdjecentAtomOrPosition(NEXT);
+          };
+        })(this)
+      },
+      'add a new sibling expression on the next line': {
+        bindKey: {
+          win: 'Enter',
+          mac: 'Enter'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.replaceSpace(FORWARD, '\n');
+          };
+        })(this)
+      },
+      'add a new sibling expression on the previous line': {
+        bindKey: {
+          win: 'Shift-Enter',
+          mac: 'Shift-Enter'
+        },
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.replaceSpace(BACKWARD, '\n');
+          };
+        })(this)
+      },
+      'select the next reference of selection': {
+        bindKey: {
+          win: 'Tab',
+          mac: 'Tab'
+        },
+        scrollIntoView: 'center',
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.selectReferenceInDirection(FORWARD);
+          };
+        })(this)
+      },
+      'select the previous reference of selection': {
+        bindKey: {
+          win: 'Shift-Tab',
+          mac: 'Shift-Tab'
+        },
+        scrollIntoView: 'center',
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.selectReferenceInDirection(BACKWARD);
+          };
+        })(this)
+      }
+    });
+  };
+
+  _Class.prototype.createMultiSelectKeyboardHandler = function() {
+    return this.multiSelectKeyboardHandler = new HashHandler([
+      {
+        name: 'escape multi select',
+        bindKey: 'esc',
+        scrollIntoView: 'cursor',
+        readOnly: true,
+        exec: (function(_this) {
+          return function() {
+            var firstSelected, selection, _ref1;
+            selection = _this.editor.selection;
+            _ref1 = selection.ranges, firstSelected = _ref1[_ref1.length - 1];
+            return selection.toSingleRange(firstSelected);
+          };
+        })(this),
+        isAvailable: (function(_this) {
+          return function() {
+            return _this.isMultiSelecting();
+          };
+        })(this)
+      }
+    ]);
+  };
+
+  _Class.prototype.addMultiSelectKeyboardHandler = function() {
+    return this.editor.keyBinding.addKeyboardHandler(this.multiSelectKeyboardHandler);
+  };
+
+  _Class.prototype.removeMultiSelectKeyboardHandler = function() {
+    return this.editor.keyBinding.removeKeyboardHandler(this.multiSelectKeyboardHandler);
+  };
+
+  _Class.prototype.addCommands = function() {
+    this.editor.commands.addCommands({
+      'insertstring': {
+        multiSelectAction: 'forEach',
+        scrollIntoView: 'cursor',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function(editor, string) {
+            return _this.insertStringForward(string);
+          };
+        })(this)
+      }
+    });
+    return this.editor.commands.addCommands(this.commands = {
+      'ignoretheseshortcuts': {
+        readOnly: true,
+        bindKey: {
+          win: "Ctrl-Shift-E",
+          mac: "Ctrl-Shift-E|Command-G|Command-Shift-G|Ctrl-G|Ctrl-Shift-G|Command-Shift-Up|Shift-Up|Shift-Down|Ctrl-N|Option-Shift-Left|Option-Shift-Right|Command-Shift-Left|Command-Shift-Right|Ctrl-B|Ctrl-V|Command-Option-E|Command-Shift-E|Command-D|Command-Shift-D duplicateSelection|Command-Alt-S|Command-/|Command-Shift-/|Command-Option-Up|Command-Option-Down|Command-Delete|Ctrl-H|Alt-Delete|Alt-Backspace|Ctrl-Alt-Backspace|Ctrl-[|Ctrl-]|Ctrl-Shift-U|Command-Shift-L|Ctrl-Alt-Up|Ctrl-Alt-Down|Ctrl-Alt-Shift-Up|Ctrl-Alt-Shift-Down|Ctrl-Alt-Left|Ctrl-Alt-Right|Ctrl-Alt-Shift-Left|Ctrl-Alt-Shift-Right|Ctrl-Alt-L|Ctrl-Alt-A|Ctrl-Alt-G"
+        },
+        exec: (function(_this) {
+          return function() {};
+        })(this)
+      },
+      'select by click': {
+        readOnly: true,
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.mutate({
+              tangibleSelection: _this.tangibleAtPos(_this.cursorPosition())
+            });
+          };
+        })(this)
+      },
+      'edit by click': {
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            var node, tangible;
+            tangible = _this.tangibleAtPos(_this.cursorPosition());
+            node = onlyExpression(tangible);
+            return _this.mutate(node && isAtom(node) ? {
+              withinAtom: node,
+              withinAtomPos: _this.offsetToCursor(node)
+            } : {
+              tangibleSelection: tangible
+            });
+          };
+        })(this)
+      },
+      'expand selection by click': {
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            var from, to, _ref1;
+            _ref1 = siblingTangibleAncestors([_this.selectedTangible(), _this.tangibleAtPos(_this.cursorPosition())]), from = _ref1[0], to = _ref1[1];
+            return _this.mutate({
+              tangibleSelection: tangibleBetween(from, to)
+            });
+          };
+        })(this)
+      },
+      'cut': {
+        scrollIntoView: 'cursor',
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            var range;
+            range = _this.editor.getSelectionRange();
+            _this.editor._emit('cut', range);
+            return _this.remove(FORWARD);
+          };
+        })(this)
+      },
+      'find': {
+        bindKey: {
+          win: "Ctrl-Shift-F",
+          mac: "Command-F"
+        },
+        readOnly: true,
+        exec: (function(_this) {
+          return function() {
+            if (!_this.isSingleLineInput) {
+              return CustomSearchBox.Search(_this.editor);
+            }
+          };
+        })(this)
+      },
+      'selectall': {
+        bindKey: {
+          win: "Ctrl-A",
+          mac: "Command-A"
+        },
+        readOnly: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.mutate({
+              tangibleSelection: insideTangible(_this.ast)
+            });
+          };
+        })(this)
+      },
+      'select enclosing expression': {
+        bindKey: {
+          win: 'Ctrl-Up',
+          mac: 'Command-Up'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.mutate({
+              inSelection: _this.isEditing() ? _this.editedAtom() : _this.realParentOfSelected()
+            });
+          };
+        })(this)
+      },
+      'select the first expression inside selection': {
+        bindKey: {
+          win: 'Ctrl-Down',
+          mac: 'Command-Down'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.moveDown(FIRST, LAST);
+          };
+        })(this)
+      },
+      'select the last expression inside selection': {
+        bindKey: {
+          win: 'Ctrl-Shift-Down',
+          mac: 'Command-Shift-Down'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.moveDown(LAST, FIRST);
+          };
+        })(this)
+      },
+      'move to next atom or position': {
+        bindKey: {
+          win: 'Right',
+          mac: 'Right'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.selectFollowingAtomOrPosition(NEXT);
+          };
+        })(this)
+      },
+      'move to previous atom or position': {
+        bindKey: {
+          win: 'Left',
+          mac: 'Left'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.selectFollowingAtomOrPosition(PREVIOUS);
+          };
+        })(this)
+      },
+      'select next sibling expression': {
+        bindKey: {
+          win: 'Ctrl-Right',
+          mac: 'Command-Right'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.selectSibling(NEXT);
+          };
+        })(this)
+      },
+      'select previous sibling expression': {
+        bindKey: {
+          win: 'Ctrl-Left',
+          mac: 'Command-Left'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.selectSibling(PREVIOUS);
+          };
+        })(this)
+      },
+      'include next expression in selection': {
+        bindKey: {
+          win: 'Shift-Right',
+          mac: 'Shift-Right'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.expandSelection(NEXT);
+          };
+        })(this)
+      },
+      'include previous expression in selection': {
+        bindKey: {
+          win: 'Shift-Left',
+          mac: 'Shift-Left'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.expandSelection(PREVIOUS);
+          };
+        })(this)
+      },
+      'add new sibling expression': {
+        bindKey: {
+          win: 'Space',
+          mac: 'Space'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.insertSpace(FORWARD, ' ');
+          };
+        })(this)
+      },
+      'add new sibling expression before current': {
+        bindKey: {
+          win: 'Shift-Space',
+          mac: 'Shift-Space'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.insertSpace(BACKWARD, ' ');
+          };
+        })(this)
+      },
+      'removeback': {
+        bindKey: {
+          win: 'Backspace',
+          mac: 'Backspace'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.remove(BACKWARD);
+          };
+        })(this)
+      },
+      'removeforward': {
+        bindKey: {
+          win: 'Delete',
+          mac: 'Delete|Shift-Delete|Ctrl-Backspace|Shift-Backspace'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.remove(FORWARD);
+          };
+        })(this)
+      },
+      'flatten onto a single line': {
+        bindKey: {
+          win: 'Ctrl-Space',
+          mac: 'Ctrl-Space'
+        },
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.removeNewLines();
+          };
+        })(this)
+      },
+      'jump to next occurence of the selection': {
+        bindKey: {
+          win: 'Ctrl-Tab',
+          mac: 'Alt-Tab'
+        },
+        readOnly: true,
+        scrollIntoView: 'center',
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.selectOccurenceInDirection(FORWARD);
+          };
+        })(this)
+      },
+      'jump to previous occurence of the selection': {
+        bindKey: {
+          win: 'Ctrl-Shift-Tab',
+          mac: 'Alt-Shift-Tab'
+        },
+        readOnly: true,
+        scrollIntoView: 'center',
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.selectOccurenceInDirection(BACKWARD);
+          };
+        })(this)
+      },
+      'multiselect next reference': {
+        bindKey: {
+          win: 'Ctrl-S',
+          mac: 'Ctrl-S'
+        },
+        readOnly: true,
+        scrollIntoView: 'center',
+        exec: (function(_this) {
+          return function() {
+            return _this.multiSelectReferenceInDirection(FORWARD);
+          };
+        })(this)
+      },
+      'multiselect previous reference': {
+        bindKey: {
+          win: 'Ctrl-Shift-S',
+          mac: 'Ctrl-Shift-S'
+        },
+        readOnly: true,
+        scrollIntoView: 'center',
+        exec: (function(_this) {
+          return function() {
+            return _this.multiSelectReferenceInDirection(BACKWARD);
+          };
+        })(this)
+      },
+      'shift expression backward': {
+        bindKey: {
+          win: 'Alt-Left',
+          mac: 'Alt-Left'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.moveSelection(BACKWARD);
+          };
+        })(this)
+      },
+      'shift expression forward': {
+        bindKey: {
+          win: 'Alt-Right',
+          mac: 'Alt-Right'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.moveSelection(FORWARD);
+          };
+        })(this)
+      },
+      'shift all expressions on a line up': {
+        bindKey: {
+          win: 'Alt-Up',
+          mac: 'Alt-Up'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.moveSelectionByLine(BACKWARD);
+          };
+        })(this)
+      },
+      'shift all expressions on a line down': {
+        bindKey: {
+          win: 'Alt-Down',
+          mac: 'Alt-Down'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.moveSelectionByLine(FORWARD);
+          };
+        })(this)
+      },
+      'insert a character': {
+        bindKey: {
+          win: '\\',
+          mac: '\\'
+        },
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.insertStringForward(_this.isEditingHalfDelimited() ? '\\' : '\\_');
+          };
+        })(this)
+      },
+      'wrap in a call': {
+        bindKey: {
+          win: 'Ctrl-Shift-9',
+          mac: 'Command-Shift-9'
+        },
+        logicalKey: {
+          win: 'Ctrl-(',
+          mac: 'Command-('
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.wrap('(', {
+              insert: true
+            }, ' ', {
+              selected: true
+            }, ')');
+          };
+        })(this)
+      },
+      'wrap in parentheses': {
+        bindKey: {
+          win: '(',
+          mac: '('
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.insertOpeningDelim('(', ')');
+          };
+        })(this)
+      },
+      'wrap in brackets': {
+        bindKey: {
+          win: '[',
+          mac: '['
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.insertOpeningDelim('[', ']');
+          };
+        })(this)
+      },
+      'wrap in braces': {
+        bindKey: {
+          win: '{',
+          mac: '{'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.insertOpeningDelim('{', '}');
+          };
+        })(this)
+      },
+      'insert or surround by quotes': {
+        bindKey: {
+          win: '"',
+          mac: '"'
+        },
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            var atom, selected;
+            if (_this.isEditingHalfDelimited()) {
+              if ((atom = _this.editedAtom()).label === 'string' && _this.isAtLimit(FORWARD, atom)) {
+                return _this.mutate({
+                  inSelection: atom
+                });
+              } else {
+                return _this.insertStringForward('"');
+              }
+            } else {
+              selected = escape('"', _this.selectedText());
+              atom = astize('"' + selected + '"', _this.parentOfSelected())[0];
+              return _this.mutate(extend({
+                changeInTree: {
+                  added: [atom],
+                  at: _this.selectedTangible()
+                }
+              }, _this.isSelecting() ? {
+                inSelection: atom
+              } : {
+                withinAtom: atom,
+                withinAtomPos: selected.length + 1
+              }));
+            }
+          };
+        })(this)
+      },
+      'select enclosing form or insert )': {
+        bindKey: {
+          win: ')',
+          mac: ')'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.closeParentOrInsert(')');
+          };
+        })(this)
+      },
+      'select enclosing form or insert }': {
+        bindKey: {
+          win: '}',
+          mac: '}'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.closeParentOrInsert('}');
+          };
+        })(this)
+      },
+      'select enclosing form or insert ]': {
+        bindKey: {
+          win: ']',
+          mac: ']'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.closeParentOrInsert(']');
+          };
+        })(this)
+      },
+      'increment a number': {
+        bindKey: {
+          win: 'Ctrl-Shift-Up',
+          mac: 'Alt-Shift-Up'
+        },
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.changeNumerical(1);
+          };
+        })(this)
+      },
+      'decrement a number': {
+        bindKey: {
+          win: 'Ctrl-Shift-Down',
+          mac: 'Alt-Shift-Down'
+        },
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.changeNumerical(-1);
+          };
+        })(this)
+      },
+      'select enclosing definition': {
+        bindKey: {
+          win: 'Ctrl-Shift-0',
+          mac: 'Command-Shift-0'
+        },
+        logicalKey: {
+          win: 'Ctrl-)',
+          mac: 'Command-)'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            return _this.mutate({
+              inSelection: definitionAncestorOf(nodeEdgeOfTangible(FIRST, _this.selectedTangible()))
+            });
+          };
+        })(this)
+      },
+      'addlabel': {
+        bindKey: {
+          win: ':',
+          mac: ':'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            var atom, endOffset, label, _ref1;
+            if (_this.isSingleLineInput && _this.editor.getValue() === '') {
+              return false;
+            }
+            if (_this.isEditingHalfDelimited()) {
+              return _this.insertStringForward(':');
+            } else {
+              atom = _this.onlySelectedExpression();
+              return _this.mutate(_this.isEditing() || atom && isAtom(atom) ? (endOffset = atom.symbol.length, {
+                changeWithinAtom: {
+                  string: ':',
+                  atom: atom,
+                  range: [endOffset, endOffset]
+                }
+              }) : ((_ref1 = astize(':', _this.parentOfSelected()), label = _ref1[0], _ref1), {
+                changeInTree: {
+                  added: [label],
+                  at: _this.selectedTangible()
+                },
+                withinAtom: label,
+                withinAtomPos: 0
+              }));
+            }
+          };
+        })(this)
+      },
+      'insert a comment': {
+        bindKey: {
+          win: '#',
+          mac: '#'
+        },
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            if (_this.isEditingHalfDelimited()) {
+              return _this.insertStringForward('#');
+            } else {
+              return _this.wrap('(', '#', ' ', {
+                selected: true,
+                select: true
+              }, ')');
+            }
+          };
+        })(this)
+      },
+      'go to definition': {
+        bindKey: {
+          win: 'Ctrl-E',
+          mac: 'Ctrl-E'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            var atom, loadModule, ref, references, selected, _i, _len, _results;
+            loadModule = function(moduleName) {
+              return _this.editorInstance.executeCommand('load', moduleName);
+            };
+            selected = _this.onlySelectedExpression();
+            if (selected && (isAtom(atom = selected))) {
+              if (atom.id != null) {
+                references = (findAllReferences(atom))(_this.ast);
+                _results = [];
+                for (_i = 0, _len = references.length; _i < _len; _i++) {
+                  ref = references[_i];
+                  if (!(isName(ref))) {
+                    continue;
+                  }
+                  if (ref.imported) {
+                    _this.selectInitially({
+                      name: ref.imported.name
+                    });
+                    loadModule(ref.imported.module);
+                  } else {
+                    _this.mutate({
+                      inSelection: ref
+                    });
+                  }
+                  break;
+                }
+                return _results;
+              } else if (atom.label === 'module') {
+                return _this.editorInstance.executeCommand('load', atom.symbol);
+              }
+            }
+          };
+        })(this)
+      },
+      'insert call-site type': {
+        bindKey: {
+          win: 'Ctrl-T',
+          mac: 'Ctrl-T'
+        },
+        readOnly: true,
+        indirect: true,
+        autocomplete: true,
+        exec: (function(_this) {
+          return function(editor, _arg) {
+            var selected, targetEditor, targetMode, type, withoutConcretes;
+            targetEditor = (_arg != null ? _arg : {}).targetEditor;
+            if (targetEditor) {
+              targetMode = targetEditor.session.getMode();
+              selected = targetMode.onlySelectedExpression();
+              if (selected && selected.tea) {
+                type = compiler.plainPrettyPrint(selected.tea);
+                withoutConcretes = type.replace(/_\d+/, '');
+                _this.startGroupMutation();
+                _this.insertStringForward("(: " + withoutConcretes + ")");
+                _this.mutate({
+                  tangibleSelection: firstTypeVarInside(FORWARD, _fst(_arguments(_this.onlySelectedExpression())))
+                });
+                return _this.finishGroupMutation();
+              }
+            }
+          };
+        })(this)
+      },
+      'show type of an expression': {
+        bindKey: {
+          win: 'Ctrl-Shift-T',
+          mac: 'Ctrl-Shift-T'
+        },
+        readOnly: true,
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            var expression, selected;
+            selected = _this.selectedTangible();
+            if (expression = (onlyExpression(selected)) || (fakeAtInsertion(selected))) {
+              if (expression.malformed) {
+                return window.log(expression.malformed);
+              } else if (expression.tea) {
+                return window.log(compiler.prettyPrint(expression.tea));
+              }
+            }
+          };
+        })(this)
+      },
+      'remove all source': {
+        bindKey: {
+          win: 'Ctrl-Shift-Backspace',
+          mac: 'Ctrl-Shift-Backspace'
+        },
+        document: false,
+        exec: (function(_this) {
+          return function() {
+            _this.editor.setValue('');
+            return _this.initAst('');
+          };
+        })(this)
+      },
+      'replace enclosing Parent expression with current selection': {
+        bindKey: {
+          win: 'Ctrl-P',
+          mac: 'Ctrl-P'
+        },
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            var added, at, lifted, parent;
+            parent = _this.realParentOfSelected();
+            if (parent) {
+              added = _this.selectedTangible();
+              lifted = reindentTangible(added, parent.parent);
+              at = insToTangible([parent]);
+              return _this.mutate({
+                changeInTree: {
+                  added: lifted,
+                  at: at
+                },
+                inSelections: _notEmpty(lifted) ? lifted : void 0,
+                tangibleSelection: _empty(lifted) ? outsToTangible(at.out) : void 0
+              });
+            }
+          };
+        })(this)
+      },
+      'wrap current selection in a Function': {
+        bindKey: {
+          win: 'Ctrl-F',
+          mac: 'Ctrl-F'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            var separator;
+            separator = !(isTangibleAtDefinitionList(_this.selectedTangible())) || _this.isSingleLineInput ? [' '] : ['\n', '  '];
+            if (_this.isInserting()) {
+              return _this.wrap.apply(_this, ['(', 'fn', ' ', [
+                  '[', {
+                    insert: true
+                  }, ']'
+                ]].concat(__slice.call(separator), [{
+                  selected: true
+                }], [')']));
+            } else {
+              return _this.wrap('(', 'fn', ' ', '[]', ' ', {
+                selected: true,
+                select: true
+              }, ')');
+            }
+          };
+        })(this)
+      },
+      'Match on current selection': {
+        bindKey: {
+          win: 'Ctrl-M',
+          mac: 'Ctrl-M'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            if (_this.isInserting()) {
+              return _this.wrap('(', 'match', ' ', {
+                selected: true,
+                insert: true
+              }, '\n', '  ', ' ', ')');
+            } else {
+              return _this.wrap('(', 'match', ' ', {
+                selected: true
+              }, '\n', '  ', {
+                insert: true
+              }, ' ', ')');
+            }
+          };
+        })(this)
+      },
+      'wrap in a Match to return current selection': {
+        bindKey: {
+          win: 'Ctrl-Shift-M',
+          mac: 'Ctrl-Shift-M'
+        },
+        multiSelectAction: 'forEach',
+        autocomplete: true,
+        exec: (function(_this) {
+          return function() {
+            return _this.wrap('(', 'match', ' ', {
+              insert: true
+            }, '\n', '  ', ' ', {
+              selected: true
+            }, ')');
+          };
+        })(this)
+      },
+      'replace selection with an Added function parameter': {
+        bindKey: {
+          win: 'Ctrl-Shift-A',
+          mac: 'Ctrl-A'
+        },
+        exec: (function(_this) {
+          return function() {
+            var endOfParams, fun, params, parent;
+            parent = siblingTangibleAncestors(_this.selectedTangiblesList())[0];
+            if (parent) {
+              fun = findParentFunction(toNode(parent));
+            }
+            if (fun) {
+              params = findParamList(fun);
+            }
+            if (params) {
+              endOfParams = outsToTangible(params.slice(-1));
+              return _this.mutate(extend((_notEmpty(_terms(params)) ? {
+                changeInTree: {
+                  added: astize(' ', params),
+                  at: endOfParams
+                }
+              } : {}), {
+                newSelections: [endOfParams]
+              }));
+            }
+          };
+        })(this)
+      },
+      'select all occurences of selection to Rename': {
+        bindKey: {
+          win: 'Ctrl-R',
+          mac: 'Ctrl-R'
+        },
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            var atom, others, selected, tangibles;
+            selected = _this.onlySelectedExpression();
+            if (selected && isAtom(atom = selected)) {
+              others = (findOtherReferences(atom))(_this.ast);
+              tangibles = map(toTangible, others);
+              return _this.mutate({
+                inSelection: atom,
+                newSelections: tangibles
+              });
+            }
+          };
+        })(this)
+      },
+      'Evaluate selected expression': {
+        bindKey: {
+          win: 'Ctrl-Shift-X',
+          mac: 'Ctrl-X'
+        },
+        readOnly: true,
+        indirect: true,
+        exec: (function(_this) {
+          return function(editor, _arg) {
+            var close, open, selected, targetEditor, targetMode, _ref1;
+            targetEditor = (_arg != null ? _arg : {}).targetEditor;
+            if (targetEditor == null) {
+              targetEditor = _this.editor;
+            }
+            targetMode = targetEditor.session.getMode();
+            if (selected = targetMode.onlySelectedExpression()) {
+              _ref1 = compiler.astizeList(''), open = _ref1[0], close = _ref1[1];
+              return _this.editorInstance.log({
+                source: targetEditor.getSelectedText(),
+                moduleName: targetMode.moduleName,
+                ast: [open, selected, close]
+              });
+            }
+          };
+        })(this)
+      },
+      'Add definition of selected name': {
+        bindKey: {
+          win: 'Ctrl-Shift-C',
+          mac: 'Ctrl-C'
+        },
+        readOnly: true,
+        indirect: true,
+        exec: (function(_this) {
+          return function(editor, _arg) {
+            var atom, def, moved, movedTo, targetEditor, targetMode;
+            targetEditor = (_arg != null ? _arg : {}).targetEditor;
+            if (targetEditor == null) {
+              targetEditor = _this.editor;
+            }
+            targetMode = targetEditor.session.getMode();
+            if ((atom = targetMode.onlySelectedExpression()) && isName(atom)) {
+              def = tangibleBetween(toTangible(atom), toTangible(siblingTerm(NEXT, atom)));
+              movedTo = _this.insertIntoDefinitionListContaining(_this.selectedTangible());
+              moved = reindentTangible(def, movedTo.parent);
+              return _this.mutate({
+                changeInTree: {
+                  added: moved,
+                  at: outsToTangible([movedTo])
+                },
+                inSelections: moved
+              });
+            }
+          };
+        })(this)
+      },
+      'Define selected token': {
+        bindKey: {
+          win: 'Ctrl-D',
+          mac: 'Ctrl-D'
+        },
+        indirect: true,
+        exec: (function(_this) {
+          return function(editor, _arg) {
+            var args, atom, definition, hole, moved, movedTo, nameHole, newName, originalHoles, rememberedHoles, sameMode, selected, selection, selections, targetEditor, targetMode;
+            targetEditor = (_arg != null ? _arg : {}).targetEditor;
+            if (targetEditor == null) {
+              targetEditor = _this.editor;
+            }
+            targetMode = targetEditor.session.getMode();
+            selected = targetMode.onlySelectedExpression();
+            if (selected) {
+              sameMode = targetEditor === _this.editor;
+              newName = (isAtom(atom = selected)) && atom.malformed;
+              _this.startGroupMutation();
+              selections = targetMode.selectedTangiblesList();
+              if (!newName && sameMode) {
+                originalHoles = (function() {
+                  var _i, _len, _results;
+                  _results = [];
+                  for (_i = 0, _len = selections.length; _i < _len; _i++) {
+                    selection = selections[_i];
+                    this.mutate(this.removeSelectable(selection));
+                    _results.push(bookmarkBefore(this.selectedTangible()));
+                  }
+                  return _results;
+                }).call(_this);
+              }
+              movedTo = _this.insertIntoDefinitionListContaining(_this.selectedTangible());
+              if (newName) {
+                _this.insertStringForward(isOperator(atom) ? (args = argumentNamesFromCall(atom.parent), "" + atom.symbol + " (fn [" + (args.join(' ')) + "]\n  )") : "" + atom.symbol + " ");
+                hole = definition = _this.selectableEdge(LAST);
+                if (isOperator(atom)) {
+                  hole = tangibleInside(LAST, toNode(definition));
+                }
+                _this.mutate({
+                  tangibleSelection: hole
+                });
+              } else {
+                nameHole = bookmarkBefore(_this.selectedTangible());
+                _this.insertSpace(FORWARD, " ");
+                moved = reindentTangible(_fst(selections), movedTo.parent);
+                rememberedHoles = join(pickupBookmarks(originalHoles || []), [nameHole()]);
+                _this.mutate({
+                  changeInTree: {
+                    added: moved,
+                    at: outsToTangible([movedTo])
+                  },
+                  tangibleSelection: rememberedHoles[0],
+                  newSelections: rememberedHoles.slice(1)
+                });
+              }
+              return _this.finishGroupMutation();
+            }
+          };
+        })(this)
+      },
+      'Inline selected expression or replace a name by its definition': {
+        bindKey: {
+          win: 'Ctrl-I',
+          mac: 'Ctrl-I'
+        },
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            var arg, args, atom, body, definition, fn, fun, i, indented, inlined, numInlined, other, others, paramIndex, paramList, params, reducible, reindentedBody, reindentedFn, selected, use, uses, _i, _j, _k, _len, _len1, _len2;
+            selected = _this.onlySelectedExpression();
+            if (selected && (isAtom(atom = selected))) {
+              if (isName(atom)) {
+                others = (findOtherReferences(atom))(_this.ast);
+                _this.startGroupMutation();
+                if ((paramList = parentOf(atom)) && (fun = parentOf(paramList)) && (isOperator(fun)) && (isFunction(fun)) && ((findParamList(fun)) === paramList)) {
+                  args = sortedArgs(map(_symbol, _validTerms(paramList)), fun.parent);
+                  paramIndex = (_terms(paramList)).indexOf(atom);
+                  if (paramIndex < args.length && args[paramIndex]) {
+                    inlined = toTangible(args[paramIndex]);
+                    _this.mutate({
+                      changeInTree: {
+                        at: tangibleWithSomeMargin(inlined)
+                      }
+                    });
+                    _this.mutate({
+                      changeInTree: {
+                        at: tangibleWithSomeMargin(toTangible(atom))
+                      }
+                    });
+                  }
+                } else if ((definition = siblingTerm(FORWARD, atom)) && isExpression(definition)) {
+                  inlined = toTangible(definition);
+                  _this.mutate(_this.removeSelectable(tangibleBetween(toTangible(atom), inlined)));
+                  _this.mutate(_this.remove(BACKWARD));
+                  if (_this.isInserting()) {
+                    _this.mutate(_this.remove(BACKWARD));
+                  }
+                }
+                if (inlined) {
+                  for (i = _i = 0, _len = others.length; _i < _len; i = ++_i) {
+                    other = others[i];
+                    indented = reindentTangible(inlined, other.parent);
+                    _this.mutate({
+                      changeInTree: {
+                        added: indented,
+                        at: toTangible(other)
+                      }
+                    });
+                    _this.mutate(i === 0 ? {
+                      inSelections: indented
+                    } : {
+                      newSelections: [insToTangible(indented)]
+                    });
+                  }
+                  return _this.finishGroupMutation();
+                }
+              } else if (isMacro(atom)) {
+                return _this.worker.call('expand', [atom.parent], function(result) {
+                  var replacing;
+                  if (result) {
+                    replacing = reindentNodes([enforceSpacing(result)], atom.parent.parent);
+                    return _this.mutate({
+                      changeInTree: {
+                        added: replacing,
+                        at: toTangible(atom.parent)
+                      },
+                      inSelections: replacing
+                    });
+                  }
+                });
+              } else {
+                return _this.lookupSource(atom, function(definition) {
+                  var replacing;
+                  replacing = reindentNodes([definition], atom.parent);
+                  return _this.mutate({
+                    changeInTree: {
+                      added: replacing,
+                      at: _this.selectedTangible()
+                    },
+                    inSelections: replacing
+                  });
+                });
+              }
+            } else if (selected && (isBetaReducible(reducible = selected)) || (parentOf(selected)) && (isBetaReducible(reducible = parentOf(selected)))) {
+              fn = _operator(reducible);
+              params = _validTerms(findParamList(fn));
+              args = _arguments(reducible);
+              _this.startGroupMutation();
+              for (i = _j = 0, _len1 = args.length; _j < _len1; i = ++_j) {
+                arg = args[i];
+                if (!(i < params.length)) {
+                  continue;
+                }
+                uses = (findOtherReferences(params[i]))(reducible);
+                for (_k = 0, _len2 = uses.length; _k < _len2; _k++) {
+                  use = uses[_k];
+                  indented = reindentTangible(toTangible(arg), use.parent);
+                  _this.mutate({
+                    changeInTree: {
+                      added: indented,
+                      at: toTangible(use)
+                    }
+                  });
+                }
+              }
+              if (args.length === params.length) {
+                body = (_terms(fn))[2];
+                reindentedBody = reindentTangible(toTangible(body), reducible.parent);
+                _this.mutate({
+                  changeInTree: {
+                    added: reindentedBody,
+                    at: toTangible(reducible)
+                  },
+                  inSelections: reindentedBody
+                });
+              } else {
+                numInlined = Math.min(args.length, params.length);
+                _this.mutate({
+                  changeInTree: {
+                    at: tangibleWithMargin(tangibleBetween(toTangible(params[0]), toTangible(params[numInlined - 1])))
+                  }
+                });
+                _this.mutate({
+                  changeInTree: {
+                    at: tangibleWithMargin(tangibleBetween(toTangible(args[0]), toTangible(args[numInlined - 1])))
+                  }
+                });
+                if (args.length < params.length) {
+                  reindentedFn = reindentTangible(toTangible(fn), reducible.parent);
+                  _this.mutate({
+                    changeInTree: {
+                      added: reindentedFn,
+                      at: toTangible(reducible)
+                    },
+                    inSelections: reindentedFn
+                  });
+                }
+              }
+              return _this.finishGroupMutation();
+            }
+          };
+        })(this)
+      },
+      'abstract an operator with a Lambda': {
+        bindKey: {
+          win: 'Ctrl-L',
+          mac: 'Ctrl-L'
+        },
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            var abstractToLambda, args, op, parent, selected;
+            abstractToLambda = function(op, args) {
+              var argList, call, fn, params, wrapper, _ref1;
+              argList = args.join(' ');
+              wrapper = astize("(fn [" + argList + "] ( " + argList + "))", op[0].parent);
+              _this.startGroupMutation();
+              _this.mutate({
+                changeInTree: {
+                  added: wrapper,
+                  at: insToTangible(op)
+                },
+                inSelections: wrapper
+              });
+              _ref1 = _terms(wrapper[0]), fn = _ref1[0], params = _ref1[1], call = _ref1[2];
+              _this.mutate({
+                changeInTree: {
+                  added: reindentNodes(op, call),
+                  at: outsToTangible([call[1]])
+                }
+              });
+              return _this.finishGroupMutation();
+            };
+            if (isCall(parent = _this.parentOfSelected())) {
+              if (isOperator(toNode(selected = _this.selectedTangible()))) {
+                op = selected["in"];
+                args = (argumentNamesFromCall(parent)).slice((_validTerms(op)).length - 1);
+                return abstractToLambda(op, args);
+              } else if ((op = _this.onlySelectedExpression()) && isAtom(op)) {
+                return _this.worker.call('docsFor', [atomReference(op)], function(info) {
+                  if (info.arity) {
+                    args = info.arity;
+                    return abstractToLambda([op], args);
+                  }
+                });
+              }
+            }
+          };
+        })(this)
+      },
+      'push a lambda inside of a call to the Outer expression': {
+        bindKey: {
+          win: 'Ctrl-O',
+          mac: 'Ctrl-O'
+        },
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            var form, fun, newCall, newFun, pushedIn, pushedUp, pushedUpBody;
+            if ((fun = _this.onlySelectedExpression()) && (isFunction(fun)) && (isOperator(fun)) && (form = parentOf(fun.parent))) {
+              _this.startGroupMutation();
+              pushedUpBody = reindentNodes([findFunctionBody(fun)], form);
+              _this.mutate({
+                changeInTree: {
+                  added: pushedUpBody,
+                  at: toTangible(fun.parent)
+                }
+              });
+              pushedUp = reindentNodes([fun.parent], form.parent);
+              newCall = pushedUp[0];
+              newFun = _operator(newCall);
+              _this.mutate({
+                changeInTree: {
+                  added: pushedUp,
+                  at: toTangible(form)
+                }
+              });
+              pushedIn = reindentNodes([form], newCall);
+              _this.mutate({
+                changeInTree: {
+                  added: pushedIn,
+                  at: toTangible(findFunctionBody(newFun))
+                },
+                inSelection: newFun
+              });
+              return _this.finishGroupMutation();
+            }
+          };
+        })(this)
+      },
+      'push definition Up': {
+        bindKey: {
+          win: 'Ctrl-U',
+          mac: 'Ctrl-U'
+        },
+        multiSelectAction: 'forEach',
+        exec: (function(_this) {
+          return function() {
+            var pushUp, selection;
+            selection = _this.selectedTangible();
+            pushUp = function(at) {
+              var definition, definitionPair, moved, movedTo, name, newSelectionNodes, parent, recover, selectionNodes, separator, top, _ref1, _ref2;
+              top = ancestorAtDefinitonList(at);
+              definitionPair = isName(top) ? isExpression(definition = siblingTerm(FORWARD, top)) ? tangibleBetween(toTangible(top), toTangible(definition)) : void 0 : isName(name = siblingTerm(BACKWARD, top)) ? tangibleBetween(toTangible(name), toTangible(top)) : void 0;
+              if (definitionPair && parentOf(top)) {
+                parent = ancestorAtDefinitonList(top.parent);
+                movedTo = nodeEdgeOfTangible(LAST, toTangible(parent));
+                _ref1 = memorable(selection), selectionNodes = _ref1[0], recover = _ref1[1];
+                _ref2 = reindentTangiblePreserving(definitionPair, parent.parent, selectionNodes), moved = _ref2[0], newSelectionNodes = _ref2[1];
+                separator = parentOf(parent) ? '\n' : '\n\n';
+                _this.startGroupMutation();
+                _this.mutate(_this.removeSelectable(definitionPair));
+                if (_this.isInserting()) {
+                  _this.mutate(_this.remove(BACKWARD));
+                }
+                _this.insertSpaceAt(FORWARD, separator, movedTo);
+                _this.mutate({
+                  changeInTree: {
+                    added: moved,
+                    at: {
+                      "in": [],
+                      out: [movedTo]
+                    }
+                  },
+                  memorableSelection: [recover, newSelectionNodes]
+                });
+                return _this.finishGroupMutation();
+              } else {
+                return pushUp(parentOf(at));
+              }
+            };
+            return pushUp(toNode(_this.selectedTangible()));
+          };
+        })(this)
+      }
+    });
+  };
+
+  _Class.prototype.multiSelectReferenceInDirection = function(direction) {
+    var atom, references, selected;
+    selected = this.onlySelectedExpression();
+    if (selected && (isAtom(atom = selected)) && (atom.id != null)) {
+      references = (findAllReferences(atom))(this.ast);
+      return this.mutate({
+        newSelections: [toTangible(findAdjecentInList(direction, atom, references))]
+      });
+    } else {
+      return this.multiSelectOccurenceInDirection(direction);
+    }
+  };
+
+  _Class.prototype.multiSelectOccurenceInDirection = function(direction) {
+    var occurences, selected;
+    if (!this.isInserting()) {
+      selected = this.selectedTangible()["in"];
+      occurences = (findAllOccurences(selected))(this.ast);
+      return this.mutate({
+        newSelections: [insToTangible(findAdjecentInList(direction, selected, occurences))]
+      });
+    }
+  };
+
+  _Class.prototype.selectReferenceInDirection = function(direction) {
+    var atom, references, selected;
+    selected = this.onlySelectedExpression();
+    if (selected && (isAtom(atom = selected)) && (atom.id != null)) {
+      references = (findAllReferences(atom))(this.ast);
+      return this.mutate({
+        inSelection: findAdjecentInList(direction, atom, references)
+      });
+    } else {
+      return this.selectOccurenceInDirection(direction);
+    }
+  };
+
+  _Class.prototype.selectOccurenceInDirection = function(direction) {
+    var occurences, selected;
+    if (!this.isInserting()) {
+      selected = this.selectedTangible()["in"];
+      occurences = (findAllOccurences(selected))(this.ast);
+      return this.mutate({
+        inSelections: findAdjecentInList(direction, selected, occurences)
+      });
+    }
+  };
+
+  _Class.prototype.moveDown = function(inTree, inAtom) {
+    var expression;
+    return this.mutate(this.isSelectingMultiple() ? {
+      tangibleSelection: this.selectableEdge(inTree)
+    } : (expression = this.onlySelectedExpression()) ? isForm(expression) ? {
+      tangibleSelection: tangibleInside(inTree, expression)
+    } : {
+      withinAtom: expression,
+      withinAtomPos: editableEdgeWithin(inAtom, expression)
+    } : {});
+  };
+
+  _Class.prototype.changeNumerical = function(difference) {
+    var atom, changed, changedSymbol, editing, offset;
+    if ((atom = this.onlySelectedExpression()) && isNumerical(atom)) {
+      offset = this.offsetToCursor(atom);
+      changedSymbol = changeNumericalAt(atom.symbol, offset, difference);
+      changed = astize(changedSymbol, atom.parent)[0];
+      editing = this.isEditing();
+      return this.mutate({
+        changeInTree: {
+          added: [changed],
+          at: this.selectedTangible()
+        },
+        inSelection: !editing ? changed : void 0,
+        withinAtom: editing ? changed : void 0,
+        withinAtomPos: editing ? changed.symbol.length - (atom.symbol.length - offset) : void 0
+      });
+    }
+  };
+
+  _Class.prototype.closeParentOrInsert = function(closingDelim) {
+    if (this.isEditingHalfDelimited()) {
+      return this.insertStringForward(closingDelim);
+    } else {
+      return this.mutate({
+        inSelection: this.realParentOfSelected()
+      });
+    }
+  };
+
+  _Class.prototype.insertOpeningDelim = function(open, close) {
+    if (this.isEditingHalfDelimited()) {
+      return this.insertStringForward(open);
+    } else {
+      return this.wrap(open, {
+        selected: true,
+        select: true
+      }, close);
+    }
+  };
+
+  _Class.prototype.wrap = function() {
+    var findTags, flatten, isString, tags, tokens;
+    tokens = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    isString = function(s) {
+      return typeof s === 'string';
+    };
+    findTags = function(tokens) {
+      var at, ats, i, key, nestedTags, offset, path, tagged, tags, _i, _j, _len, _len1;
+      tags = {};
+      offset = 0;
+      for (i = _i = 0, _len = tokens.length; _i < _len; i = ++_i) {
+        tagged = tokens[i];
+        if (!isString(tagged)) {
+          if (Array.isArray(tagged)) {
+            nestedTags = findTags(tagged);
+            for (key in nestedTags) {
+              ats = nestedTags[key];
+              for (_j = 0, _len1 = ats.length; _j < _len1; _j++) {
+                at = ats[_j];
+                path = {};
+                (tags[key] != null ? tags[key] : tags[key] = []).push({
+                  parent: i - offset,
+                  child: at
+                });
+              }
+            }
+          } else {
+            for (key in tagged) {
+              (tags[key] != null ? tags[key] : tags[key] = []).push(i - offset);
+            }
+            offset++;
+          }
+        }
+      }
+      return tags;
+    };
+    tags = findTags(tokens);
+    flatten = function(list) {
+      var flattened, node;
+      if (Array.isArray(list)) {
+        return ((function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = list.length; _i < _len; _i++) {
+            node = list[_i];
+            if (flattened = flatten(node)) {
+              _results.push(flattened);
+            }
+          }
+          return _results;
+        })()).join('');
+      } else if (isString(list)) {
+        return list;
+      }
+    };
+    return this.wrapIn(flatten(tokens), this.selectedTangible(), tags);
+  };
+
+  _Class.prototype.wrapIn = function(wrapperString, tangible, _arg) {
+    var atPath, empty, insert, select, selected, selections, wrapped, wrapper;
+    selected = _arg.selected, select = _arg.select, insert = _arg.insert;
+    if (selected == null) {
+      throw new Error("missing selected in wrapIn");
+    }
+    wrapper = astize(wrapperString, parentOfTangible(tangible))[0];
+    empty = tangible["in"].length === 0;
+    atPath = function(path, node) {
+      if (path.parent) {
+        return atPath(path.child, node[path.parent]);
+      } else {
+        return node[path];
+      }
+    };
+    this.startGroupMutation();
+    this.mutate({
+      changeInTree: {
+        added: [wrapper],
+        at: tangible
+      }
+    });
+    wrapped = reindentTangible(tangible, wrapper);
+    selections = join(select || [], insert || []);
+    this.mutate({
+      changeInTree: {
+        added: wrapped,
+        at: {
+          "in": [],
+          out: [atPath(selected[0], wrapper)]
+        }
+      },
+      inSelections: select && !empty ? wrapped : void 0,
+      tangibleSelection: !select || empty ? {
+        "in": [],
+        out: [atPath(selections[0], wrapper)]
+      } : void 0,
+      newSelections: map((function(i) {
+        return {
+          "in": [],
+          out: [atPath(i, wrapper)]
+        };
+      }), selections.slice(1))
+    });
+    return this.finishGroupMutation();
+  };
+
+  _Class.prototype.removeNewLines = function() {
+    var flattenNodes, nodes, replacing, selected;
+    selected = this.selectedTangible();
+    nodes = selected["in"];
+    flattenNodes = function(nodes) {
+      var node, _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = nodes.length; _i < _len; _i++) {
+        node = nodes[_i];
+        if (!isIndent(node)) {
+          if (isNewLine(node)) {
+            _results.push((astize(' ', node.parent))[0]);
+          } else if (isForm(node)) {
+            _results.push(listToForm(flattenNodes(node)));
+          } else {
+            _results.push(cloneNode(node));
+          }
+        }
+      }
+      return _results;
+    };
+    replacing = flattenNodes(nodes);
+    return this.mutate({
+      changeInTree: {
+        added: replacing,
+        at: selected
+      },
+      inSelections: replacing
+    });
+  };
+
+  _Class.prototype.moveSelectionByLine = function(direction) {
+    var onSiblingLine, replacedLine, selected, selectedLine;
+    selected = this.selectedTangible();
+    selectedLine = insToTangible(this.allOnLine(toNode(selected)));
+    if (onSiblingLine = sibling(direction, edgeOfList(direction, padding(direction, selectedLine)))) {
+      replacedLine = insToTangible(this.allOnLine(onSiblingLine));
+      return this.swap(direction, selectedLine, replacedLine);
+    }
+  };
+
+  _Class.prototype.allOnLine = function(node) {
+    var isInline, isOnLine, parent, towards;
+    isOnLine = (function(_this) {
+      return function(node) {
+        var range;
+        range = _this.rangeOfNodes([node]);
+        return range.start.row === range.end.row;
+      };
+    })(this);
+    isInline = function(node) {
+      return (isExpression(node)) || (isSpace(node));
+    };
+    towards = function(dir) {
+      var n, prev, _results;
+      n = node;
+      _results = [];
+      while ((prev = sibling(dir, n)) && isInline(prev)) {
+        _results.push(n = prev);
+      }
+      return _results;
+    };
+    if ((parent = parentOf(node)) && isOnLine(parent)) {
+      return this.allOnLine(parent);
+    }
+    return concat([(towards(FIRST)).reverse(), (isInline(node) ? [node] : []), towards(LAST)]);
+  };
+
+  _Class.prototype.moveSelection = function(direction) {
+    var atom, replaced, selected;
+    if (this.isEditing()) {
+      atom = this.editedAtom();
+      if (!this.isAtLimit(direction, atom)) {
+        return this.mutate({
+          withinAtom: atom,
+          withinAtomPos: (this.offsetToCursor(atom)) + direction
+        });
+      }
+    } else {
+      selected = this.selectedTangible();
+      replaced = this.selectedSibling(direction);
+      if (replaced) {
+        return this.swap(direction, selected, replaced);
+      }
+    }
+  };
+
+  _Class.prototype.swap = function(direction, selected, replaced) {
+    var movingReplaced, movingSelected, targetHole;
+    movingSelected = cloneNodes(selected["in"]);
+    movingReplaced = cloneNodes(replaced["in"]);
+    this.startGroupMutation();
+    this.mutate({
+      changeInTree: {
+        added: [],
+        at: selected
+      }
+    });
+    this.mutate({
+      changeInTree: {
+        added: movingReplaced,
+        at: {
+          "in": [],
+          out: selected.out
+        }
+      }
+    });
+    this.mutate({
+      changeInTree: {
+        added: [],
+        at: replaced
+      }
+    });
+    targetHole = {
+      "in": [],
+      out: replaced.out
+    };
+    this.mutate({
+      changeInTree: {
+        added: movingSelected,
+        at: targetHole
+      },
+      inSelections: _notEmpty(movingSelected) ? movingSelected : void 0,
+      tangibleSelection: _empty(movingSelected) ? targetHole : void 0
+    });
+    return this.finishGroupMutation();
+  };
+
+  _Class.prototype.insertStringForward = function(string) {
+    return this.insertString(FORWARD, string);
+  };
+
+  _Class.prototype.insertString = function(direction, string) {
+    var added, atom, delimiter, offset, validString;
+    if (string == null) {
+      throw "Missing string in insertString";
+    }
+    return this.mutate(this.isEditing() ? (atom = this.editedAtom(), validString = isDelimitedAtom(atom) ? (delimiter = atomDelimiter(atom), escape(delimiter, string)) : string, offset = this.offsetToCursor(atom), {
+      changeWithinAtom: {
+        string: validString,
+        range: atom.label === 'char' && atom.symbol === '\\_' ? [1, 2] : [offset, offset]
+      }
+    }) : (added = astize(string, this.parentOfSelected()), extend({
+      changeInTree: {
+        added: added,
+        at: this.selectedTangible()
+      }
+    }, added.length === 1 && isAtom((atom = added[0])) ? {
+      withinAtom: atom,
+      withinAtomPos: atom.symbol.length
+    } : {
+      inSelections: added
+    })));
+  };
+
+  _Class.prototype.insertSpace = function(direction, space) {
+    if (this.isEditing() && isDelimitedAtom(this.editedAtom())) {
+      return this.insertString(direction, space);
+    } else {
+      return this.insertSpaceAt(direction, space, this.selectedNodeEdge(direction));
+    }
+  };
+
+  _Class.prototype.replaceSpace = function(direction, newLine) {
+    var margin, siblingTangible, _ref1;
+    _ref1 = this.toSelectionSibling(direction), margin = _ref1.margin, siblingTangible = _ref1.siblingTangible;
+    if (margin && isSpace(edgeOfList(opposite(direction), margin["in"]))) {
+      return this.mutate({
+        changeInTree: {
+          added: astize(newLine, parentOfTangible(margin)),
+          at: margin
+        },
+        tangibleSelection: siblingTangible
+      });
+    } else {
+      return this.insertSpace(direction, newLine);
+    }
+  };
+
+  _Class.prototype.insertSpaceAt = function(direction, space, insertPos) {
+    var added, parent;
+    parent = insertPos.parent;
+    added = astize(space, parent);
+    return this.mutate({
+      changeInTree: {
+        added: added,
+        at: {
+          "in": [],
+          out: [insertPos]
+        }
+      },
+      tangibleSelection: {
+        "in": [],
+        out: direction === FORWARD ? [insertPos] : added
+      }
+    });
+  };
+
+  _Class.prototype.insertIntoDefinitionListContaining = function(tangible) {
+    var movedTo, separator, top;
+    top = ancestorAtDefinitonList(toNode(tangible));
+    movedTo = nodeEdgeOfTangible(LAST, termToTangible(top));
+    if (!top.fake || isName(siblingTerm(PREVIOUS, top))) {
+      separator = parentOf(top) ? '\n' : '\n\n';
+      this.insertSpaceAt(FORWARD, separator, movedTo);
+    }
+    return movedTo;
+  };
+
+  _Class.prototype.selectLineAdjecentAtomOrPosition = function(direction) {
+    var adjecent, column, form, formEdge, formStart, insideDirection, pos, row, selected, toSelect, _ref1;
+    pos = this.startPos(selected = toNode(this.selectedTangible()));
+    column = (_ref1 = this.editor.selection.$desiredColumn) != null ? _ref1 : pos.column;
+    row = pos.row + direction;
+    adjecent = this.tangibleAtPos({
+      row: row,
+      column: column + 1
+    });
+    toSelect = isForm(form = toNode(adjecent)) ? (formStart = this.startPos(form), formEdge = this.edgeOfNode(direction, form), insideDirection = formEdge.row === row && formStart.column > column ? FIRST : isNodeInside(selected, form) ? direction : opposite(direction), termToTangible(limitTerm(insideDirection, toNode(adjecent)))) : adjecent;
+    return this.mutate({
+      tangibleSelection: toSelect,
+      desiredColumn: column
+    });
+  };
+
+  _Class.prototype.selectFollowingAtomOrPosition = function(direction) {
+    if (this.isSelectingMultiple()) {
+      return this.selectSibling(direction);
+    } else {
+      return this.mutate({
+        tangibleSelection: followingTangibleAtomOrPosition(direction, this.selectedTangible())
+      });
+    }
+  };
+
+  _Class.prototype.selectSibling = function(direction) {
+    var siblingSelection;
+    return this.mutate(this.isSelectingMultiple() ? {
+      tangibleSelection: this.selectableEdge(direction)
+    } : (siblingSelection = this.selectedSibling(direction), !siblingSelection && isReal(this.parentOfSelected()) ? {
+      inSelection: this.parentOfSelected()
+    } : {
+      tangibleSelection: siblingSelection
+    }));
+  };
+
+  _Class.prototype.expandSelection = function(direction) {
+    var margin, siblingTangible, toSibling, _ref1;
+    _ref1 = this.toSelectionSibling(direction), margin = _ref1.margin, siblingTangible = _ref1.siblingTangible;
+    return this.mutate(siblingTangible ? (toSibling = append(direction, margin, siblingTangible), {
+      tangibleSelection: append(direction, this.selectedTangible(), toSibling)
+    }) : {
+      inSelection: this.realParentOfSelected()
+    });
+  };
+
+  _Class.prototype.tangibleAtPos = function(pos) {
+    var after, before, res, _ref1;
+    _ref1 = this.tokensSurroundingPos(pos), before = _ref1[0], after = _ref1[1];
+    res = tangibleSurroundedBy(FORWARD, before, after || before);
+    return res;
+  };
+
+  _Class.prototype.tokenFollowingPos = function(pos) {
+    var after, before, _ref1;
+    _ref1 = this.tokensSurroundingPos(pos), before = _ref1[0], after = _ref1[1];
+    return after || before;
+  };
+
+  _Class.prototype.tokensSurroundingPos = function(pos) {
+    var idx;
+    idx = this.trimmedPosToIdx(pos);
+    return findNodesBetween(this.ast, idx - 1, idx + 1);
+  };
+
+  _Class.prototype.tangibleRange = function(tangible) {
+    var end, start, _ref1;
+    _ref1 = nodeEdgesOfTangible(tangible), start = _ref1[0], end = _ref1[1];
+    return positionsToRange(this.startPos(start), this.startPos(end));
+  };
+
+  _Class.prototype.remove = function(direction) {
+    var atLimit, atom, defaultMargin, next, offset, parent, previous, removeDirection, removeMargin, tn;
+    return this.mutate((atom = this.editedAtom()) ? atLimit = (editableLength(atom)) === (isDelimitedAtom(atom) ? 0 : 1) ? this.removeSelectable(this.selectedTangible()) : (offset = this.offsetToCursor(atom), removeDirection = this.isAtLimit(direction, atom) ? opposite(direction) : direction, {
+      changeWithinAtom: {
+        string: '',
+        range: [offset, offset + removeDirection]
+      }
+    }) : this.isSelecting() ? this.removeSelectable(this.selectedTangible()) : (tn = this.selectedTangible(), defaultMargin = this.selectionMargin(direction), removeDirection = defaultMargin ? direction : opposite(direction), removeMargin = this.selectionMargin(removeDirection), removeMargin ? (previous = sibling(PREVIOUS, nodeEdgeOfTangible(FIRST, removeMargin)), next = nodeEdgeOfTangible(LAST, removeMargin), {
+      changeInTree: {
+        at: removeMargin
+      },
+      tangibleSelection: tangibleSurroundedBy(FORWARD, previous, next)
+    }) : isReal(parent = this.parentOfSelected()) ? this.removeSelectable(insToTangible([parent])) : {}));
+  };
+
+  _Class.prototype.removeSelected = function() {
+    if (!this.isInserting()) {
+      return this.mutate(this.removeSelectable(this.selectedTangible()));
+    }
+  };
+
+  _Class.prototype.removeSelectable = function(tangible) {
+    return {
+      changeInTree: {
+        at: tangible
+      },
+      tangibleSelection: {
+        "in": [],
+        out: tangible.out
+      }
+    };
+  };
+
+  _Class.prototype.isAtLimit = function(direction, atom) {
+    var toLimit;
+    toLimit = this.distance(this.cursorPosition(), this.editableEdge(direction, atom));
+    return toLimit === 0;
+  };
+
+  _Class.prototype.offsetToCursor = function(atom) {
+    return this.distance(this.cursorPosition(), this.startPos(atom));
+  };
+
+  _Class.prototype.selectedText = function() {
+    if (this.isEditing()) {
+      return this.editedAtom().symbol;
+    } else {
+      return this.editor.getSelectedText();
+    }
+  };
+
+  _Class.prototype.selectableEdge = function(direction) {
+    return tangibleEdge(direction, this.selectedTangible());
+  };
+
+  _Class.prototype.editableEdge = function(direction, atom) {
+    if (isDelimitedAtom(atom)) {
+      return this.idxToPos((edgeIdxOfNode(direction, atom)) + (opposite(direction)));
+    } else {
+      return this.edgeOfNode(direction, atom);
+    }
+  };
+
+  _Class.prototype.realParentOfSelected = function() {
+    var parent;
+    if (isReal(parent = this.parentOfSelected())) {
+      return parent;
+    }
+  };
+
+  _Class.prototype.parentOfSelected = function() {
+    return parentOfTangible(this.selectedTangible());
+  };
+
+  _Class.prototype.selectedSibling = function(direction) {
+    return (this.toSelectionSibling(direction)).siblingTangible;
+  };
+
+  _Class.prototype.toSelectionSibling = function(direction) {
+    var margin, siblingTangible;
+    margin = this.selectionMargin(direction);
+    if (margin) {
+      siblingTangible = padding(direction, margin);
+      return {
+        margin: margin,
+        siblingTangible: tangibleSurroundedBy(direction, edgeOfList(direction, margin["in"]), edgeOfList(opposite(direction), siblingTangible))
+      };
+    } else {
+      return {};
+    }
+  };
+
+  _Class.prototype.selectionMargin = function(direction) {
+    return tangibleMargin(direction, this.selectedTangible());
+  };
+
+  _Class.prototype.selectedNodeEdge = function(direction) {
+    return nodeEdgeOfTangible(direction, this.selectedTangible());
+  };
+
+  _Class.prototype.editedAtom = function() {
+    if (this.isEditing()) {
+      return this.onlySelectedExpression();
+    }
+  };
+
+  _Class.prototype.onlySelectedExpression = function() {
+    return onlyExpression(this.selectedTangible());
+  };
+
+  _Class.prototype.startGroupMutation = function() {
+    return this.groupMutating = true;
+  };
+
+  _Class.prototype.finishGroupMutation = function() {
+    this.groupMutating = false;
+    return this.undoManager().packGroupMutation();
+  };
+
+  _Class.prototype.registerMutation = function(state, way) {
+    var atom, selectionMutation, _base;
+    selectionMutation = this.isEditing() ? (atom = this.editedAtom(), {
+      withinAtom: atom,
+      withinAtomPos: this.distance(this.startPos(atom), this.editor.selection.getRange().end)
+    }) : {
+      tangibleSelection: this.selectedTangible()
+    };
+    return typeof (_base = this.undoManager()).registerMutation === "function" ? _base.registerMutation(state, selectionMutation, way) : void 0;
+  };
+
+  _Class.prototype.replay = function(stack, way) {
+    var state, states, _i, _len;
+    states = stack.pop();
+    if (states) {
+      this.startGroupMutation();
+      for (_i = 0, _len = states.length; _i < _len; _i++) {
+        state = states[_i];
+        this.mutate(state, way);
+      }
+      return this.finishGroupMutation();
+    }
+  };
+
+  _Class.prototype.mutate = function(state, way) {
+    var added, addedString, atom, editing, range, recover, removedRange, replaced, selectionNodes, selectionRange, selections, tangible, _base, _i, _len, _ref1, _ref2;
+    if (way == null) {
+      way = {
+        undo: true
+      };
+    }
+    this.registerMutation(state, way);
+    if (!this.groupMutating) {
+      if (typeof (_base = this.undoManager()).packGroupMutation === "function") {
+        _base.packGroupMutation();
+      }
+    }
+    if (state.changeInTree) {
+      replaced = state.changeInTree.at;
+      added = state.changeInTree.added || [];
+      removedRange = this.rangeOfTangible(replaced);
+      addedString = nodesToString(added);
+      ammendAst(replaced, added);
+    }
+    if (state.changeWithinAtom) {
+      if (removedRange) {
+        throw "atom edit during tree edit not supported";
+      }
+      replaced = state.changeWithinAtom.range;
+      added = state.changeWithinAtom.string;
+      atom = state.changeWithinAtom.atom || this.editedAtom();
+      removedRange = this.rangeWithingAtom(atom, replaced);
+      addedString = added;
+      ammendToken(atom, replaced, added);
+    }
+    if (addedString != null) {
+      this.repositionAst();
+      this.docReplace(removedRange, addedString);
+    }
+    if (state.inSelection || state.inSelections || state.tangibleSelection || state.selectionRange || state.memorableSelection) {
+      selections = state.tangibleSelection || state.selectionRange && (this.tangibleSelectionFromRange(state.selectionRange)) || state.memorableSelection && (_ref1 = state.memorableSelection, recover = _ref1[0], selectionNodes = _ref1[1], _ref1) && (recover(selectionNodes)) || insToTangible(state.inSelections || [state.inSelection]);
+      selectionRange = this.rangeOfTangible(selections);
+      editing = false;
+    }
+    if (state.withinAtom) {
+      if (selections) {
+        throw "shouldn't set both withinAtom and selection";
+      }
+      selections = insToTangible([state.withinAtom]);
+      selectionRange = this.rangeWithingAtom(state.withinAtom, [state.withinAtomPos, state.withinAtomPos]);
+      editing = true;
+    }
+    if (selections) {
+      this.select(selections, editing);
+      this.setSelectionRange(selectionRange, state.desiredColumn);
+    }
+    if (state.newSelections) {
+      _ref2 = state.newSelections;
+      for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+        tangible = _ref2[_i];
+        range = this.tangibleRange(tangible);
+        this.selectFor(tangible, false, range);
+        this.editor.selection.addRange(range);
+      }
+    }
+    return true;
+  };
+
+  _Class.prototype.handleCommandExecution = function(e) {
+    this.updateEditingMarkers();
+    this.updateErrorMarkers();
+    this.closeTooltip();
+    return this.doAutocomplete(e);
+  };
+
+  _Class.prototype.select = function(selections, shouldEdit) {
+    this.editor.selection.$nodes = selections;
+    return this.editor.selection.$editing = shouldEdit;
+  };
+
+  _Class.prototype.selectFor = function(selections, shouldEdit, editorSelection) {
+    editorSelection.$nodes = selections;
+    return editorSelection.$editing = shouldEdit;
+  };
+
+  _Class.prototype.setSelectionRange = function(range, desiredColumn) {
+    this.editor.selection.setSelectionRange(range);
+    return this.editor.selection.$desiredColumn = desiredColumn;
+  };
+
+  _Class.prototype.updateEditingMarkers = function() {
+    var editorSelections, i, range, _i, _len;
+    editorSelections = this.isMultiSelecting() ? this.editor.multiSelect.ranges : [this.editor.selection];
+    for (i = _i = 0, _len = editorSelections.length; _i < _len; i = ++_i) {
+      range = editorSelections[i];
+      this.updateEditingMarkerFor(this.isEditingFor(range), range);
+    }
+  };
+
+  _Class.prototype.updateEditingMarkerFor = function(shouldEdit, editorSelection) {
+    var atom, id, range;
+    if (id = editorSelection.$editMarker) {
+      this.editor.session.removeMarker(id);
+      editorSelection.$editMarker = void 0;
+    }
+    if (shouldEdit) {
+      atom = onlyExpression(editorSelection.$nodes);
+      range = this.editableRange(atom);
+      id = this.editor.session.addMarker(range, 'ace_active-token');
+      return editorSelection.$editMarker = id;
+    }
+  };
+
+  _Class.prototype.isMultiSelecting = function() {
+    return this.editor.multiSelect.inMultiSelectMode;
+  };
+
+  _Class.prototype.selectedTangiblesList = function() {
+    var selection, _i, _ref1, _results;
+    if (this.isMultiSelecting()) {
+      _ref1 = this.editor.multiSelect.ranges;
+      _results = [];
+      for (_i = _ref1.length - 1; _i >= 0; _i += -1) {
+        selection = _ref1[_i];
+        _results.push(selection.$nodes);
+      }
+      return _results;
+    } else {
+      return [this.selectedTangible()];
+    }
+  };
+
+  _Class.prototype.selectedTangible = function() {
+    return this.editor.selection.$nodes;
+  };
+
+  _Class.prototype.isEditing = function() {
+    return this.editor.selection.$editing;
+  };
+
+  _Class.prototype.isEditingFor = function(editorSelection) {
+    return editorSelection.$editing;
+  };
+
+  _Class.prototype.isEditingDelimited = function() {
+    return this.isEditing() && isDelimitedAtom(this.editedAtom());
+  };
+
+  _Class.prototype.isEditingHalfDelimited = function() {
+    return this.isEditing() && isHalfDelimitedAtom(this.editedAtom());
+  };
+
+  _Class.prototype.isSelecting = function() {
+    return !this.isEditing() && this.selectedTangible()["in"].length > 0;
+  };
+
+  _Class.prototype.isSelectingMultiple = function() {
+    return this.isSelecting() && this.selectedTangible()["in"].length > 1;
+  };
+
+  _Class.prototype.isInserting = function() {
+    return this.selectedTangible()["in"].length === 0;
+  };
+
+  _Class.prototype.toText = function(node) {
+    return this.editor.session.doc.getTextRange(this.range(node));
+  };
+
+  _Class.prototype.editableRange = function(atom) {
+    if (isDelimitedAtom(atom)) {
+      return this.delimitedAtomRange(atom);
+    } else {
+      return this.range(atom);
+    }
+  };
+
+  _Class.prototype.cursorPosition = function() {
+    return this.editor.getCursorPosition();
+  };
+
+  _Class.prototype.handleRangeDeselect = function(_arg) {
+    var range, ranges, _i, _len, _results;
+    ranges = _arg.ranges;
+    _results = [];
+    for (_i = 0, _len = ranges.length; _i < _len; _i++) {
+      range = ranges[_i];
+      _results.push(this.updateEditingMarkerFor(false, range));
+    }
+    return _results;
+  };
+
+  _Class.prototype.delimitedAtomRange = function(atom) {
+    var end, start, _ref1;
+    _ref1 = this.range(atom), start = _ref1.start, end = _ref1.end;
+    return Range.fromPoints(this.shiftPosBy(start, 1), this.shiftPosBy(end, -1));
+  };
+
+  _Class.prototype.rangeWithingAtom = function(atom, range) {
+    var end, start, _ref1;
+    _ref1 = sortTuple(range), start = _ref1[0], end = _ref1[1];
+    return Range.fromPoints(this.idxToPos(atom.start + start), this.idxToPos(atom.start + end));
+  };
+
+  _Class.prototype.rangeOfNodes = function(nodes) {
+    var first, last;
+    first = nodes[0], last = nodes[nodes.length - 1];
+    return positionsToRange(this.startPos(first), this.endPos(last));
+  };
+
+  _Class.prototype.rangeOfTangible = function(tangible) {
+    var from, to, _ref1;
+    _ref1 = nodeEdgesOfTangible(tangible), from = _ref1[0], to = _ref1[1];
+    return positionsToRange(this.startPos(from), this.startPos(to));
+  };
+
+  _Class.prototype.range = function(node) {
+    var end, start;
+    start = this.startPos(node);
+    end = this.endPos(node);
+    return Range.fromPoints(start, end);
+  };
+
+  _Class.prototype.endOfLine = function(pos) {
+    return this.idxToPos((this.posToIdx({
+      row: pos.row + 1,
+      column: 0
+    })) - 1);
+  };
+
+  _Class.prototype.edgeOfNode = function(direction, node) {
+    return this.idxToPos(edgeIdxOfNode(direction, node));
+  };
+
+  _Class.prototype.nodeRange = function(node) {
+    return positionsToRange(this.startPos(node), this.endPos(node));
+  };
+
+  _Class.prototype.startPos = function(node) {
+    return this.idxToPos(node.start);
+  };
+
+  _Class.prototype.endPos = function(node) {
+    return this.idxToPos(node.end);
+  };
+
+  _Class.prototype.distance = function(posA, posB) {
+    return Math.abs((this.posToIdx(posB)) - (this.posToIdx(posA)));
+  };
+
+  _Class.prototype.idxToPos = function(idx) {
+    return this.editor.session.doc.indexToPosition(idx);
+  };
+
+  _Class.prototype.posToIdx = function(pos) {
+    return this.editor.session.doc.positionToIndex(pos);
+  };
+
+  _Class.prototype.trimmedPosToIdx = function(pos) {
+    return this.posToIdx(this.editor.session.$clipPositionToDocument(pos.row, pos.column));
+  };
+
+  _Class.prototype.shiftPosBy = function(pos, offset) {
+    return this.idxToPos((this.posToIdx(pos)) + offset);
+  };
+
+  _Class.prototype.docReplace = function(range, text) {
+    var doc;
+    doc = this.editor.session.doc;
+    doc.remove(range);
+    return doc.insert(range.start, text);
+  };
+
+  _Class.prototype.prepareWorker = function() {
+    var worker;
+    worker = new DistributingWorkerClient(["ace", "compilers"], "compilers/teascript/worker", "Worker", null);
+    return this.worker = worker;
+  };
+
+  _Class.prototype.createWorker = function(session) {
+    if (!this.worker) {
+      throw new Error("Missing worker in mode");
+    }
+    this.worker.attachToDocument(session.getDocument());
+    this.worker.on("error", function(e) {
+      return session.setAnnotations([e.data]);
+    });
+    this.worker.on("ok", (function(_this) {
+      return function(e) {
+        return session.clearAnnotations();
+      };
+    })(this));
+    return this.worker;
+  };
+
+  _Class.prototype.assignModuleName = function(moduleName) {
+    if (moduleName !== this.moduleName) {
+      this.moduleName = moduleName;
+      return this.worker.call('setModuleName', [moduleName]);
+    }
+  };
+
+  return _Class;
+
+})(TextMode);
+
+CustomUndoManager = (function() {
+  function CustomUndoManager(mode) {
+    this.mode = mode;
+    this.reset = __bind(this.reset, this);
+    this.redo = __bind(this.redo, this);
+    this.undo = __bind(this.undo, this);
+    this.packGroupMutation = __bind(this.packGroupMutation, this);
+    this.registerMutation = __bind(this.registerMutation, this);
+    this.execute = __bind(this.execute, this);
+    this.reset();
+  }
+
+  CustomUndoManager.prototype.execute = function() {};
+
+  CustomUndoManager.prototype.registerMutation = function(state, selectionMutation, way) {
+    var added, atom, from, replaced, reversals, stack, to, _ref1;
+    stack = way.undo ? this.undoStack : this.redoStack;
+    reversals = [];
+    if (state.changeInTree) {
+      replaced = state.changeInTree.at;
+      added = state.changeInTree.added || [];
+      reversals.push({
+        changeInTree: {
+          at: {
+            "in": added,
+            out: replaced.out
+          },
+          added: replaced["in"]
+        }
+      });
+    }
+    if (state.changeWithinAtom) {
+      _ref1 = sortTuple(state.changeWithinAtom.range), from = _ref1[0], to = _ref1[1];
+      added = state.changeWithinAtom.string;
+      atom = state.changeWithinAtom.atom || this.mode.editedAtom();
+      reversals.push({
+        changeWithinAtom: {
+          range: [from, from + added.length],
+          string: atom.symbol.slice(from, to),
+          atom: atom
+        }
+      });
+    }
+    reversals.push(selectionMutation);
+    this.groupMutationRegister.stack = stack;
+    return this.groupMutationRegister.states.push(merge(reversals));
+  };
+
+  CustomUndoManager.prototype.packGroupMutation = function() {
+    var res, stack, states, _ref1;
+    _ref1 = this.groupMutationRegister, stack = _ref1.stack, states = _ref1.states;
+    states.reverse();
+    stack.push((this.sameKindMutation(states, stack[stack.length - 1] || []) ? res = states.concat(stack.pop()) : states));
+    return this.groupMutationRegister = {
+      states: []
+    };
+  };
+
+  CustomUndoManager.prototype.undo = function() {
+    return this.mode.replay(this.undoStack, {
+      redo: true
+    });
+  };
+
+  CustomUndoManager.prototype.redo = function() {
+    return this.mode.replay(this.redoStack, {
+      undo: true
+    });
+  };
+
+  CustomUndoManager.prototype.reset = function() {
+    this.undoStack = [];
+    this.redoStack = [];
+    return this.groupMutationRegister = {
+      states: []
+    };
+  };
+
+  CustomUndoManager.prototype.sameKindMutation = function(previousStates, nextStates) {
+    var atom, n, p, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
+    if (previousStates.length > 0 && nextStates.length > 0) {
+      p = previousStates[0];
+      n = nextStates[0];
+      return (atom = (_ref1 = p.changeInTree) != null ? _ref1.added[0] : void 0) && atom === ((_ref2 = n.changeWithinAtom) != null ? _ref2.atom : void 0) || (atom = (_ref3 = p.changeWithinAtom) != null ? _ref3.atom : void 0) && p.changeWithinAtom.string.length > 0 && atom === ((_ref4 = n.changeWithinAtom) != null ? _ref4.atom : void 0) && n.changeWithinAtom.string.length > 0 || (atom = (_ref5 = p.changeWithinAtom) != null ? _ref5.atom : void 0) && p.changeWithinAtom.string.length === 0 && atom === ((_ref6 = n.changeInTree) != null ? _ref6.at["in"][0] : void 0) || (atom = (_ref7 = p.changeWithinAtom) != null ? _ref7.atom : void 0) && p.changeWithinAtom.string.length === 0 && atom === ((_ref8 = n.changeWithinAtom) != null ? _ref8.atom : void 0) && n.changeWithinAtom.string.length === 0;
+    } else {
+      return false;
+    }
+  };
+
+  return CustomUndoManager;
+
+})();
+
+argumentNamesFromCall = function(call) {
+  var addArgName, argNames, args, defaultNames, i, labeled, term, _i, _len, _ref1;
+  defaultNames = "xyzwtuvmnopqrs";
+  labeled = false;
+  i = 0;
+  argNames = {};
+  args = [];
+  addArgName = function(symbol) {
+    var count;
+    return args.push(((count = argNames[symbol]) ? (argNames[symbol]++, symbol + count) : (argNames[symbol] = 2, symbol)));
+  };
+  _ref1 = _arguments(call);
+  for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+    term = _ref1[_i];
+    if (labeled) {
+      labeled = false;
+      continue;
+    }
+    addArgName(isLabel(term) ? (labeled = true, _labelName(term)) : (isAtom(term)) && (!isHalfDelimitedAtom(term)) && !isNumerical(term) ? term.symbol : defaultNames[i++]);
+  }
+  return args;
+};
+
+isTangibleAtDefinitionList = function(tangible) {
+  var parent;
+  if (isReal(parent = parentOfTangible(tangible))) {
+    return isParentOfDefinitionList(parent);
+  } else {
+    return true;
+  }
+};
+
+ancestorAtDefinitonList = function(node) {
+  var parent;
+  if ((parent = parentOf(node))) {
+    if ((isParentOfDefinitionList(parent)) && isExpression(node)) {
+      return node;
+    } else {
+      return ancestorAtDefinitonList(parent);
+    }
+  } else {
+    return node;
+  }
+};
+
+findParentScope = function(top, expression) {
+  return (findParentFunction(expression)) || top;
+};
+
+findParentFunction = function(expression) {
+  if (isFunction(expression)) {
+    return expression;
+  } else if (isReal(expression.parent)) {
+    return findParentFunction(expression.parent);
+  }
+};
+
+findParamList = function(form) {
+  var params;
+  params = _arguments(form)[0];
+  return params;
+};
+
+findFunctionBody = function(form) {
+  var body, _ref1;
+  _ref1 = _arguments(form), body = _ref1[_ref1.length - 1];
+  return body;
+};
+
+isBetaReducible = function(expression) {
+  return (isCall(expression)) && isFunction(_operator(expression));
+};
+
+isParentOfDefinitionList = function(expression) {
+  var _ref1;
+  return (isFunction(expression)) || (isForm(expression)) && ((_ref1 = _operator(expression)) != null ? _ref1.symbol : void 0) === 'syntax';
+};
+
+isFunction = function(expression) {
+  var _ref1;
+  return (isForm(expression)) && ((_ref1 = _operator(expression)) != null ? _ref1.symbol : void 0) === 'fn';
+};
+
+isFunctionBody = function(expression) {
+  var _ref1, _ref2;
+  return !((isForm(expression)) && ((_ref1 = (_ref2 = _operator(expression)) != null ? _ref2.symbol : void 0) === '#' || _ref1 === ':'));
+};
+
+enforceSpacing = function(expression) {
+  var form, i, prev, space, spacedForm, term, _i, _len, _ref1;
+  if (isForm(form = expression)) {
+    spacedForm = form.slice(0, 2);
+    _ref1 = form.slice(2, -1);
+    for (i = _i = 0, _len = _ref1.length; _i < _len; i = ++_i) {
+      term = _ref1[i];
+      if (!(!isWhitespace(term))) {
+        continue;
+      }
+      prev = form[i - 1 + 2];
+      space = isIndent(prev) ? form.slice(i - 2 + 2, i + 2) : isWhitespace(prev) ? [prev] : [token_(' ')];
+      spacedForm.push.apply(spacedForm, __slice.call(space).concat([enforceSpacing(term)]));
+    }
+    spacedForm.push(form[form.length - 1]);
+    return listToForm(spacedForm);
+  } else {
+    return expression;
+  }
+};
+
+definitionAncestorOf = function(node) {
+  var parent;
+  if ((parent = parentOf(node))) {
+    if (isName(siblingTerm(PREVIOUS, parent))) {
+      return parent;
+    } else {
+      return definitionAncestorOf(parent);
+    }
+  }
+};
+
+isName = function(expression) {
+  return (expression != null ? expression.label : void 0) === 'name';
+};
+
+isMacro = function(expression) {
+  return (expression != null ? expression.label : void 0) === 'keyword';
+};
+
+findAllOccurences = function(nodes) {
+  return function(node) {
+    var child, current, i, numNodes, terms;
+    numNodes = nodes.length;
+    current = (function() {
+      var _i, _ref1, _results;
+      if (numNodes === 1) {
+        if (nodesEqual(nodes[0], node)) {
+          return [[node]];
+        }
+      } else if ((isForm(node)) && node.length >= numNodes) {
+        _results = [];
+        for (i = _i = 0, _ref1 = node.length - numNodes; 0 <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = 0 <= _ref1 ? ++_i : --_i) {
+          if (nodesEqual((terms = node.slice(i, i + numNodes)), nodes)) {
+            _results.push(terms);
+          }
+        }
+        return _results;
+      }
+    })();
+    child = isForm(node) ? concatMap(findAllOccurences(nodes), node) : void 0;
+    return join(current || [], child || []);
+  };
+};
+
+nodesEqual = function(a, b) {
+  if (isForm(a)) {
+    return (isForm(b)) && a.length === b.length && all(zipWith(nodesEqual, a, b));
+  } else {
+    return a.symbol === b.symbol;
+  }
+};
+
+findName = function(symbol, nodes) {
+  var term, _i, _len;
+  for (_i = 0, _len = nodes.length; _i < _len; _i++) {
+    term = nodes[_i];
+    if ((isName(term)) && (term.symbol === symbol)) {
+      return term;
+    }
+  }
+};
+
+atomReference = function(atom) {
+  return {
+    name: atom.symbol,
+    scope: atom.scope
+  };
+};
+
+findAllReferences = function(atom) {
+  return function(node) {
+    if (isForm(node)) {
+      return concatMap(findAllReferences(atom), node);
+    } else {
+      if (node.id === atom.id) {
+        return [node];
+      } else {
+        return [];
+      }
+    }
+  };
+};
+
+findOtherReferences = function(atom) {
+  return function(node) {
+    if (isForm(node)) {
+      return concatMap(findOtherReferences(atom), node);
+    } else {
+      if (node.id === atom.id && node !== atom) {
+        return [node];
+      } else {
+        return [];
+      }
+    }
+  };
+};
+
+siblingTerm = function(direction, node) {
+  var i, t, terms, _i, _len;
+  terms = _terms(node.parent);
+  for (i = _i = 0, _len = terms.length; _i < _len; i = ++_i) {
+    t = terms[i];
+    if (t === node) {
+      if (direction === FORWARD) {
+        return terms[i + 1];
+      } else {
+        return terms[i - 1];
+      }
+    }
+  }
+};
+
+findAdjecentInList = function(direction, what, list) {
+  var element, returnNext, _i, _len;
+  for ((direction > 0 ? (_i = 0, _len = list.length) : _i = list.length - 1); direction > 0 ? _i < _len : _i >= 0; _i += direction) {
+    element = list[_i];
+    if (returnNext) {
+      return element;
+    }
+    if (element === what || element[0] && element[0] === what[0]) {
+      returnNext = true;
+    }
+  }
+  return edgeOfList(opposite(direction), list);
+};
+
+onlyExpression = function(tangible) {
+  var node;
+  node = tangible["in"][0];
+  if (tangible["in"].length === 1 && isExpression(node)) {
+    return node;
+  }
+};
+
+fakeAtInsertion = function(tangible) {
+  var fake;
+  fake = tangible.out[0];
+  if (fake.fake) {
+    return fake;
+  }
+};
+
+siblingTangibleAncestors = function(tangibles) {
+  var depths, minDepth, parents, t;
+  depths = map(__(depthOf, parentOfTangible), tangibles);
+  minDepth = Math.min.apply(Math, depths);
+  parents = (function() {
+    var _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = tangibles.length; _i < _len; _i++) {
+      t = tangibles[_i];
+      _results.push(tangibleAncestor(t, (depthOf(parentOfTangible(t))) - minDepth));
+    }
+    return _results;
+  })();
+  return siblingAncestorsFrom(parents);
+};
+
+siblingAncestorsFrom = function(tangibles) {
+  var first, t, _i, _len;
+  first = parentOfTangible(tangibles[0]);
+  for (_i = 0, _len = tangibles.length; _i < _len; _i++) {
+    t = tangibles[_i];
+    if ((parentOfTangible(t)) !== first) {
+      return siblingAncestorsFrom(map(tangibleParent, tangibles));
+    }
+  }
+  return tangibles;
+};
+
+tangibleAncestor = function(tangible, levels) {
+  if (levels === 0) {
+    return tangible;
+  } else {
+    return tangibleAncestor(tangibleParent(tangible), levels - 1);
+  }
+};
+
+tangibleBetween = function(tangible1, tangible2) {
+  var from, fromNode, parent, to, _ref1;
+  _ref1 = sortSiblingTangibles(tangible1, tangible2), from = _ref1[0], to = _ref1[1];
+  parent = parentOfTangible(from);
+  fromNode = nodeEdgeOfTangible(FIRST, from);
+  return {
+    "in": parent.slice(childIndex(fromNode), childIndexOfTangible(to)),
+    out: to.out
+  };
+};
+
+tangibleWithSomeMargin = function(tangible) {
+  var before;
+  return concatTangibles(filter(_is, [(before = tangibleMargin(PREVIOUS, tangible)), tangible, !before ? tangibleMargin(NEXT, tangible) : void 0]));
+};
+
+tangibleWithMargin = function(tangible) {
+  return concatTangibles(filter(_is, [tangibleMargin(PREVIOUS, tangible), tangible, tangibleMargin(NEXT, tangible)]));
+};
+
+tangibleMargin = function(direction, tangible) {
+  var paddingEdge, paddingNodes;
+  paddingNodes = padding(direction, tangible);
+  paddingEdge = edgeOfList(direction, paddingNodes);
+  if (isWhitespace(paddingEdge)) {
+    return insToTangible(paddingNodes);
+  } else {
+    return null;
+  }
+};
+
+sortSiblingTangibles = function(tangible1, tangible2) {
+  if ((childIndexOfTangible(tangible1)) > (childIndexOfTangible(tangible2))) {
+    return [tangible2, tangible1];
+  } else {
+    return [tangible1, tangible2];
+  }
+};
+
+tangibleEdge = function(direction, tangible) {
+  var edge;
+  edge = edgeOfList(direction, tangible["in"]);
+  if (direction === FORWARD || tangible["in"].length === 0) {
+    return {
+      "in": !edge || isWhitespace(edge) ? [] : [edge],
+      out: tangible.out
+    };
+  } else {
+    if (isWhitespace(edge)) {
+      return {
+        "in": [],
+        out: [edge]
+      };
+    } else {
+      return insToTangible([edge]);
+    }
+  }
+};
+
+parentOfTangible = function(tangible) {
+  return tangible.out[0].parent;
+};
+
+childIndexOfTangible = function(tangible) {
+  return childIndex(tangible.out[0]);
+};
+
+nodeEdgeOfTangible = function(direction, tangible) {
+  return edgeOfList(direction, nodeEdgesOfTangible(tangible));
+};
+
+nodeEdgesOfTangible = function(tangible) {
+  var from, to;
+  from = join(tangible["in"], tangible.out)[0];
+  to = tangible.out[0];
+  return [from, to];
+};
+
+insToTangible = function(ins) {
+  var last, next;
+  last = ins[ins.length - 1];
+  next = sibling(NEXT, last);
+  return {
+    "in": ins,
+    out: validOut(next)
+  };
+};
+
+outsToTangible = function(outs) {
+  return {
+    "in": [],
+    out: validOut(outs[0])
+  };
+};
+
+concatTangibles = function(tangibles) {
+  var allIn, last, _i;
+  allIn = 2 <= tangibles.length ? __slice.call(tangibles, 0, _i = tangibles.length - 1) : (_i = 0, []), last = tangibles[_i++];
+  return {
+    "in": join(concatMap(tangibleToIns, allIn), last["in"]),
+    out: last.out
+  };
+};
+
+tangibleToIns = function(tangible) {
+  return tangible["in"];
+};
+
+firstTypeVarInside = function(direction, form) {
+  var notTypeVar;
+  notTypeVar = function(x) {
+    return (isAtom(x)) && !isNotCapital(x);
+  };
+  return firstNotMatchingInside(notTypeVar, direction, form);
+};
+
+firstFakeInside = function(direction, form) {
+  return firstNotMatchingInside(isExpression, direction, form);
+};
+
+firstNotMatchingInside = function(notMatch, direction, form) {
+  var child, inside, notMatched;
+  inside = tangibleInside(opposite(direction), form);
+  while ((notMatched = notMatch(child = toNode(inside))) && isNodeInside(child, form)) {
+    inside = followingTangibleAtomOrPosition(direction, inside);
+  }
+  if (notMatched) {
+    return form;
+  } else {
+    return inside;
+  }
+};
+
+isNodeInside = function(child, ancestor) {
+  return child && (child === ancestor || isNodeInside(child.parent, ancestor));
+};
+
+followingTangibleAtomOrPosition = function(direction, tangible) {
+  return atomOrPositionFrom(direction, siblingLeaf(direction, nodeEdgeOfTangible(direction, tangible)));
+};
+
+atomOrPositionFrom = function(direction, token) {
+  var tangible;
+  if (token) {
+    if (tangible = isAtomOrPositionAt(token)) {
+      return tangible;
+    } else {
+      return atomOrPositionFrom(direction, siblingLeaf(direction, token));
+    }
+  }
+};
+
+isAtomOrPositionAt = function(after) {
+  var before;
+  before = preceding(after);
+  if ((((isWhitespace(after)) && !isIndent(after)) || (isClosingDelim(after))) && (!isClosingDelim(before))) {
+    return {
+      "in": isExpression(before) ? [before] : [],
+      out: validOut(after)
+    };
+  }
+};
+
+tangibleParent = function(tangible) {
+  var parent;
+  parent = parentOfTangible(tangible);
+  if (isReal(parent)) {
+    return insToTangible([parent]);
+  }
+};
+
+tangibleSurroundedBy = function(direction, first, second) {
+  var after, before, _ref1;
+  _ref1 = inOrder(direction, first, second), before = _ref1[0], after = _ref1[1];
+  if (before === after && isExpression(before)) {
+    return insToTangible([before]);
+  } else if (isClosingDelim(before)) {
+    return insToTangible([before.parent]);
+  } else if (isOpeningDelim(after)) {
+    return insToTangible([after.parent]);
+  } else if (isExpression(before)) {
+    return {
+      "in": [before],
+      out: validOut(after)
+    };
+  } else if (isExpression(after)) {
+    return insToTangible([after]);
+  } else if ((isOpeningDelim(before)) || (!isIndent(after))) {
+    return {
+      "in": [],
+      out: validOut(after)
+    };
+  } else {
+    return tangibleInAfter(direction, second);
+  }
+};
+
+tangibleInAfter = function(direction, node) {
+  var other;
+  return (other = sibling(direction, node)) && tangibleSurroundedBy(direction, node, other);
+};
+
+tangibleInside = function(direction, form) {
+  return tangibleEdge(direction, insideTangible(form));
+};
+
+inOrder = function(direction, a, b) {
+  if (direction === FORWARD) {
+    return [a, b];
+  } else {
+    return [b, a];
+  }
+};
+
+insideTangible = function(form) {
+  return {
+    "in": form.slice(1, -1),
+    out: form.slice(-1)
+  };
+};
+
+paddingEdge = function(direction, tangible) {
+  return edgeOfList(direction, padding(direction, tangible));
+};
+
+padding = function(direction, tangible) {
+  if (direction === FORWARD) {
+    return tangible.out;
+  } else {
+    return precedingWhitespace(sibling(PREVIOUS, toNode(tangible)));
+  }
+};
+
+pickupBookmarks = function(bookmarks) {
+  return map((function(bookmark) {
+    return bookmark();
+  }), bookmarks);
+};
+
+bookmarkBefore = function(tangible) {
+  var at;
+  at = preceding(toNode(tangible));
+  return function() {
+    return {
+      "in": [],
+      out: validOut(following(at))
+    };
+  };
+};
+
+memorable = function(tangible) {
+  if (tangible["in"].length === 0) {
+    return [[tangible.out[0]], outsToTangible];
+  } else {
+    return [tangible["in"], insToTangible];
+  }
+};
+
+termToTangible = function(term) {
+  if (isExpression(term)) {
+    return toTangible(term);
+  } else {
+    return {
+      "in": [],
+      out: validOut(term)
+    };
+  }
+};
+
+toTangible = function(node) {
+  return insToTangible([node]);
+};
+
+toNode = function(tangible) {
+  return nodeEdgeOfTangible(FIRST, tangible);
+};
+
+precedingWhitespace = function(node) {
+  if (isIndent(node)) {
+    return [sibling(PREVIOUS, node), node];
+  } else {
+    return [node];
+  }
+};
+
+validOut = function(node) {
+  var siblingNode;
+  siblingNode = sibling(NEXT, node);
+  if ((isWhitespace(node)) && siblingNode && isIndent(siblingNode)) {
+    return [node, siblingNode];
+  } else {
+    return [node];
+  }
+};
+
+limitTerm = function(direction, node) {
+  if (isForm(node)) {
+    return limitTerm(direction, edgeOfList(direction, _terms(node)));
+  } else {
+    return node;
+  }
+};
+
+depthOf = function(node) {
+  if (!isReal(node)) {
+    return -1;
+  } else {
+    return 1 + depthOf(node.parent);
+  }
+};
+
+insertChildNodeAt = function(child, parent, index) {
+  child.parent = parent;
+  return parent.splice(index, 0, child);
+};
+
+ammendAst = function(replaced, added) {
+  var index, node, parent, _i, _len;
+  parent = replaced.out[0].parent;
+  for (_i = 0, _len = added.length; _i < _len; _i++) {
+    node = added[_i];
+    node.parent = parent;
+  }
+  index = childIndex(nodeEdgeOfTangible(FIRST, replaced));
+  return parent.splice.apply(parent, [index, replaced["in"].length].concat(__slice.call(added)));
+};
+
+ammendToken = function(token, at, added) {
+  var end, removed, start, _ref1;
+  _ref1 = sortTuple(at), start = _ref1[0], end = _ref1[1];
+  removed = end - start;
+  token.symbol = spliceString(token.symbol, start, removed, added);
+  return token.end += added.length - removed;
+};
+
+append = function(direction, tangibleA, tangibleB) {
+  var after, before, _ref1;
+  _ref1 = inOrder(direction, tangibleA, tangibleB), before = _ref1[0], after = _ref1[1];
+  return {
+    "in": join(before["in"], after["in"]),
+    out: after.out
+  };
+};
+
+sortTuple = function(_arg) {
+  var a, b;
+  a = _arg[0], b = _arg[1];
+  return [Math.min(a, b), Math.max(a, b)];
+};
+
+nodesToString = function(nodes) {
+  var node, string, _i, _len;
+  string = "";
+  for (_i = 0, _len = nodes.length; _i < _len; _i++) {
+    node = nodes[_i];
+    string += isForm(node) ? nodesToString(node) : node.symbol;
+  }
+  return string;
+};
+
+editableLength = function(atom) {
+  return atom.symbol.length - (isDelimitedAtom(atom) ? 2 : isHalfDelimitedAtom(atom) ? 1 : 0);
+};
+
+changeNumericalAt = function(symbol, offset, amount) {
+  var at, decimals, fp, n, t;
+  n = symbol.length;
+  fp = (at = symbol.indexOf(".")) >= 0 ? at + 1 : n;
+  decimals = n - fp;
+  t = parseFloat(symbol);
+  t *= Math.pow(10, decimals);
+  amount *= Math.pow(10, n - offset - (fp !== n && offset < fp ? 1 : 0));
+  t += amount;
+  t /= Math.pow(10, decimals);
+  return t.toFixed(decimals);
+};
+
+isExpression = function(node) {
+  return !(isWhitespace(node)) && !(isDelim(node));
+};
+
+isAtom = function(node) {
+  return (isExpression(node)) && !isForm(node);
+};
+
+isNumerical = function(atom) {
+  return atom.symbol && /^-?\d/.test(atom.symbol);
+};
+
+isDelimitedAtom = function(atom) {
+  var _ref1;
+  return (_ref1 = atom.label) === 'string' || _ref1 === 'regex';
+};
+
+isHalfDelimitedAtom = function(atom) {
+  return atom.label === 'char' || isDelimitedAtom(atom);
+};
+
+atomDelimiter = function(atom) {
+  return atom.symbol[0];
+};
+
+isDelim = function(node) {
+  return /^[\(\)\[\]\{\}]$/.test(node.symbol);
+};
+
+isClosingDelim = function(node) {
+  return /^[\)\]\}]$/.test(node.symbol);
+};
+
+isOpeningDelim = function(node) {
+  return /^[\(\[\{]$/.test(node.symbol);
+};
+
+isOperator = function(node) {
+  var parent;
+  parent = parentOf(node);
+  return parent && (isCall(parent)) && (_fst(_terms(parent))) === node;
+};
+
+isEmptyCall = function(expression) {
+  return expression.length === 2 && expression[0].symbol === '(';
+};
+
+isLabel = function(expression) {
+  return expression.label === 'label';
+};
+
+isWhitespace = function(node) {
+  var _ref1;
+  return (_ref1 = node.label) === 'whitespace' || _ref1 === 'indent';
+};
+
+isIndent = function(node) {
+  return node.label === 'indent';
+};
+
+isSpace = function(token) {
+  return token.symbol === ' ';
+};
+
+isNewLine = function(token) {
+  return token.symbol === '\n';
+};
+
+isReal = function(node) {
+  return node.start >= 0;
+};
+
+escape = function(what, string) {
+  return string.replace(RegExp("" + what, "g"), "\\" + what);
+};
+
+repeat = function(n, string) {
+  return (new Array(n + 1)).join(string);
+};
+
+merge = function(objects) {
+  var a, c, key, value, _i, _len;
+  c = {};
+  for (_i = 0, _len = objects.length; _i < _len; _i++) {
+    a = objects[_i];
+    for (key in a) {
+      value = a[key];
+      c[key] = value;
+    }
+  }
+  return c;
+};
+
+extend = function(a, b) {
+  return merge([a, b]);
+};
+
+_transformed = function(origin) {
+  if (origin.transformed) {
+    return _transformed(origin.transformed);
+  } else {
+    return origin;
+  }
+};
+
+findNodeWithPosition = function(node, start, end) {
+  var expr;
+  if (start < node.end && node.start < end) {
+    if (start === node.start && end === node.end) {
+      return [node];
+    } else {
+      return concat((function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = node.length; _i < _len; _i++) {
+          expr = node[_i];
+          _results.push(findNodeWithPosition(expr, start, end));
+        }
+        return _results;
+      })());
+    }
+  } else {
+    return [];
+  }
+};
+
+findNodesBetween = function(node, start, end) {
+  var expr;
+  if (start < node.end && node.start < end) {
+    if (isForm(node)) {
+      return concat((function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = node.length; _i < _len; _i++) {
+          expr = node[_i];
+          _results.push(findNodesBetween(expr, start, end));
+        }
+        return _results;
+      })());
+    } else {
+      return [node];
+    }
+  } else {
+    return [];
+  }
+};
+
+convertToAceLineTokens = function(tokens) {
+  var converted, last;
+  converted = map(convertToAceToken, tokens);
+  if ((last = converted[converted.length - 1]) && last.value === '\n') {
+    converted.pop();
+  }
+  return converted;
+};
+
+convertToAceToken = function(token) {
+  var delim;
+  delim = isDelim(token);
+  return {
+    value: token.label === 'string' ? "“" + token.symbol.slice(1, -1) + "”" : token.symbol,
+    type: ((function() {
+      if (delim && token.parent.malformed || !delim && token.malformed) {
+        return 'token_malformed';
+      } else {
+        switch (token.label) {
+          case 'whitespace':
+            return 'text';
+          default:
+            if (token.label) {
+              return 'token_' + token.label;
+            } else {
+              return 'text';
+            }
+        }
+      }
+    })()) + (token.fake ? '.token_fake' : '')
+  };
+};
+
+topList = function(ast) {
+  var inside;
+  inside = ast.slice(1, -1);
+  inside.start = ast.start + 1;
+  inside.end = ast.end - 1;
+  return inside;
+};
+
+edgeIdxOfNode = function(direction, node) {
+  if (direction === FORWARD) {
+    return node.end;
+  } else {
+    return node.start;
+  }
+};
+
+editableEdgeWithin = function(direction, atom) {
+  return (edgeWithinAtom(direction, atom)) + (isDelimitedAtom(atom) ? opposite(direction) : 0);
+};
+
+edgeWithinAtom = function(direction, atom) {
+  if (direction === FORWARD) {
+    return atom.symbol.length;
+  } else {
+    return 0;
+  }
+};
+
+edgeOfList = function(direction, list) {
+  var first, last;
+  first = list[0], last = list[list.length - 1];
+  if (direction === FORWARD) {
+    return last;
+  } else {
+    return first;
+  }
+};
+
+positionsToRange = function(start, end) {
+  return Range.fromPoints(start, end);
+};
+
+spliceString = function(string, index, count, add) {
+  return string.slice(0, index) + add + string.slice(index + count);
+};
+
+previousExpression = function(expression) {
+  var node, reached, _i, _ref1;
+  reached = false;
+  _ref1 = expression.parent;
+  for (_i = _ref1.length - 1; _i >= 0; _i += -1) {
+    node = _ref1[_i];
+    if (reached && isExpression(node)) {
+      return node;
+    }
+    if (node === expression) {
+      reached = true;
+    }
+  }
+  return expression;
+};
+
+nextExpression = function(expression) {
+  var node, reached, _i, _len, _ref1;
+  reached = false;
+  _ref1 = expression.parent;
+  for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+    node = _ref1[_i];
+    if (reached && isExpression(node)) {
+      return node;
+    }
+    if (node === expression) {
+      reached = true;
+    }
+  }
+  return expression;
+};
+
+preceding = function(node) {
+  return siblingLeaf(BACKWARD, node);
+};
+
+following = function(node) {
+  return siblingLeaf(FORWARD, node);
+};
+
+siblingLeaf = function(direction, node) {
+  var candidate;
+  candidate = (sibling(direction, node)) || (isReal(node.parent)) && (siblingLeaf(direction, node.parent));
+  if (candidate) {
+    if (isForm(candidate)) {
+      return edgeOfList(opposite(direction), candidate);
+    } else {
+      return candidate;
+    }
+  }
+};
+
+parentOf = function(node) {
+  if (isReal(node.parent)) {
+    return node.parent;
+  }
+};
+
+sibling = function(direction, node) {
+  return node.parent[(childIndex(node)) + direction];
+};
+
+previous = function(node) {
+  return node.parent[(childIndex(node)) - 1];
+};
+
+next = function(node) {
+  return node.parent[(childIndex(node)) + 1];
+};
+
+childIndex = function(node) {
+  return indexWithin(node, node.parent);
+};
+
+indexWithin = function(what, array) {
+  var element, i, _i, _len;
+  for (i = _i = 0, _len = array.length; _i < _len; i = ++_i) {
+    element = array[i];
+    if (element === what) {
+      return i;
+    }
+  }
+  throw new Error("what is not inside of array in indexWithin");
+};
+
+duplicateProperties = function(newAst, oldAst) {
+  var i, node, _i, _len, _results;
+  oldAst.malformed = newAst.malformed;
+  oldAst.tea = newAst.tea;
+  oldAst.id = newAst.id;
+  oldAst.fake = newAst.fake;
+  oldAst.assignable = newAst.assignable;
+  oldAst.scope = newAst.scope;
+  oldAst.inferredType = newAst.inferredType;
+  oldAst.imported = newAst.imported;
+  if (isForm(newAst)) {
+    _results = [];
+    for (i = _i = 0, _len = newAst.length; _i < _len; i = ++_i) {
+      node = newAst[i];
+      _results.push(duplicateProperties(node, oldAst[i]));
+    }
+    return _results;
+  } else {
+    return oldAst.label = newAst.label;
+  }
+};
+
+reindentTangiblePreserving = function(tangible, to, preservedList) {
+  return reindentNodesPreserving(tangible["in"], to, preservedList);
+};
+
+reindentTangible = function(tangible, to) {
+  return reindentNodes(tangible["in"], to);
+};
+
+reindentNodes = function(nodes, to) {
+  var reindented;
+  reindented = reindentNodesPreserving(nodes, to, [])[0];
+  return reindented;
+};
+
+reindentNodesPreserving = function(nodes, to, preservedList) {
+  var cloned, node, preserved, _i, _len, _ref1;
+  _ref1 = cloneNodesPreserving(nodes, preservedList), cloned = _ref1[0], preserved = _ref1[1];
+  for (_i = 0, _len = cloned.length; _i < _len; _i++) {
+    node = cloned[_i];
+    node.parent = to;
+  }
+  return [reindentMutateNodes(cloned, to), preserved];
+};
+
+astize = function(string, parent) {
+  var close, expressions, open, wrapped, _i;
+  wrapped = compiler.astizeList(string);
+  reindent(depthOf(parent), wrapped);
+  open = wrapped[0], expressions = 3 <= wrapped.length ? __slice.call(wrapped, 1, _i = wrapped.length - 1) : (_i = 1, []), close = wrapped[_i++];
+  return expressions;
+};
+
+cloneNodes = function(nodes) {
+  var clones;
+  clones = cloneNodesPreserving(nodes, [])[0];
+  return clones;
+};
+
+cloneNodesPreserving = function(nodes, preserving) {
+  var clones, preservedLists, _ref1;
+  _ref1 = unzip(map(cloneNodePreserving(preserving), nodes)), clones = _ref1[0], preservedLists = _ref1[1];
+  return [clones, concat(preservedLists)];
+};
+
+cloneNode = function(node) {
+  var clone;
+  clone = (cloneNodePreserving([]))(node)[0];
+  return clone;
+};
+
+cloneNodePreserving = function(preserving) {
+  return function(node) {
+    var clone, preserved, _ref1;
+    if (isForm(node)) {
+      _ref1 = cloneNodesPreserving(node, preserving), clone = _ref1[0], preserved = _ref1[1];
+      listToForm(clone);
+    } else {
+      preserved = [];
+      clone = {
+        symbol: node.symbol,
+        label: node.label
+      };
+    }
+    clone.start = node.start;
+    clone.end = node.end;
+    clone.malformed = node.malformed;
+    clone.tea = node.tea;
+    clone.id = node.id;
+    if (__indexOf.call(preserving, node) >= 0) {
+      preserved = [clone];
+    }
+    return [clone, preserved];
+  };
+};
+
+reindentMutateNodes = function(nodes, parent) {
+  reindent(depthOf(parent), nodes);
+  return nodes;
+};
+
+reindent = function(depth, ast, next, nextIndex) {
+  var i, indent, indentToken, newLine, shouldIndent, _ref1;
+  if (isForm(ast)) {
+    i = 0;
+    while (i < ast.length) {
+      reindent(depth + 1, ast[i], ast[i + 1], i + 1);
+      ++i;
+    }
+  } else if (next && isNewLine(ast)) {
+    indent = repeat(depth, '  ');
+    shouldIndent = depth > 0;
+    if (isIndent(next)) {
+      if (shouldIndent) {
+        setIndentTo(next, indent);
+      } else {
+        next.parent.splice(nextIndex, 1);
+      }
+    } else if (shouldIndent) {
+      _ref1 = astizeExpressions("\n  "), newLine = _ref1[0], indentToken = _ref1[1];
+      setIndentTo(indentToken, indent);
+      insertChildNodeAt(indentToken, next.parent, childIndex(next));
+    }
+  }
+};
+
+listToForm = function(nodes) {
+  var node, _i, _len;
+  for (_i = 0, _len = nodes.length; _i < _len; _i++) {
+    node = nodes[_i];
+    node.parent = nodes;
+  }
+  return nodes;
+};
+
+setIndentTo = function(token, indent) {
+  token.symbol = indent;
+  return token.end = token.start + indent.length;
+};
+
+astizeExpressions = function(string) {
+  var close, expressions, open, _i, _ref1;
+  _ref1 = compiler.astizeExpression("(" + string + ")"), open = _ref1[0], expressions = 3 <= _ref1.length ? __slice.call(_ref1, 1, _i = _ref1.length - 1) : (_i = 1, []), close = _ref1[_i++];
+  return expressions;
+};
+
+LAST = FORWARD = NEXT = 1;
+
+FIRST = BACKWARD = PREVIOUS = -1;
+
+opposite = function(direction) {
+  return direction * -1;
+};
+
+});

@@ -1,1 +1,97 @@
-define(function(require,exports,module){var e,t,n,i,r,o,s,a,l,c,u,h=module.uri||"",d=(h.substring(0,h.lastIndexOf("/")+1),{}.hasOwnProperty),p=function(e,t){function n(){this.constructor=e}for(var i in t)d.call(t,i)&&(e[i]=t[i]);return n.prototype=t.prototype,e.prototype=new n,e.__super__=t.prototype,e};o=require("ace/tokenizer").Tokenizer,i=require("ace/mode/coffee_highlight_rules").CoffeeHighlightRules,t=require("ace/mode/matching_brace_outdent").MatchingBraceOutdent,e=require("ace/mode/folding/coffee").FoldMode,n=require("ace/range").Range,r=require("ace/mode/text").Mode,s=require("ace/worker/worker_client").WorkerClient,u=/(?:[({[=:]|[-=]>|\b(?:else|switch|try|catch(?:\s*[$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]*)?|finally))\s*$/,a=/^(\s*)# ?/,l=/^\s*###(?!#)/,c=/^\s*/,exports.Mode=function(r){function h(){this.$tokenizer=new o((new i).getRules()),this.$outdent=new t,this.foldingRules=new e}return p(h,r),h.prototype.getNextLineIndent=function(e,t,n){var i,r;return i=this.$getIndent(t),r=this.$tokenizer.getLineTokens(t,e).tokens,r.length&&"comment"===r[r.length-1].type||"start"!==e||!u.test(t)||(i+=n),i},h.prototype.toggleCommentLines=function(e,t,i,r){var o,s,u,h;for(console.log("toggle"),u=new n(0,0,0,0),o=h=i;r>=i?r>=h:h>=r;o=r>=i?++h:--h)s=t.getLine(o),l.test(s)||(s=a.test(s)?s.replace(a,"$1"):s.replace(c,"$&# "),u.end.row=u.start.row=o,u.end.column=s.length+2,t.replace(u,s))},h.prototype.checkOutdent=function(e,t,n){return this.$outdent.checkOutdent(t,n)},h.prototype.autoOutdent=function(e,t,n){return this.$outdent.autoOutdent(t,n)},h.prototype.createWorker=function(e){var t;return t=new s(["ace","compilers"],"compilers/coffeescript/worker","Worker"),e&&(t.attachToDocument(e.getDocument()),t.on("error",function(t){return e.setAnnotations([t.data])}),t.on("ok",function(){return function(){return e.clearAnnotations()}}(this))),t},h}(r)});
+define(function (require, exports, module) {
+  var __filename = module.uri || "", __dirname = __filename.substring(0, __filename.lastIndexOf("/") + 1);
+  var FoldMode, Outdent, Range, Rules, TextMode, Tokenizer, WorkerClient, commentLine, hereComment, indentation, indenter,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+Tokenizer = require("ace/tokenizer").Tokenizer;
+
+Rules = require("ace/mode/coffee_highlight_rules").CoffeeHighlightRules;
+
+Outdent = require("ace/mode/matching_brace_outdent").MatchingBraceOutdent;
+
+FoldMode = require("ace/mode/folding/coffee").FoldMode;
+
+Range = require("ace/range").Range;
+
+TextMode = require("ace/mode/text").Mode;
+
+WorkerClient = require("ace/worker/worker_client").WorkerClient;
+
+indenter = /(?:[({[=:]|[-=]>|\b(?:else|switch|try|catch(?:\s*[$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]*)?|finally))\s*$/;
+
+commentLine = /^(\s*)# ?/;
+
+hereComment = /^\s*###(?!#)/;
+
+indentation = /^\s*/;
+
+exports.Mode = (function(_super) {
+  __extends(_Class, _super);
+
+  function _Class() {
+    this.$tokenizer = new Tokenizer(new Rules().getRules());
+    this.$outdent = new Outdent;
+    this.foldingRules = new FoldMode;
+  }
+
+  _Class.prototype.getNextLineIndent = function(state, line, tab) {
+    var indent, tokens;
+    indent = this.$getIndent(line);
+    tokens = this.$tokenizer.getLineTokens(line, state).tokens;
+    if (!(tokens.length && tokens[tokens.length - 1].type === "comment") && state === "start" && indenter.test(line)) {
+      indent += tab;
+    }
+    return indent;
+  };
+
+  _Class.prototype.toggleCommentLines = function(state, doc, startRow, endRow) {
+    var i, line, range, _i;
+    console.log("toggle");
+    range = new Range(0, 0, 0, 0);
+    for (i = _i = startRow; startRow <= endRow ? _i <= endRow : _i >= endRow; i = startRow <= endRow ? ++_i : --_i) {
+      line = doc.getLine(i);
+      if (hereComment.test(line)) {
+        continue;
+      }
+      if (commentLine.test(line)) {
+        line = line.replace(commentLine, '$1');
+      } else {
+        line = line.replace(indentation, '$&# ');
+      }
+      range.end.row = range.start.row = i;
+      range.end.column = line.length + 2;
+      doc.replace(range, line);
+    }
+  };
+
+  _Class.prototype.checkOutdent = function(state, line, input) {
+    return this.$outdent.checkOutdent(line, input);
+  };
+
+  _Class.prototype.autoOutdent = function(state, doc, row) {
+    return this.$outdent.autoOutdent(doc, row);
+  };
+
+  _Class.prototype.createWorker = function(session) {
+    var worker;
+    worker = new WorkerClient(["ace", "compilers"], "compilers/coffeescript/worker", "Worker");
+    if (session) {
+      worker.attachToDocument(session.getDocument());
+      worker.on("error", function(e) {
+        return session.setAnnotations([e.data]);
+      });
+      worker.on("ok", (function(_this) {
+        return function(e) {
+          return session.clearAnnotations();
+        };
+      })(this));
+    }
+    return worker;
+  };
+
+  return _Class;
+
+})(TextMode);
+
+});

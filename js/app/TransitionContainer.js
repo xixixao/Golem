@@ -1,1 +1,44 @@
-define(function(require,exports,module){{var e,t,n,r,i=module.uri||"";i.substring(0,i.lastIndexOf("/")+1)}r=(t=require("hyper"))._span,n=function(e,t){var n,r,i;r={};for(n in e)i=e[n],r[n]=i;for(n in t)i=t[n],r[n]=i;return r},module.exports=t(e=function(){function e(){}return e.prototype.componentWillReceiveProps=function(e){return!e.children&&this.props.children?(this.savedChildren=this.props.children,this.savedStyle=this.props.on):void 0},e.prototype.render=function(){var e,t;return t=this.props.children?this.props.on:n(this.savedStyle,this.props.off),(e=this.props.component||r)({style:t},this.props.children||this.savedChildren)},e}())});
+define(function (require, exports, module) {
+  var __filename = module.uri || "", __dirname = __filename.substring(0, __filename.lastIndexOf("/") + 1);
+  var TransitionContainer, hyper, merge, _span;
+
+_span = (hyper = require('hyper'))._span;
+
+merge = function(a, b) {
+  var k, merged, v;
+  merged = {};
+  for (k in a) {
+    v = a[k];
+    merged[k] = v;
+  }
+  for (k in b) {
+    v = b[k];
+    merged[k] = v;
+  }
+  return merged;
+};
+
+module.exports = hyper(TransitionContainer = (function() {
+  function TransitionContainer() {}
+
+  TransitionContainer.prototype.componentWillReceiveProps = function(nextProps) {
+    if (!nextProps.children && this.props.children) {
+      this.savedChildren = this.props.children;
+      return this.savedStyle = this.props.on;
+    }
+  };
+
+  TransitionContainer.prototype.render = function() {
+    var component, style;
+    style = this.props.children ? this.props.on : merge(this.savedStyle, this.props.off);
+    component = this.props.component || _span;
+    return component({
+      style: style
+    }, this.props.children || this.savedChildren);
+  };
+
+  return TransitionContainer;
+
+})());
+
+});

@@ -1,1 +1,46 @@
-define(function(require,exports,module){{var e,t,n=module.uri||"";n.substring(0,n.lastIndexOf("/")+1)}t=[{id:"coffeescript",name:"CoffeeScript"},{id:"teascript",name:"TeaScript"}],module.exports=e=function(){function e(){}return e.getName=function(e){var n,r,i,o,a;for(i=0,o=t.length;o>i;i++)if(a=t[i],n=a.id,r=a.name,n===e)return r},e.getId=function(e){var n,r,i,o,a;for(i=0,o=t.length;o>i;i++)if(a=t[i],n=a.id,r=a.name,r===e)return n},e.getAll=function(){return t},e}()});
+define(function (require, exports, module) {
+  var __filename = module.uri || "", __dirname = __filename.substring(0, __filename.lastIndexOf("/") + 1);
+  var Modes, modes;
+
+modes = [
+  {
+    id: 'coffeescript',
+    name: 'CoffeeScript'
+  }, {
+    id: 'teascript',
+    name: 'TeaScript'
+  }
+];
+
+module.exports = Modes = (function() {
+  function Modes() {}
+
+  Modes.getName = function(someId) {
+    var id, name, _i, _len, _ref;
+    for (_i = 0, _len = modes.length; _i < _len; _i++) {
+      _ref = modes[_i], id = _ref.id, name = _ref.name;
+      if (id === someId) {
+        return name;
+      }
+    }
+  };
+
+  Modes.getId = function(someName) {
+    var id, name, _i, _len, _ref;
+    for (_i = 0, _len = modes.length; _i < _len; _i++) {
+      _ref = modes[_i], id = _ref.id, name = _ref.name;
+      if (name === someName) {
+        return id;
+      }
+    }
+  };
+
+  Modes.getAll = function() {
+    return modes;
+  };
+
+  return Modes;
+
+})();
+
+});
