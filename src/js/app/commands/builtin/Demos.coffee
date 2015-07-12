@@ -12,6 +12,415 @@ class DemosCommand
 module.exports = [DemosCommand]
 
 demos = [
+  name: 'SVG'
+  source: '''[to-css black white red blue green orange rgbi rgb transparent] (req Color)
+
+[animate animate-time] (req HTML)
+
+test (fn []
+  (# Try gears or star instead of clock.)
+  (run-io (animate-time clock)))
+
+canvas (fn [objects]
+  (draw [200 200] objects))
+
+clock (fn [time]
+  (draw [400 400] (concat
+      {{face}
+        (map tick (range-by 0 60 5))
+        {(hand light 50 (log hours))
+          (hand light 80 (log minutes))
+          (hand dark 100 (log seconds))}}))
+  tick (fn [seconds]
+    (move (rim seconds 100)
+      (rotate (degrees (- (* 6 seconds) 180))
+        (filled light (rect [2 5])))))
+  face (filled background (circle 110))
+  seconds (mod 60 s)
+  minutes (mod 60 (div 60 s))
+  hours (mod 60 (div (* 12 60) s))
+  s (div 1000 time)
+  hand (fn [color size seconds]
+    (path (solid-thick color 2) {[0 0] (rim seconds size)}))
+  rim (fn [seconds size]
+    (polar size angle)
+    angle (degrees (- (* 6 seconds) 90)))
+  dark (rgb 0.4 0.4 0.4)
+  light (rgb 1 0.7 0.7)
+  background (rgb 1 0.2 0.2))
+
+gears (fn [time]
+  (draw [500 500]
+    (zip (fn [to dir] (move (polar 100 (degrees to)) (gear dir)))
+      (range-by 0 360 90)
+      (concat-repeat 40 {1 -1})))
+  gear (fn [dir]
+    (groupped
+      {(filled color (circle size))
+        (filled (rgb 0.15 0.15 0.15) (circle (/ 2 size)))
+        (rotate (* dir (/ 400 time))
+          (groupped (zip f (ngon rivets size) (range 0 rivets))))})
+    f (fn [to i]
+      (rotate (degrees (* (/ rivets 360) i))
+        (move to (filled color (rect (tuplize (/ 3 size)))))))
+    size 65)
+  rivets 5
+  color (rgb (+ 0.5 (abs (- 0.5 (mod 1 (/ 2000 time))))) 0.5 0.5))
+
+star (fn [time]
+  (draw [400 400]
+    {(rotate (/ 1000 time) (groupped (zip f (ngon n 100) (range 0 n))))})
+  n 20
+  f (fn [to i]
+    (rotate (degrees angle) (scaled 2 (move to (filled color wing))))
+    angle (* (/ 10 360) (+ i (/ 100 time)))
+    color (rgbi 255 (+ 100 (* 40 (mod 5 i))) 0))
+  wing {[0 0] [-5 20] [5 20]})
+
+Line-Cap (data Flat Round Square)
+
+Line-Join (data
+  Smooth
+  Sharp [miter: Num]
+  Clipped)
+
+Line-Style (record
+  thick: Num
+  cap: Line-Cap
+  join: Line-Join
+  color: Color)
+
+default-line (Line-Style 2 Flat Clipped black)
+default-border (Line-Style 0 Flat Clipped black)
+
+solid (fn [color]
+  (Line-Style thick cap join color)
+  (Line-Style thick cap join _) default-line)
+
+solid-thick (fn [color thick]
+  (Line-Style thick cap join color)
+  (Line-Style _ cap join _) default-line)
+
+Point (type [Num Num])
+
+polar (fn [size angle]
+  [(* size (cos angle)) (* size (sin angle))])
+
+plus (fn [x y]
+  [(+ x1 y1) (+ x2 y2)]
+  [x1 x2] x
+  [y1 y2] y)
+
+times (fn [x y]
+  [(* x1 y1) (* x2 y2)]
+  [x1 x2] x
+  [y1 y2] y)
+
+Shape (type (Array Point))
+Path (type (Array Point))
+
+Form (data
+  Shape [border: Line-Style fill: Color shape: Shape]
+  Path [style: Line-Style path: Path]
+  Objects [group: (Array Object)])
+
+Object (record
+  rotation: Num
+  scale: Num
+  at: Point
+  alpha: Num
+  form: Form)
+
+draw (fn [size objects]
+  (tag "svg"
+    {width: (num-to-string width)
+      height: (num-to-string height)
+      viewbox: (format "%n %n %n %n" (~ w) (~ h) width height)}
+    (tag "g"
+      {transform: "scale(1 -1)"}
+      (concat-map to-svg objects)))
+  h (/ 2 height)
+  w (/ 2 width)
+  [width height] size)
+
+to-svg (fn [object]
+  (tag tag-name attributes children)
+  children (match form
+    (Objects objects) (concat-map to-svg objects)
+    _ "")
+  attributes (join transform (match form
+      (Path style path) (svg-path style path)
+      (Shape border-style color shape) (svg-shape border-style color shape)
+      (Objects _) (Map)))
+  transform {opacity: (num-to-string alpha)
+    style: (format "transform: translate(%npx, %npx) scale(%n) rotate(%ndeg)"
+      x y scale (mod 360 (to-degrees rotation)))}
+  tag-name (match form
+    (Objects _) "g"
+    _ "path")
+  (Object rotation scale at: [x y] alpha form) object)
+
+svg-path (fn [style points]
+  {d: (svg-line-seq points)
+    fill: "none"
+    stroke: (to-css color)
+    stroke-width: (num-to-string thick)}
+  (Line-Style thick cap join color) style)
+
+svg-shape (fn [border-style color points]
+  {d: (join (svg-line-seq points) " Z")
+    fill: (to-css color)
+    stroke: (to-css border-color)
+    stroke-width: (num-to-string thick)}
+  (Line-Style thick cap _ border-color) border-style)
+
+svg-line-seq (fn [points]
+  (& \\M (concat-with " L" (map point-to-string points)))
+  point-to-string (fn [point]
+    (format "%n %n" (fst point) (snd point))))
+
+to-object (fn [shape]
+  (Object rotation: 0 scale: 1 at: [0 0] alpha: 1 shape))
+
+filled (fn [color shape]
+  (to-object (Shape default-border color shape)))
+
+outlined (fn [border-style shape]
+  (to-object (Shape border-style transparent shape)))
+
+shape (fn [border-style color through]
+  (to-object (Shape border-style color through)))
+
+path (fn [style through]
+  (to-object (Path style through)))
+
+groupped (fn [objects]
+  (to-object (Objects objects)))
+
+rect (fn [size]
+  {[(~ w) (~ h)]
+    [w (~ h)]
+    [w h]
+    [(~ w) h]}
+  w (/ 2 width)
+  h (/ 2 height)
+  [width height] size)
+
+square (fn [width]
+  (rect (tuplize width)))
+
+circle (fn [radius]
+  (ellipse (tuplize (* 2 radius))))
+
+ellipse (fn [size]
+  (ellipsogon (bounded 15 100 (uncurry max size)) size))
+
+ngon (fn [n radius]
+  (# Regular polygon with n sides.)
+  (ellipsogon n (tuplize (* 2 radius))))
+
+ellipsogon (fn [n size]
+  (map corner (range 0 n))
+  corner (fn [i] [(* w (cos (* i step))) (* h (sin (* i step)))])
+  step (/ n (* 2 math-pi))
+  w (/ 2 width)
+  h (/ 2 height)
+  [width height] size)
+
+move (fn [by object]
+  (Object rotation scale (plus at by) alpha form)
+  (Object rotation scale at alpha form) object)
+
+move-hor (fn [by-x object]
+  (move [by-x 0] object))
+
+move-ver (fn [by-y object]
+  (move [0 by-y] object))
+
+rotate (fn [by-angle object]
+  (Object (+ rotation by-angle) scale at alpha form)
+  (Object rotation scale at alpha form) object)
+
+scaled (fn [scale object]
+  (Object rotation scale at alpha form)
+  (Object rotation _ at alpha form) object)
+
+with-alpha (fn [alpha object]
+  (Object rotation scale at alpha form)
+  (Object rotation scale at _ form) object)
+
+tag (fn [tag-name attrs content]
+  (format "<%s%s>%s</%s>"
+    tag-name
+    (concat-map (uncurry attr) (entry-array attrs))
+    content
+    tag-name)
+  attr (fn [name value]
+    (format " %s=\\"%s\\"" name value)))
+'''
+,
+  name: 'HTML'
+  source: '''DomElement (data FakeDomElement)
+
+time-out! (fn [duration callback]
+  (: (Fn Num (Io Void) (Io Void)))
+  (io (:: Void (.setTimeout (global) (fn [] (run-io callback)) duration))))
+
+on-id (fn [id event-name callback]
+  (: (Fn String String (Fn Js (Io a)) (Io Void)))
+  (io (:: Void (.addEventListener global.document event-name (fn [event]
+          (if (== target-id id)
+            (exec-io (callback event))
+            Void)
+          target-id (:: String (.-id (.-target event))))))))
+
+element-by-id (fn [name]
+  (: (Fn String (? DomElement)))
+  (:: (? DomElement)
+    (from-nullable (.getElementById global.document name))))
+
+element-by-id! (fn [name]
+  (io (element-by-id name)))
+
+set-html! (fn [html element]
+  (: (Fn String DomElement (Io Void)))
+  (io (:: Void (set! (.-innerHTML element) html))))
+
+numerical-value (fn [element]
+  (: (Fn DomElement Num))
+  (parse-int (:: String (.-value element))))
+
+animate-time (fn [f]
+  (animate (fn [ms]
+      (run-io (do
+          (set time local-time)
+          (lift (f time)))))))
+
+local-time (io
+  (- (* 60000 (current-timezone-offset))
+    (:: Num (.now global.Date))))
+
+time (io (:: Num (.now global.Date)))
+
+current-timezone-offset (macro []
+  (: (Fn Num))
+  (Js.method (Js.new "Date" {}) "getTimezoneOffset" {}))
+
+animate (fn [f]
+  (: (Fn (Fn Num String) (Io String)))
+  (do
+    (set id random-id)
+    (io (.requestAnimationFrame (global) (step id)))
+    (lift (format "<div id='%s'></div>" id)))
+  step (fn [id]
+    (fn [ms]
+      (match (element-by-id id)
+        None Void
+        (Some element) (exec-io (do
+            (set-html! (f ms) element)
+            (io (.requestAnimationFrame (global) (step id))))))))
+  random-id (do
+    (set id random)
+    (lift (num-to-string id))))
+
+timeit (fn [f]
+  (run-io (do
+      (set t1 time)
+      (lift (f))
+      (set t2 time)
+      (lift (- t1 t2)))))'''
+,
+  name: 'Color'
+  source: '''Color (record
+  red: Num
+  blue: Num
+  green: Num
+  alpha: Num)
+
+to-css (fn [color]
+  (# Converts color to the its CSS representation.)
+  (match color
+    (Color r g b alpha) (format "rgba(%i, %i, %i, %i)" r g b alpha)))
+
+rgb (fn [red blue green]
+  (Color (* 255 red) (* 255 blue) (* 255 green) 1))
+
+rgbi (fn [red blue green]
+  (Color red blue green 1))
+
+hsl (fn [hue saturation lightness]
+  (hsla hue saturation lightness 1))
+
+hsla (fn [hue saturation lightness alpha]
+  (Color red green blue alpha)
+  [red green blue] (-hsl-to-rgb standard-hue saturation lightness)
+  standard-hue (- (* (* 2 math-pi) (floor (/ (* 2 math-pi) hue))) hue))
+
+grayscale (fn [presence]
+  (# A gray color, 0 presence for black and 1 for white.)
+  (hsl 0 0 presence))
+
+-hsl-to-rgb (fn [h s l]
+  [(+ m r) (+ m g) (+ m b)]
+  m (- (/ 2 chroma) l)
+  [r g b] (cond
+    (< 0 hue) [0 0 0]
+    (< 1 hue) [chroma x 0]
+    (< 2 hue) [x chroma 0]
+    (< 3 hue) [0 chroma x]
+    (< 4 hue) [0 x chroma]
+    (< 5 hue) [x 0 chroma]
+    (< 6 hue) [chroma 0 x]
+    else [0 0 0])
+  x (* chroma (- (abs (- 1 (mod 2 hue))) 1))
+  hue (/ (degrees 60) h)
+  chroma (* s (- (abs (- 1 (* 2 l))) 1)))
+
+black (rgbi 0 0 0)
+blue (rgbi 0 0 255)
+gray (rgbi 128 128 128)
+green (rgbi 0 128 0)
+orange (rgbi 255 165 0)
+purple (rgbi 128 0 128)
+red (rgbi 255 0 0)
+white (rgbi 255 255 255)
+yellow (rgbi 255 255 0)
+transparent (Color 0 0 0 0)
+'''
+,
+  name: 'BinarySearch'
+  source: '''test (fn []
+  (# Try running the following, to see the log in action.
+    Don't forget to change the inputs and observe the effects.)
+  (search 3 {1 2 4 5 6 7 9 10}))
+
+search (fn [n list]
+  (search-in 0 (size list))
+  search-in (fn [min max]
+    (cond
+      (>= max min) None
+      else (match (log (show-search min max half list) (compare n middle))
+        LT (search-in min half)
+        GT (search-in (+ 1 half) max)
+        EQ (Some half)))
+    middle (!! (at half list))
+    half (+ min (div 2 (- min max)))))
+
+
+
+show-search (fn [min max index list]
+  (concat (zip box list (range 0 (size list))))
+  box (fn [n i]
+    (format "<div style=\\"float: left; padding: 5px %s%s%s; border-radius: 5px\\">%n</div>"
+      highlight left right n)
+    highlight (if (= i index)
+      "; color: orange" "")
+    left (if (= i min)
+      "; padding-left: 3px; border-left: 2px solid orange" "")
+    right (if (= i (- 1 max))
+      "; padding-right: 3px; border-right: 2px solid orange" "")))
+'''
+,
   name: 'DoC-Calculus'
   source: '''Un-Op (data Neg Sin Cos Log)
 Bin-Op (data Add Mul Div)
@@ -854,6 +1263,9 @@ key-set (fn [map]
   (# A Set of keys of map .)
   (fold-keys & (Set) map))
 
+map-with-key (fn [what over]
+  (fold-keys (fn [k m] (& [k (what k (!! (at k over)))] m)) (Map) over))
+
 Appendable (class [collection item]
   & (fn [what to]
     (: (Fn item collection collection))
@@ -1054,7 +1466,7 @@ array-mappable (instance (Mappable Array)
 array-zippable (instance (Zippable Array)
   zip (fn [with first second]
     (: (Fn (Fn a b c) (Array a) (Array b) (Array c)))
-    (.zipWith first (fix-arity-2 with) second)))
+    (:: (Array c) (.zipWith first (fix-arity-2 with) second))))
 
 array-map (instance (Map (Array a) Num a)
   at (fn [index in]
@@ -1094,7 +1506,18 @@ array-deq (instance (Deq (Array a) a)
     (Js.method list "butLast" {}))
 
   last (fn [list]
-    (from-nullable (.last list))))
+    (:: (? a) (from-nullable (.last list)))))
+
+array-set (instance (Set (Array a) a)
+  {(Eq a)}
+  elem? (macro [what in]
+    (Js.method in "contains" {what}))
+
+  remove (fn [what from]
+    (if (>= 0 to-remove)
+      (:: a (.splice from to-remove 1))
+      from)
+    to-remove (:: Num (.indexOf from what))))
 
 array-eq (instance (Eq (Array a))
   {(Eq a)}
@@ -1178,7 +1601,7 @@ list-deq (instance (Deq (List a) a)
     (Js.method list "butLast" {}))
 
   last (fn [list]
-    (from-nullable (.last list))))
+    (:: (? a) (from-nullable (.last list)))))
 
 chars (macro [string]
   (: (Fn String (Array Char)))
@@ -1221,7 +1644,7 @@ string-bag (instance (Bag String Char)
 
 string-map (instance (Map String Num Char)
   at (fn [index in]
-    (from-nullable (.charAt in index)))
+    (:: (? Char) (from-nullable (.charAt in index))))
 
   key? (fn [what in]
     (between? 0 (size in) what))
@@ -1243,10 +1666,10 @@ string-seq (instance (Seq String Char)
     (drop 1 list))
 
   take (fn [n from]
-    (.slice from 0 (max 0 n)))
+    (:: String (.slice from 0 (max 0 n))))
 
   drop (fn [n from]
-    (.slice from (max 0 n))))
+    (:: String (.slice from (max 0 n)))))
 
 string-deq (instance (Deq String Char)
   && (macro [what to]
@@ -1329,7 +1752,7 @@ zip-into (fn [with into left right]
 
 parse-int (fn [string]
   (: (Fn String Num))
-  (.parseInt (global) string))
+  (:: Num (.parseInt (global) string)))
 
 num-to-string (fn [n]
   (format "%n" n))
@@ -1350,6 +1773,9 @@ split (fn [bag]
   (fold wrap {} bag)
   wrap (fn [x all]
     (&& (singleton x) all)))
+
+partition (fn [with what]
+  [(filter with what) (filter (. not with) what)])
 
 break-on (fn [on seq]
   (: (Fn (Fn a Bool) seq [seq seq]) (Seq seq a))
@@ -1423,11 +1849,11 @@ any-map (fn [fun list]
 
 char-from-code (fn [x]
   (: (Fn Num Char))
-  (.fromCharCode global.String x))
+  (:: Char (.fromCharCode global.String x)))
 
 code-from-char (fn [x]
   (: (Fn Char Num))
-  (.charCodeAt x 0))
+  (:: Num (.charCodeAt x 0)))
 
 char-ord (instance (Ord Char)
   <= (fn [than what]
@@ -1555,6 +1981,7 @@ random-int (fn [from exclude-to]
   (match args
     {x} x
     {x f ..fs} (` -> (,f ,x) ,..fs)))
+
 
 '''
 ]
