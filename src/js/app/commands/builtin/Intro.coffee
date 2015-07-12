@@ -20,7 +20,7 @@ Now press Enter. Congratulations, you have
 
 Next steps:
 - Go through the [Tutorial](:e;:tutorial)
-- Look at the [Language Reference](:e;:language-reference)
+- Look at the [Language Reference](:e;:language-guide)
 - Start breathing again after you spotted all the parentheses
 - Bug us on <a href="http://github.com/xixixao/Golem">Github</a>
 """
@@ -108,11 +108,11 @@ Golem provides many useful actions for transforming code. To see all the availab
 
 ## The Language
 
-Now that you are familiar with the IDE, let's learn more about the language itself. You can keep this tutorial open for reference. Display [:language-reference](:language-reference).
+Now that you are familiar with the IDE, let's learn more about the language itself. You can keep this tutorial open for reference. Display [:language-guide](:language-guide).
 """
 
-languageReference = """
-This is a short guide to Shem, the language. You can evaluate a selected expression using <kbd>Ctrl-X</kbd> and add a selected name with its definition to the module editor using <kbd>Ctrl-C</kbd>. Some examples are taken from [Learn You a Haskell](http://learnyouahaskell.com) for comparison.
+languageGuide = """
+This is a short guide to Shem, the language. You can evaluate a selected expression using <kbd>Ctrl-X</kbd> and add a selected name with its definition to the module editor using <kbd>Ctrl-C</kbd>. Some examples and their order are taken from [Learn You a Haskell](http://learnyouahaskell.com), for comparison.
 
 ## Basics
 
@@ -313,12 +313,80 @@ Optional use of labels:
 (concat-repeat times: 8 what: {0 1})
 ```
 
+## Pattern Matching
 
+Using the `match` macro:
 
+```
+lucky-number (fn [x]
+  (match x
+    7 "Lucky Number Slevin!"
+    42 "The answer to everything."
+    _ "No luck today..."))
+```
 
+Recursive functions:
+
+```
+factorial (fn [x]
+  (match x
+    0 1
+    _ (* x (factorial (- 1 x)))))
+```
+
+Matching on tuples and multiple parameters:
+
+```
+add-vectors (fn [v1 v2]
+  (match [v1 v2]
+    [[x1 y1] [x2 y2]] [(+ x1 x2) (+ y1 y2)]))
+```
+
+Matching on arrays:
+
+```
+but-first-and-last (fn [list]
+  (match list
+    {first ..xs last} xs))
+```
+
+## Conditionals
+
+Using the `cond` macro, `else` is just `True`:
+
+```
+maybe-prime (fn [x]
+  (cond
+    (= 2 x) "A prime for sure."
+    (and (> 2 x) (odd? x)) "Maybe a prime, who knows.")
+    else "Definitely not a prime.")
+```
+
+The `if` macro expands to `cond`:
+
+```
+if-factorial (fn [x]
+  (if (= x 0)
+    1
+    (* x (factorial (- 1 x)))))
+```
 
 
 """
+
+## Recursion
+
+# Simple recursion:
+
+# ```
+# quicksort (fn [list]
+#   (match list
+#     {x ..xs} (concat {smaller-sorted (singleton x) bigger-sorted}))
+#   smaller-sorted (quicksort smaller)
+#   bigger-sorted (quicksort bigger)
+#   [smaller bigger] (partition (<= x) xs))
+# ```
+
 
 oldTutorial = """Welcome! This tutorial covers the introduction to both the IDE and the language. <a href=":e;:intro">back to intro</a>
 
@@ -477,21 +545,21 @@ class IntroCommand
 
 class TutorialCommand
   @defaultSymbols = ['tutorial']
-  @description = 'Show the tutorial'
+  @description = 'Show the Golem tutorial'
   @symbols = @defaultSymbols
 
   @execute = (args, state, editor) ->
     editor.log _div displayBox (marked tutorial), editor
 
-class LanguageReferenceCommand
-  @defaultSymbols = ['language-reference']
-  @description = 'Show the language reference'
+class LanguageGuideCommand
+  @defaultSymbols = ['language-guide']
+  @description = 'Show the Shem guide'
   @symbols = @defaultSymbols
 
   @execute = (args, state, editor) ->
     moduleName = editor.unnamedModuleName()
     id = 1000
-    marked languageReference,
+    marked languageGuide,
       highlight: (code, tag) ->
         displayId = "display#{id++}"
         isTopLevel = tag isnt '$'
@@ -504,4 +572,4 @@ class LanguageReferenceCommand
 
 
 
-module.exports = [IntroCommand, TutorialCommand, LanguageReferenceCommand]
+module.exports = [IntroCommand, TutorialCommand, LanguageGuideCommand]
