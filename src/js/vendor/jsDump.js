@@ -172,13 +172,13 @@ var jsDump;
       undefined:'undefined',
       'function':function( fn ){
         return fn;
-        var ret = 'function',
-          name = 'name' in fn ? fn.name : (reName.exec(fn)||[])[1];//functions never have name in IE
-        if( name )
-          ret += ' ' + name;
-        ret += '(';
-        ret = [ ret, this.parse( fn, 'functionArgs' ), '){'].join('');
-        return join( ret, this.parse(fn,'functionCode'), '}' );
+        // var ret = 'function',
+        //   name = 'name' in fn ? fn.name : (reName.exec(fn)||[])[1];//functions never have name in IE
+        // if( name )
+        //   ret += ' ' + name;
+        // ret += '(';
+        // ret = [ ret, this.parse( fn, 'functionArgs' ), '){'].join('');
+        // return join( ret, this.parse(fn,'functionCode'), '}' );
       },
       array: array,
       nodelist: array,
