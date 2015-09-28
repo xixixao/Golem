@@ -1593,6 +1593,7 @@ exports.Mode = class extends TextMode
         at: selected
       inSelections: replacing
 
+  # TODO: fix for blank indented lines
   moveSelectionByLine: (direction) ->
     # like moveSelection but swap all tokens on each line
     selected = @selectedTangible()
