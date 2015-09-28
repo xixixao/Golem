@@ -107,7 +107,7 @@ class AdhocWorker extends exports.Worker
           type: (if execute then 'execute' else 'normal')
           commandSource: value
           result:
-            @compilationFn value, @moduleName
+            @compilationFn value, (names: [@moduleName], types: ['browser'])
 
       catch e
         console.log e.stack
@@ -132,7 +132,7 @@ cacheModule = (fn, source, moduleName) ->
     console.log "#{moduleName} was cached."
     old.result
   else
-    result = fn source, moduleName
+    result = fn source, (names: [moduleName], types: ['browser'])
     if not result.request
       cache[moduleName] =
         source: source
