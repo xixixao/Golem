@@ -122,7 +122,7 @@ _FileBrowser = hyper class FileBrowser
             className: 'colorHighlightHover'
             onClick: @handleClick(name)
             style: cursor: 'pointer'
-            _td if name is @state.fileName then '>'
+            _td if name is @state.fileName then '> ' else '  '
             _td "#{name} "
             _td numLines
 
