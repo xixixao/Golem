@@ -12,12 +12,21 @@ findAll = (object, filter) ->
   found
 
 module.exports = class FileSystemMemory extends Memory
-  _directory: ->
+  constructor: ->
+    super
+    # TODO: remove this and open last opened instead, by preserving IDE state in a file
     # TODO: error if the arg does not exist
-    srcPath = path.join process.env.PWD, window.GolemOpenFilePath, 'src'
-    mkdirp.sync srcPath
-    srcPath
-    # if fs.existsSync path.join window.GolemOpenFilePath
+    @openPath = path.join process.env.PWD, window.GolemOpenFilePath, 'src'
+    @singleFile = no
+
+  _directory: ->
+    if not fs.existsSync @openPath
+      if not @singleFile
+        mkdirp.sync srcPath
+    if @singleFile
+      path.dirname @openPath
+    else
+      @openPath
 
   _countLines: (srcPath, name) ->
     (@_readFile path.join srcPath, name).split('\n').length
@@ -31,28 +40,36 @@ module.exports = class FileSystemMemory extends Memory
       stats = {}
       srcPath = @_directory()
       for fileName in fs.readdirSync srcPath
-        ext = path.extname fileName
-        if ext[1...] is 'shem'
-          name = path.basename fileName, ext
-          stats[name] = name: name, numLines: @_countLines srcPath, name
+        if not @singleFile or (path.join srcPath, fileName) is @openPath
+          ext = path.extname fileName
+          # TODO: load all files in directories, recursively, but don't compile them
+          if ext[1...] is 'shem'
+            name = path.basename fileName, ext
+            stats[name] = name: name, numLines: @_countLines srcPath, name
       stats
     else
       # dont delete files for now
 
-  _fileStorage: (name, value) ->
+  _fileStorage: (name, savedInfo) ->
     srcPath = @_directory()
     filePath = (path.join srcPath, name)
-    @emitter.emit 'file' if value isnt undefined
-    if value
-      fileContent = value.value
-      delete value.value
-      @_writeFile filePath, fileContent
-      $.totalStorage "GolemFile_" + filePath, value
+    @emitter.emit 'file' if savedInfo isnt undefined
+    if savedInfo
+      fileContent = savedInfo.value
+      delete savedInfo.value
+      @_writeFile filePath, fileContent if name isnt @unnamed
+      $.totalStorage "GolemFile_" + filePath, savedInfo
     else
       info = $.totalStorage "GolemFile_" + filePath
-      if info
-        try
-          info.value = @_readFile filePath
+      try
+        value = @_readFile filePath
+      catch
+        return null
+      if not info
+        info =
+          mode: 'teascript'
+        $.totalStorage "GolemFile_" + filePath, info
+      info.value = value
       info
 
   _writeFile: (path, content) ->
@@ -61,6 +78,20 @@ module.exports = class FileSystemMemory extends Memory
   _readFile: (path) ->
     fs.readFileSync "#{path}.shem", encoding: 'utf8'
 
+  # TODO: this is dangerous, replace with Save as... or similar
   writeBuilt: (js) ->
     srcPath = @_directory()
     fs.writeFileSync (path.join srcPath, '..', 'index.js'), js
+
+  reload: (filepath) ->
+    stats = fs.statSync filepath
+    @singleFile = not stats.isDirectory()
+    @openPath = filepath
+    @emitter.emit 'fileTable'
+    fileName =
+      if @singleFile
+        filepath
+      else
+        (fs.readdirSync filepath)[0]
+    if fileName
+      path.basename fileName, '.shem'

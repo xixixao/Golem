@@ -6,12 +6,15 @@ findAll = (object, filter) ->
     found[k] = v
   found
 
+# Memory is the current representation for the file system, whether it's
+# in the browser or on the desktop
 module.exports = class Memory
   constructor: ->
     @unnamed = "@unnamed"
     @emitter = new Emitter
     @on = @emitter.on.bind(@emitter)
     @off = @emitter.off.bind(@emitter)
+    @emit = @emitter.emit.bind(@emitter)
 
   # TODO: for each file, save its non-command executed commands
   saveSource: (fileName, serialized) ->

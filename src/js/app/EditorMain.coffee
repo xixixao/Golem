@@ -308,6 +308,9 @@ module.exports = hyper class EditorMain
   load: (fileName, mustExist) ->
     if fileName isnt @state.module.name
       @save()
+    @loadWithoutSaving fileName, mustExist
+
+  loadWithoutSaving: (fileName, mustExist) ->
     loaded = @loadSource fileName, mustExist
     if loaded
       @memory.setLastOpenFileName fileName
@@ -505,6 +508,11 @@ module.exports = hyper class EditorMain
   componentWillMount: ->
     window.addEventListener 'unload', =>
       @save()
+
+    window.addEventListener 'golem-native-open-file', ({filepath}) =>
+      @save()
+      fileName = @memory.reload filepath
+      @loadWithoutSaving fileName or @memory.getLastOpenFileName()
 
     @setInterval @save, @state.autosaveDelay
 

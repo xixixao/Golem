@@ -13,7 +13,12 @@ createProjectMenu = ->
     label: 'Open...'
     click: ->
       fileDialog multiple: yes, ([filepath]) ->
-        console.log filepath
+        dispatchGlobalEvent 'golem-native-open-file', {filepath}
+  ,
+    label: 'Open Folder...'
+    click: ->
+      fileDialog nwdirectory: yes, ([filepath]) ->
+        dispatchGlobalEvent 'golem-native-open-file', {filepath}
   ,
     label: 'Open Project...'
     click: ->
@@ -43,6 +48,12 @@ fileDialog = (attributes, callback) ->
     document.body.removeChild wrapper
   , false
   chooser.click()
+
+dispatchGlobalEvent = (name, data) ->
+  event = new Event name
+  for key, value of data
+    event[key] = value
+  window.dispatchEvent event
 
 menu = (label, items...) ->
   newMenu = new gui.Menu()
