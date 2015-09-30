@@ -17,10 +17,13 @@ fileAutocomplete = (includeCurrent) -> (args, state, editor, callback) ->
       files = editor.memory.getFileTable()
       (for key, {name, numLines} of files when includeCurrent or name isnt current
         name: name
-        value: name
+        value: escapeSpaces name
         meta: "#{numLines}").reverse()
     else
       []
+
+escapeSpaces = (name) ->
+  name.replace /(\s)/g, "\\$1"
 
 class SaveCommand
   @defaultSymbols = ['save']

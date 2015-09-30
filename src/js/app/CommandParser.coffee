@@ -18,5 +18,9 @@ module.exports = (input) ->
   #   \s* $ # ending whitespace
   # ///
 
-  [symbol, args...] = input.split /\s+/
+  [symbol, args...] = input
+    .replace /([^\\])\s+/g, "$1$1 "
+    .split /[^\\] /
+    .map (x) ->
+      x.replace /\\(\s)/g, "$1"
   [symbol, args]
