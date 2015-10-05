@@ -67,7 +67,7 @@ exports.Worker = class extends Mirror
       compiler.expand @moduleName, expression
 
     compileBuild: (moduleName) ->
-      compiler.compileModuleWithDependencies moduleName
+      compiler.compileModuleWithDependencies (names: [moduleName], types: ['browser'])
 
 # Returns a function which runs given function maximally once during given
 # duration.
