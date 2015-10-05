@@ -3,7 +3,7 @@
 React = require 'React'
 cx = React.addons.classSet
 
-module.exports = hyper class OutputDisplay
+module.exports = hyper class OutputBox
 
   componentDidUpdate: (prevProps, prevState) ->
     if @props.focus
