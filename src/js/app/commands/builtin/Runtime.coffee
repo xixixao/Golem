@@ -66,7 +66,7 @@ class DumpCommand
 
 stripImmutable = (js) ->
   js.replace /\/\*\*\* Immutable.JS \*\*\*\/[\s\S]*\/\*\*\* Immutable.JS \*\*\*\//,
-    '/* global.Immutable = ...      Removed from print out */'
+    '\n/* global.Immutable = ...      Removed from print out */'
 
 class BuildCommand
   @defaultSymbols = ['build']
