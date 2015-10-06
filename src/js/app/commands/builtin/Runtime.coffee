@@ -1,6 +1,6 @@
-{_div} = hyper = require 'hyper'
+{_pre} = hyper = require 'hyper'
 beautify = (require 'beautify').js_beautify
-{highlight} = hljs = (require 'hljs')
+hljs = (require 'hljs')
 
 ifCompiled = (state, editor, fn) ->
     # TODO: compile if not autocompiling
@@ -22,8 +22,11 @@ stripImports = (js) ->
     .replace /\nreturn \{[^\}]*\};\n\}\(\)\);$/, ''
 
 addLineNumbers = (text) ->
-  (for line, i in text.split '\n'
-    "<span class='unselectableText' style='color: #555;'>#{i}  </span>#{line}"
+  lines = text.split '\n'
+  gutterWidth = 1 + ('' + lines.length).length # number of digits
+  (for line, i in lines
+    gutterBuffer = (Array gutterWidth - ('' + i).length).join ' '
+    "<span class='unselectableText' style='color: #555;'>#{gutterBuffer}#{i}  </span>#{line}"
     ).join '\n'
 
 _CodeDump = hyper class CodeDump
@@ -44,7 +47,7 @@ _CodeDump = hyper class CodeDump
         @state.compiledJs
       else
         stripImports @state.compiledJs
-    _div
+    _pre
       dangerouslySetInnerHTML:
         __html: addLineNumbers highlight format text
 
@@ -61,21 +64,25 @@ class DumpCommand
         mode: state.mode
         modifiers: modifiers
 
+stripImmutable = (js) ->
+  js.replace /\/\*\*\* Immutable.JS \*\*\*\/[\s\S]*\/\*\*\* Immutable.JS \*\*\*\//,
+    '/* global.Immutable = ...      Removed from print out */'
+
 class BuildCommand
   @defaultSymbols = ['build']
   @description = 'Build the project and JavaScript'
   @symbols = @defaultSymbols
 
-  @execute = (args, state, editor) ->
-    # TODO: add full output and line numbers
-    # ("#{i} #{line}" for line, i in state.compiledJs.split('\n')).join '\n'
+  @execute = (modifiers, state, editor) ->
     ifCompiled state, editor, ->
       state.mode.worker.call 'compileBuild', [state.module.moduleName], (compiled) ->
-        if editor.memory.writeBuilt
+        if 'show' not in modifiers and editor.memory.writeBuilt
           editor.memory.writeBuilt compiled.js
           editor.displayMessage 'file', "Build saved to index.js"
         else
-          editor.logResult highlight format compiled.js
+          editor.log _pre
+            dangerouslySetInnerHTML:
+              __html: addLineNumbers highlight format stripImmutable compiled.js
 
 # TODO: support toggling auto compile
 # class RunCommand
