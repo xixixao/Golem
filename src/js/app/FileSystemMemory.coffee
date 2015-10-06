@@ -56,15 +56,16 @@ module.exports = class FileSystemMemory extends Memory
     @emitter.emit 'file' if savedInfo isnt undefined
     if savedInfo
       fileContent = savedInfo.value
-      delete savedInfo.value
-      @_writeFile filePath, fileContent if name isnt @unnamed
+      if name isnt @unnamed
+        delete savedInfo.value
+        @_writeFile filePath, fileContent
       $.totalStorage "GolemFile_" + filePath, savedInfo
     else
       info = $.totalStorage "GolemFile_" + filePath
       try
         value = @_readFile filePath
       catch
-        return null
+        return if info.value then info else null
       if not info
         info =
           mode: 'teascript'
