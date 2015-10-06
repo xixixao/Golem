@@ -16,7 +16,8 @@ TimeLine = require './UniqueTimeLine'
 CommandParser = require './CommandParser'
 Modes = require './Modes'
 History = require './History'
-if window.requireNode and window.GolemOpenFilePath
+IS_DESKTOP = window.requireNode and window.GolemOpenFilePath
+if IS_DESKTOP
   Memory = require './FileSystemMemory'
 else
   Memory = require './Memory'
@@ -532,7 +533,8 @@ module.exports = hyper class EditorMain
   componentDidMount: ->
     if @state.timeline.size() < 10
       @_executeCommand @state.commandMap['intro']
-    @_executeCommand @state.commandMap['load-demos']
+    if not IS_DESKTOP
+      @_executeCommand @state.commandMap['load-demos']
     window.log = @logResult
 
   logResult: (input) ->
