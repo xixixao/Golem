@@ -25,8 +25,11 @@ addLineNumbers = (text) ->
   lines = text.split '\n'
   gutterWidth = 1 + ('' + lines.length).length # number of digits
   (for line, i in lines
-    gutterBuffer = (Array gutterWidth - ('' + i).length).join ' '
-    "<span class='unselectableText' style='color: #555;'>#{gutterBuffer}#{i}  </span>#{line}"
+    lineNumber = i + 1
+    gutterBuffer = (Array gutterWidth - ('' + lineNumber).length).join ' '
+    "<span
+      class='unselectableText'
+      style='color: #555;'>#{gutterBuffer}#{lineNumber}  </span>#{line}"
     ).join '\n'
 
 _CodeDump = hyper class CodeDump
