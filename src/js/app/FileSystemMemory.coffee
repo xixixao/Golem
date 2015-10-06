@@ -16,7 +16,7 @@ module.exports = class FileSystemMemory extends Memory
     super
     # TODO: remove this and open last opened instead, by preserving IDE state in a file
     # TODO: error if the arg does not exist
-    @openPath = path.join process.env.PWD, window.GolemOpenFilePath, 'src'
+    @openPath = path.join process.env.PWD, window.GolemOpenFilePath
     @singleFile = no
 
   _directory: ->
