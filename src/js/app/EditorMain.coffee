@@ -533,7 +533,9 @@ module.exports = hyper class EditorMain
   componentDidMount: ->
     if @state.timeline.size() < 10
       @_executeCommand @state.commandMap['intro']
-    if not IS_DESKTOP
+    if IS_DESKTOP and not @memory.singleFile
+      @_executeCommand @state.commandMap['browse']
+    else
       @_executeCommand @state.commandMap['load-demos']
     window.log = @logResult
 

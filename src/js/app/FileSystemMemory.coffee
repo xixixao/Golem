@@ -14,10 +14,10 @@ findAll = (object, filter) ->
 module.exports = class FileSystemMemory extends Memory
   constructor: ->
     super
-    # TODO: remove this and open last opened instead, by preserving IDE state in a file
+    # TODO: remove this and open last opened instead, by preserving IDE state in a file if there are no args
     # TODO: error if the arg does not exist
     @openPath = path.join process.env.PWD, window.GolemOpenFilePath
-    @singleFile = no
+    @setSingleFile()
 
   _directory: ->
     if not fs.existsSync @openPath
@@ -83,10 +83,13 @@ module.exports = class FileSystemMemory extends Memory
     srcPath = @_directory()
     fs.writeFileSync (path.join srcPath, '..', 'index.js'), js
 
-  reload: (filepath) ->
-    stats = fs.statSync filepath
+  setSingleFile: ->
+    stats = fs.statSync @openPath
     @singleFile = not stats.isDirectory()
+
+  reload: (filepath) ->
     @openPath = filepath
+    @setSingleFile()
     @emitter.emit 'fileTable'
     fileName =
       if @singleFile
