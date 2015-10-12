@@ -65,7 +65,7 @@ module.exports = class FileSystemMemory extends Memory
       try
         value = @_readFile filePath
       catch
-        return if info.value then info else null
+        return if info?.value then info else null
       if not info
         info =
           mode: 'teascript'

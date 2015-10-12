@@ -535,7 +535,7 @@ module.exports = hyper class EditorMain
       @_executeCommand @state.commandMap['intro']
     if IS_DESKTOP and not @memory.singleFile
       @_executeCommand @state.commandMap['browse']
-    else
+    if not IS_DESKTOP
       @_executeCommand @state.commandMap['load-demos']
     window.log = @logResult
 
