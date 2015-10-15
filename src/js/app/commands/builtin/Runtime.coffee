@@ -1,4 +1,4 @@
-{_pre} = hyper = require 'hyper'
+{_pre, _div} = hyper = require 'hyper'
 beautify = (require 'beautify').js_beautify
 hljs = (require 'hljs')
 
@@ -21,16 +21,26 @@ stripImports = (js) ->
     .replace /^(.|\n)*'use strict'\n/, '' # for Prelude
     .replace /\nreturn \{[^\}]*\};\n\}\(\)\);$/, ''
 
-addLineNumbers = (text) ->
+displayWithLineNumbers = (text) ->
   lines = text.split '\n'
   gutterWidth = 1 + ('' + lines.length).length # number of digits
-  (for line, i in lines
+  lineNumbers = (for line, i in lines
     lineNumber = i + 1
     gutterBuffer = (Array gutterWidth - ('' + lineNumber).length).join ' '
-    "<span
-      class='unselectableText'
-      style='color: #555;'>#{gutterBuffer}#{lineNumber}  </span>#{line}"
+    "#{gutterBuffer}#{lineNumber}  "
     ).join '\n'
+  _div {},
+    _pre
+      className: 'unselectableText'
+      style:
+        color: '#555'
+        float: 'left'
+      lineNumbers
+    _pre
+      style: float: 'left'
+      dangerouslySetInnerHTML:
+        __html: text
+
 
 _CodeDump = hyper class CodeDump
   getInitialState: ->
@@ -50,9 +60,7 @@ _CodeDump = hyper class CodeDump
         @state.compiledJs
       else
         stripImports @state.compiledJs
-    _pre
-      dangerouslySetInnerHTML:
-        __html: addLineNumbers highlight format text
+    displayWithLineNumbers highlight format text
 
 
 class DumpCommand
@@ -83,9 +91,7 @@ class BuildCommand
           editor.memory.writeBuilt compiled.js
           editor.displayMessage 'file', "Build saved to index.js"
         else
-          editor.log _pre
-            dangerouslySetInnerHTML:
-              __html: addLineNumbers highlight format stripImmutable compiled.js
+          editor.log displayWithLineNumbers highlight format stripImmutable compiled.js
 
 # TODO: support toggling auto compile
 # class RunCommand
