@@ -25,6 +25,15 @@ fileAutocomplete = (includeCurrent) -> (args, state, editor, callback) ->
 escapeSpaces = (name) ->
   name.replace /(\s)/g, "\\$1"
 
+class NewCommand
+  @defaultSymbols = ['new']
+  @description = 'Remode code and save locally under name.'
+  @symbols = @defaultSymbols
+
+  @execute = ([name], state, editor) ->
+    editor.displayMessage 'file', "File #{name} created."
+    editor.load name
+
 class SaveCommand
   @defaultSymbols = ['save']
   @description = 'Save current code locally under name.'
@@ -79,7 +88,7 @@ class CloseCommand
   @description = 'Stops saving under current name.'
   @symbols = @defaultSymbols
 
-  @execute = ([name], state, editor) ->
+  @execute = (args, state, editor) ->
     editor.displayMessage 'file', "File closed."
     # editor.save "@unnamed"
     # editor.empty()
@@ -134,4 +143,4 @@ class BrowseCommand
   @execute = (args, state, editor) ->
     editor.log _FileBrowser editor: editor, memory: editor.memory
 
-module.exports = [SaveCommand, LoadCommand, RenameCommand, DeleteCommand, BrowseCommand, CloseCommand]
+module.exports = [NewCommand, SaveCommand, LoadCommand, RenameCommand, DeleteCommand, BrowseCommand, CloseCommand]

@@ -256,6 +256,7 @@ module.exports = hyper class EditorMain
       require './commands/builtin/Output'
       require './commands/builtin/Runtime'
       require './commands/builtin/Files'
+      require './commands/builtin/Projects'
       require './commands/builtin/Modes'
       require './commands/builtin/Download'
       require './commands/builtin/Demos'

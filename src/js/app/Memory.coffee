@@ -50,6 +50,28 @@ module.exports = class Memory
     findAll @_fileTableStorage(), (name) =>
       name isnt @unnamed
 
+  getModuleTree: ->
+    tree = {}
+    files = (name for name of @_fileTableStorage()).sort()
+
+    add = (to, path, [name, rest...]) ->
+      to[name] or=
+        name: [path..., name].join '/'
+        children: {}
+        exists: no
+      if rest.length > 0
+        add to[name].children, [path..., name], rest
+    for name in files when name isnt @unnamed
+      if /\//.test name
+        path = name.split '/'
+        add tree, [], path
+      else
+        tree[name] =
+          name: name
+          children: []
+          exists: yes
+    tree
+
   _fileStorage: (name, value) ->
     @emitter.emit 'file' if value isnt undefined
     $.totalStorage "GolemFile_" + name, value
