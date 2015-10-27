@@ -41,6 +41,7 @@ module.exports = hyper class CommandLine
     @editor = editor = ace.edit @_getEditorNode(), mode, "ace/theme/tea"
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2
+    editor.$blockScrolling = Infinity
     editor.setHighlightActiveLine false
     editor.setShowPrintMargin false
     editor.renderer.setShowGutter false

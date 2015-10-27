@@ -279,6 +279,7 @@ exports.Mode = class extends TextMode
       @initialSelection = null
       @mutate
         inSelection: findName toSelect.name, @ast
+      @editor.renderer.scrollCursorIntoView null, 0.5 # center
 
   # Traverses the AST in order, fixing positions
   repositionAst: ->

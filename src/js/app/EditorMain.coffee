@@ -353,6 +353,7 @@ module.exports = hyper class EditorMain
     editor = ace.edit container, mode, "ace/theme/tea"
     editor.setFontSize 13
     editor.renderer.setScrollMargin 2, 2
+    editor.$blockScrolling = Infinity
     editor.setHighlightActiveLine false
     editor.session.setTabSize 2
     editor.setShowPrintMargin false

@@ -65,6 +65,7 @@ module.exports = hyper class SourceEditor
     editor.session.setTabSize 2
     editor.setShowPrintMargin false
     editor.setOption 'scrollPastEnd', true
+    editor.$blockScrolling = Infinity
 
     @undoStore = {}
 
