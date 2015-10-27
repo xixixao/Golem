@@ -31,22 +31,6 @@ sortBy = (array, property) ->
 #     else
 #       editor.displayMessage 'file', "There is no #{name}."
 
-# class RenameCommand
-#   @defaultSymbols = ['rename']
-#   @description = 'Rename code under some name to a different name.'
-#   @symbols = @defaultSymbols
-#   @autocomplete = fileAutocomplete yes
-
-#   @execute = ([fromName, toName], state, editor) ->
-#     loaded = editor.load fromName, true
-#     if not loaded
-#       editor.displayMessage 'file', "There is no #{name}."
-#       return
-#     editor.save toName
-#     editor.memory.removeFromClient fromName
-#     editor.displayMessage 'file', "#{fromName} renamed to #{toName}."
-#     editor.save name
-
 # class DeleteCommand
 #   @defaultSymbols = ['delete']
 #   @description = 'Remove code from local storage'
@@ -157,4 +141,18 @@ class ProjectCommand
   @execute = (args, state, editor) ->
     editor.log _ProjectBrowser editor: editor, memory: editor.memory
 
-module.exports = [ProjectCommand]
+
+class ExportModuleCommand
+  @defaultSymbols = ['export']
+  @description = 'Toggle whether current module is exported'
+  @symbols = @defaultSymbols
+
+  @execute = (args, state, editor) ->
+    name = state.module.moduleName
+    editor.memory.removeFromClient name
+    state.mode.exported = not state.mode.exported
+    editor.save name
+    editor.displayMessage 'file',
+      "Module #{name} #{if state.mode.exported then '' else 'un'}exported."
+
+module.exports = [ProjectCommand, ExportModuleCommand]

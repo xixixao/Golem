@@ -65,12 +65,11 @@ class RenameCommand
   @execute = ([fromName, toName], state, editor) ->
     loaded = editor.load fromName, true
     if not loaded
-      editor.displayMessage 'file', "There is no #{name}."
+      editor.displayMessage 'file', "There is no #{fromName}."
       return
     editor.save toName
     editor.memory.removeFromClient fromName
     editor.displayMessage 'file', "#{fromName} renamed to #{toName}."
-    editor.save name
 
 class DeleteCommand
   @defaultSymbols = ['delete']

@@ -20,7 +20,7 @@ module.exports = class Memory
   saveSource: (fileName, serialized) ->
     numLines = (serialized.value.split "\n").length
 
-    @fileTable fileName, name: fileName, numLines: numLines
+    @fileTable fileName, name: fileName, numLines: numLines, exported: serialized.exported
     @_fileStorage fileName, serialized
     @_lastOpenFileStorage fileName
     return
