@@ -28,8 +28,8 @@ module.exports = class FileSystemMemory extends Memory
     else
       @openPath
 
-  _countLines: (srcPath, name) ->
-    (@_readFile path.join srcPath, name).split('\n').length
+  _countLines: (filePath) ->
+    (@_readFile filePath).split('\n').length
 
   fileTable: (fileName, fileData) ->
     # ignore for now
@@ -48,12 +48,12 @@ module.exports = class FileSystemMemory extends Memory
             else
               ext = path.extname fileName
               # TODO: load all files in directories, recursively, but don't compile them
-              if ext[1...] is 'shem'
+              if ext[1...] in ['xshem', 'shem']
                 moduleName = path.basename fileName, ext
                 fullModuleName = path.join relativePath, moduleName
                 table[fullModuleName] =
                   name: fullModuleName
-                  numLines: @_countLines dirPath, moduleName
+                  numLines: @_countLines filePath
       add @_directory(), ''
       table
     else
@@ -78,30 +78,35 @@ module.exports = class FileSystemMemory extends Memory
     srcPath = @_directory()
     filePath = (path.join srcPath, name)
     @emitter.emit 'file' if savedInfo isnt undefined
+    ext = if savedInfo
+      if savedInfo.exported then 'xshem' else 'shem'
+    else
+      if fs.existsSync "#{filePath}.xshem" then 'xshem' else 'shem'
+    fullPath = "#{filePath}.#{ext}"
     if savedInfo
       fileContent = savedInfo.value
       if name isnt @unnamed
         delete savedInfo.value
-        @_writeFile filePath, fileContent
-      $.totalStorage "GolemFile_" + filePath, savedInfo
+        @_writeFile fullPath, fileContent
+      $.totalStorage "GolemFile_" + fullPath, savedInfo
     else
-      info = $.totalStorage "GolemFile_" + filePath
+      info = $.totalStorage "GolemFile_" + fullPath
       try
-        value = @_readFile filePath
+        value = @_readFile fullPath
       catch
         return if info?.value then info else null
       if not info
         info =
           mode: 'teascript'
-        $.totalStorage "GolemFile_" + filePath, info
+        $.totalStorage "GolemFile_" + fullPath, info
       info.value = value
       info
 
   _writeFile: (path, content) ->
-    fs.writeFileSync "#{path}.shem", content
+    fs.writeFileSync path, content
 
   _readFile: (path) ->
-    fs.readFileSync "#{path}.shem", encoding: 'utf8'
+    fs.readFileSync path, encoding: 'utf8'
 
   # TODO: this is dangerous, replace with Save as... or similar
   writeBuilt: (js) ->
