@@ -1,7 +1,7 @@
 {_div, _pre, _input} = hyper = require 'hyper'
 
 React = require 'React'
-cx = React.addons.classSet
+cx = require 'classnames'
 $ = require 'ejquery'
 ace = require 'ace/ace'
 jsDump = require 'vendor/jsDump'

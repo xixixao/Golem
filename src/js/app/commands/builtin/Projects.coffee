@@ -121,7 +121,7 @@ _ProjectBrowser = hyper class ProjectBrowser
   render: ->
     _div {},
       _span
-        style: 'font-weight': 'bold'
+        style: fontWeight: 'bold'
         "Modules"
       _div
         @subtree @state.data, 0

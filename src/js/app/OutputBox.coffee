@@ -1,7 +1,7 @@
 {_div, _input} = hyper = require 'hyper'
 
 React = require 'React'
-cx = React.addons.classSet
+cx = require 'classnames'
 
 module.exports = hyper class OutputBox
 

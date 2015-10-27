@@ -1,7 +1,7 @@
 {_div, _pre, _span, _table, _tbody, _tr, _th, _td} = hyper = require 'hyper'
 
 React = require 'React'
-cx = React.addons.classSet
+cx = require 'classnames'
 ace = require './AceEditor'
 jsDump = require 'vendor/jsDump'
 
