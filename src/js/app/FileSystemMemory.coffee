@@ -59,6 +59,21 @@ module.exports = class FileSystemMemory extends Memory
     else
       # dont delete files for now
 
+  getModuleTree: ->
+    tree = super
+    checkIndex = (tree) ->
+      if tree.children['index']
+        tree.exists = yes
+        tree.name = tree.children.index.name
+        delete tree.children.index
+        for name, child of tree.children
+          checkIndex child
+    top = children: tree
+    checkIndex top
+    enclosing = {}
+    enclosing[path.basename @_directory()] = top
+    enclosing
+
   _fileStorage: (name, savedInfo) ->
     srcPath = @_directory()
     filePath = (path.join srcPath, name)

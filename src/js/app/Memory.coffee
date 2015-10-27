@@ -55,11 +55,12 @@ module.exports = class Memory
     files = (name for name of @_fileTableStorage()).sort()
 
     add = (to, path, [name, rest...]) ->
+      last = rest.length is 0
       to[name] or=
         name: [path..., name].join '/'
         children: {}
-        exists: no
-      if rest.length > 0
+        exists: last
+      if not last
         add to[name].children, [path..., name], rest
     for name in files when name isnt @unnamed
       if /\//.test name
@@ -68,7 +69,7 @@ module.exports = class Memory
       else
         tree[name] =
           name: name
-          children: []
+          children: {}
           exists: yes
     tree
 
