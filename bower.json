@@ -8,6 +8,7 @@
     "iced-coffee-script": "~1.6.1",
     "marked": "0.3.3",
     "tiny-emitter": "~0.1.12",
-    "normalize.css": "~3.0.3"
+    "normalize.css": "~3.0.3",
+    "classnames": "~2.2.0"
   }
 }

@@ -17,6 +17,7 @@ require
     'beautify': 'vendor/js-beautify/beautify'
     'hljs': 'vendor/highlight/highlight'
     'marked': 'vendor/marked/marked'
+    'classnames': 'vendor/classnames/index'
   shim:
     'vendor/jquery/jquery.cookie': ['jquery']
     'vendor/jquery/jquery.total-storage': ['jquery']
