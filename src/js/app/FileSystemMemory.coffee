@@ -48,12 +48,13 @@ module.exports = class FileSystemMemory extends Memory
             else
               ext = path.extname fileName
               # TODO: load all files in directories, recursively, but don't compile them
-              if ext[1...] in ['xshem', 'shem']
+              if ext in ['.xshem', '.shem']
                 moduleName = path.basename fileName, ext
                 fullModuleName = path.join relativePath, moduleName
                 table[fullModuleName] =
                   name: fullModuleName
                   numLines: @_countLines filePath
+                  exported: ext is '.xshem'
       add @_directory(), ''
       table
     else

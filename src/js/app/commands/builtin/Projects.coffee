@@ -105,16 +105,19 @@ _ProjectBrowser = hyper class ProjectBrowser
 
 
   subtree: (data, index) ->
-    for moduleName, {name, children, exists} of data
+    for moduleName, {name, children, exists, exported} of data
       children ?= {}
       _div
         key: moduleName
         _div
           className: 'colorHighlightHover'
-          style: cursor: 'pointer'
+          style:
+            opacity: (if not exists then 0.5 else 1)
+            cursor: (if exists then 'pointer' else 'alias')
           onClick: (@handleClick name, exists)
           if name is @state.fileName then '> ' else '  '
           ((Array index + 1).join '  ') + moduleName
+          if exported then ' +' else ''
         _div
           @subtree children, index + 1
 

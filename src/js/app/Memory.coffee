@@ -51,26 +51,22 @@ module.exports = class Memory
       name isnt @unnamed
 
   getModuleTree: ->
+    table = @_fileTableStorage()
     tree = {}
-    files = (name for name of @_fileTableStorage()).sort()
+    files = (name for name of table).sort()
 
     add = (to, path, [name, rest...]) ->
       last = rest.length is 0
       to[name] or=
-        name: [path..., name].join '/'
+        name: moduleName = [path..., name].join '/'
         children: {}
         exists: last
+        exported: (table[moduleName] or {}).exported
       if not last
         add to[name].children, [path..., name], rest
     for name in files when name isnt @unnamed
-      if /\//.test name
-        path = name.split '/'
-        add tree, [], path
-      else
-        tree[name] =
-          name: name
-          children: {}
-          exists: yes
+      path = name.split '/'
+      add tree, [], path
     tree
 
   _fileStorage: (name, value) ->
