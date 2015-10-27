@@ -37,16 +37,25 @@ module.exports = class FileSystemMemory extends Memory
   _fileTableStorage: (table) ->
     @emitter.emit 'fileTable' if table isnt undefined
     if not table
-      stats = {}
-      srcPath = @_directory()
-      for fileName in fs.readdirSync srcPath
-        if not @singleFile or (path.join srcPath, fileName) is @openPath
-          ext = path.extname fileName
-          # TODO: load all files in directories, recursively, but don't compile them
-          if ext[1...] is 'shem'
-            name = path.basename fileName, ext
-            stats[name] = name: name, numLines: @_countLines srcPath, name
-      stats
+      table = {}
+      add = (dirPath, relativePath) =>
+        for fileName in fs.readdirSync dirPath
+          filePath = path.join dirPath, fileName
+          if not @singleFile or filePath is @openPath
+            stats = fs.statSync filePath
+            if stats.isDirectory()
+              add filePath, (path.join relativePath, fileName)
+            else
+              ext = path.extname fileName
+              # TODO: load all files in directories, recursively, but don't compile them
+              if ext[1...] is 'shem'
+                moduleName = path.basename fileName, ext
+                fullModuleName = path.join relativePath, moduleName
+                table[fullModuleName] =
+                  name: fullModuleName
+                  numLines: @_countLines dirPath, moduleName
+      add @_directory(), ''
+      table
     else
       # dont delete files for now
 
