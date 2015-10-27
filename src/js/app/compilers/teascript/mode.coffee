@@ -214,7 +214,7 @@ exports.Mode = class extends TextMode
   #   # console.log "setting DIRTY true"
   #   @dirty = true
 
-  setContent: (string, selectedRange, moduleName) ->
+  setContent: (string, selectedRange, moduleName, @exported) ->
     # console.log "setting content"
     try
       @assignModuleName moduleName if moduleName?

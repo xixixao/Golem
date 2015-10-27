@@ -79,11 +79,12 @@ module.exports = class FileSystemMemory extends Memory
     srcPath = @_directory()
     filePath = (path.join srcPath, name)
     @emitter.emit 'file' if savedInfo isnt undefined
-    ext = if savedInfo
-      if savedInfo.exported then 'xshem' else 'shem'
-    else
-      if fs.existsSync "#{filePath}.xshem" then 'xshem' else 'shem'
-    fullPath = "#{filePath}.#{ext}"
+    exported =
+      if savedInfo
+        savedInfo.exported
+      else
+        fs.existsSync "#{filePath}.xshem"
+    fullPath = "#{filePath}.#{if exported then 'xshem' else 'shem'}"
     if savedInfo
       fileContent = savedInfo.value
       if name isnt @unnamed
@@ -101,6 +102,7 @@ module.exports = class FileSystemMemory extends Memory
           mode: 'teascript'
         $.totalStorage "GolemFile_" + fullPath, info
       info.value = value
+      info.exported = exported
       info
 
   _writeFile: (path, content) ->

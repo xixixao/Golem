@@ -11,11 +11,11 @@ _require = require
 
 module.exports = hyper class SourceEditor
 
-  load: ({value, selection, moduleName, scroll}) ->
+  load: ({value, exported, selection, moduleName, scroll}) ->
     session = @editor.session
     @undoStore[@props.module.moduleName] = session.getUndoManager() if session.getUndoManager().execute
     session.setUndoManager session.$defaultUndoManager
-    session.getMode().setContent value, selection, moduleName
+    session.getMode().setContent value, selection, moduleName, exported
     session.setUndoManager @undoStore[moduleName] or session.getMode().createUndoManager?() or new UndoManager
     if scroll
       session.setScrollTop scroll.top
@@ -23,6 +23,7 @@ module.exports = hyper class SourceEditor
 
   serializedModule: ->
     value: @editor.getValue()
+    exported: @editor.session.getMode().exported
     mode: 'teascript'
     selection: @editor.getSelectionRange()
     cursor: @editor.getCursorPosition()
