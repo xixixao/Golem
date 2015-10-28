@@ -29,6 +29,7 @@ exports.Worker = class extends Mirror
     @_compile value, @moduleName, yes, @exported
 
   _compile: (value, moduleName, current, exported) ->
+    console.log "worker: compiling #{moduleName}, current: #{current}, exported: #{exported}"
     try
       result = cacheModule compiler.compileModuleTopLevel, value, moduleName, exported
       if result.request
@@ -135,7 +136,7 @@ moduleNameToPath = (moduleName, exported) ->
 cache = {}
 
 cacheModule = (fn, source, moduleName, exported) ->
-  if (old = cache[moduleName])?.source is source and old
+  if (old = cache[moduleName])?.source is source and old and old.exported is exported
     console.log "#{moduleName} was cached."
     old.result
   else
@@ -143,6 +144,7 @@ cacheModule = (fn, source, moduleName, exported) ->
     if not result.request
       cache[moduleName] =
         source: source
+        exported: exported
         result: result
     result
 
