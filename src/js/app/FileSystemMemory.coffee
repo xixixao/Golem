@@ -76,9 +76,12 @@ module.exports = class FileSystemMemory extends Memory
     enclosing
 
   _fileStorage: (name, savedInfo) ->
+    @emitter.emit 'file' if savedInfo isnt undefined
+
     srcPath = @_directory()
     filePath = (path.join srcPath, name)
-    @emitter.emit 'file' if savedInfo isnt undefined
+    if (fs.existsSync filePath) and (stats = fs.statSync filePath) and stats.isDirectory()
+      filePath = path.join filePath, 'index'
     exported =
       if savedInfo
         savedInfo.exported

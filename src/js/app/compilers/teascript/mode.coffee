@@ -1022,7 +1022,8 @@ exports.Mode = class extends TextMode
               for ref in references when (isName ref)
                 if ref.imported
                   @selectInitially name: ref.imported.name
-                  loadModule ref.imported.module
+                  # TODO: don't unrelativize here, see EditorMain and mode
+                  loadModule ref.imported.module.replace /^\.\//, ''
                 else
                   @mutate
                     inSelection: ref

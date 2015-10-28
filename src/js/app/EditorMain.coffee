@@ -289,7 +289,7 @@ module.exports = hyper class EditorMain
     worker.on 'request', ({data: {moduleName}}) =>
       console.log "source worker requesting", moduleName
       # TODO: dont unrelativize the modulename here
-      loaded = @memory.loadSource moduleName.replace /^.\//, ''
+      loaded = @memory.loadSource moduleName.replace /^\.\//, ''
       if loaded
         worker.call 'compileModule', [loaded.value, moduleName]
       else
