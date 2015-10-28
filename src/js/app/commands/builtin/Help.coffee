@@ -12,8 +12,8 @@ class HelpCommand
       "followed by command name and space separated arguments"
 
     table = _table {},
-      for command in state.commands
-        _tr {},
+      for command, i in state.commands
+        _tr key: i,
           _td [].concat ([(_code symbol), ' '] for symbol in command.symbols)
           _td command.description
 

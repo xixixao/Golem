@@ -9,64 +9,42 @@ sortBy = (array, property) ->
     else
       0
 
-# class SaveCommand
-#   @defaultSymbols = ['save']
-#   @description = 'Save current code locally under name.'
-#   @symbols = @defaultSymbols
+_ProjectsBrowser = hyper class ProjectsBrowser
 
-#   @execute = ([name], state, editor) ->
-#     editor.displayMessage 'file', "#{name} saved."
-#     editor.save name
+  handleClick: (name) -> (event) =>
+    @props.editor.switchProject name
 
-# class LoadCommand
-#   @defaultSymbols = ['load', 'l']
-#   @description = 'Load code from local storage under name.'
-#   @symbols = @defaultSymbols
-#   @autocomplete = fileAutocomplete no
+  handleChange: ->
+    @setState
+      data: @props.memory.projects()
+      projectName: @props.memory.project.name
 
-#   @execute = ([name], state, editor) ->
-#     loaded = editor.load name, true
-#     if loaded
-#       editor.displayMessage 'file', "#{name} loaded."
-#     else
-#       editor.displayMessage 'file', "There is no #{name}."
+  componentWillMount: ->
+    @handleChange()
 
-# class DeleteCommand
-#   @defaultSymbols = ['delete']
-#   @description = 'Remove code from local storage'
-#   @symbols = @defaultSymbols
-#   @autocomplete = fileAutocomplete yes
+  componentDidMount: ->
+    @props.memory.on 'projectTable', @handleChange
+    @props.memory.on 'fileTable', @handleChange
 
-#   @execute = ([name], state, editor) ->
-#     editor.displayMessage 'file', "#{name} deleted."
-#     editor.memory.removeFromClient name
-#     {}
+  componentWillUnmount: ->
+    @props.memory.off 'projectTable', @handleChange
+    @props.memory.off 'fileTable', @handleChange
 
-# class CloseCommand
-#   @defaultSymbols = ['close']
-#   @description = 'Stops saving under current name.'
-#   @symbols = @defaultSymbols
-
-#   @execute = ([name], state, editor) ->
-#     editor.displayMessage 'file', "File closed."
-#     # editor.save "@unnamed"
-#     # editor.empty()
-#     editor.load "@unnamed"
-#     {}
+  render: ->
+    data = sortBy (file for _, file of @state.data), 'name'
+    _table _tbody {},
+      _tr _th(),
+        _th 'Name'
+      for {name, numLines} in data
+        _tr
+          key: name
+          className: 'colorHighlightHover'
+          onClick: @handleClick(name)
+          style: cursor: 'pointer'
+          _td if name is @state.projectName then '> ' else '  '
+          _td "#{name} "
 
 _ProjectBrowser = hyper class ProjectBrowser
-
-  # getInitialState: ->
-  #   data:
-  #     A:
-  #       name: 'A'
-  #       children:
-  #         B:
-  #           name: 'A/B'
-  #           children:
-  #             C: name: 'A/B/C'
-  #             D: name: 'A/B/D'
-  #         F: name: 'A/F'
 
   handleClick: (name, exists) -> (event) =>
     @props.editor.executeCommand (if exists then 'load' else 'new'), name
@@ -114,33 +92,30 @@ _ProjectBrowser = hyper class ProjectBrowser
         @subtree @state.data, 0
 
 
-
-    # data = sortBy (file for _, file of @state.data), 'name'
-    # if data.length is 0
-    #   _div "No files found"
-    # else
-    #   _table _tbody {},
-    #     _tr _th(),
-    #       _th 'Name'
-    #       _th 'Lines'
-    #     for {name, numLines} in data
-    #       _tr
-    #         key: name
-    #         className: 'colorHighlightHover'
-    #         onClick: @handleClick(name)
-    #         style: cursor: 'pointer'
-    #         _td if name is @state.fileName then '> ' else '  '
-    #         _td "#{name} "
-    #         _td numLines
-
-class ProjectCommand
+class SetProjectCommand
   @defaultSymbols = ['project']
-  @description = 'Show modules in current project'
+  @description = 'Load or create a project of given name.'
+  @symbols = @defaultSymbols
+
+  @execute = ([name], state, editor) ->
+    editor.displayMessage 'file', "Project #{name} loaded."
+    editor.switchProject name
+
+class ListProjectsCommand
+  @defaultSymbols = ['projects']
+  @description = 'Show all saved projects.'
+  @symbols = @defaultSymbols
+
+  @execute = (args, state, editor) ->
+    editor.log _ProjectsBrowser editor: editor, memory: editor.memory
+
+class BrowseProjectCommand
+  @defaultSymbols = ['modules', 'm']
+  @description = 'Show modules in current project.'
   @symbols = @defaultSymbols
 
   @execute = (args, state, editor) ->
     editor.log _ProjectBrowser editor: editor, memory: editor.memory
-
 
 class ExportModuleCommand
   @defaultSymbols = ['export']
@@ -150,9 +125,9 @@ class ExportModuleCommand
   @execute = (args, state, editor) ->
     name = state.module.moduleName
     editor.memory.removeFromClient name
-    state.mode.exported = not state.mode.exported
+    state.mode.flipExported()
     editor.save name
     editor.displayMessage 'file',
       "Module #{name} #{if state.mode.exported then '' else 'un'}exported."
 
-module.exports = [ProjectCommand, ExportModuleCommand]
+module.exports = [BrowseProjectCommand, ExportModuleCommand, SetProjectCommand, ListProjectsCommand]

@@ -15,8 +15,10 @@ exports.Worker = class extends Mirror
 
   setModuleName: (@moduleName) ->
 
-  compileModule: (value, moduleName) ->
-    @_compile value, moduleName, no
+  setExported: (@exported) ->
+
+  compileModule: (value, moduleName, exported) ->
+    @_compile value, moduleName, no, exported
 
   onUpdate: ->
     # @trigger @compile
@@ -24,12 +26,11 @@ exports.Worker = class extends Mirror
 
   compile: =>
     value = @doc.getValue()
-    @_compile value, @moduleName, yes
+    @_compile value, @moduleName, yes, @exported
 
-  _compile: (value, moduleName, current) ->
-    console.log "worker: compiling #{moduleName}, current: #{current}"
+  _compile: (value, moduleName, current, exported) ->
     try
-      result = cacheModule compiler.compileModuleTopLevel, value, moduleName
+      result = cacheModule compiler.compileModuleTopLevel, value, moduleName, exported
       if result.request
         listening = @sender.on 'ok', (requested) =>
           if requested.moduleName is result.request
@@ -107,7 +108,7 @@ class AdhocWorker extends exports.Worker
           type: (if execute then 'execute' else 'normal')
           commandSource: value
           result:
-            @compilationFn value, moduleNameToPath @moduleName
+            @compilationFn value, moduleNameToPath @moduleName, @exported
 
       catch e
         console.log e.stack
@@ -125,20 +126,20 @@ class AdhocWorker extends exports.Worker
       else
         compiler.parseExpression
 
-moduleNameToPath = (moduleName) ->
+moduleNameToPath = (moduleName, exported) ->
   names = [..., last] = moduleName.split '/'
   if last is 'index'
     names.pop()
-  {names, types: ('browser' for _ in names)}
+  {names, types: ('browser' for _ in names), exported}
 
 cache = {}
 
-cacheModule = (fn, source, moduleName) ->
+cacheModule = (fn, source, moduleName, exported) ->
   if (old = cache[moduleName])?.source is source and old
     console.log "#{moduleName} was cached."
     old.result
   else
-    result = fn source, moduleNameToPath moduleName
+    result = fn source, moduleNameToPath moduleName, exported
     if not result.request
       cache[moduleName] =
         source: source

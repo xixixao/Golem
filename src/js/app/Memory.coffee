@@ -11,10 +11,46 @@ findAll = (object, filter) ->
 module.exports = class Memory
   constructor: ->
     @unnamed = "@unnamed"
+    @defaultProject = "Default"
     @emitter = new Emitter
     @on = @emitter.on.bind(@emitter)
     @off = @emitter.off.bind(@emitter)
     @emit = @emitter.emit.bind(@emitter)
+    @project = @projects()[@defaultProject]
+
+  # On desktop, folders are used for projects, in the browser, they are explicitly supported
+  reload: (projectName) ->
+    @saveProject projectName
+    @project = @projects()[projectName]
+    @emitter.emit 'fileTable'
+
+  projects: ->
+    @_projectsStorage()
+
+  saveProject: (projectName) ->
+    @_projectsTable projectName, yes
+
+  removeProject: (projectName) ->
+    # Dont delete the actual data
+    @_projectsTable projectName, no
+
+  _projectsTable: (projectName, exists) ->
+    @manipulateTable @_projectsStorage, projectName,
+      if exists
+        @_projectsStorage()[projectName] or
+          name: projectName
+          storageKey: "GolemProject_#{projectName}"
+          fileStorageKey: "GolemFile_#{projectName}_"
+          lastOpenFile: undefined
+
+  _projectsStorage: (table) =>
+    @emitter.emit 'projectTable' if table isnt undefined
+    ($.totalStorage "projectTableCOOKIEv1", table) or
+      Default:
+        name: "Default"
+        storageKey: "fileTableCOOKIEv4" # for backwards compatibility
+        fileStorageKey: "GolemFile_" # for backwards compatibility
+        lastOpenFile: undefined
 
   # TODO: for each file, save its non-command executed commands
   saveSource: (fileName, serialized) ->
@@ -32,19 +68,22 @@ module.exports = class Memory
     @_fileStorage fileName, null
     @fileTable fileName
 
-  # fileTable holds a list of all saved files with associated data
   fileTable: (fileName, fileData) ->
-    oldTable = (@_fileTableStorage()) or {}
+    @manipulateTable @_fileTableStorage, fileName, fileData
 
-    table = findAll oldTable, (oldFileName) -> oldFileName isnt fileName
-    if fileData
-      table[fileName] = fileData
+  manipulateTable: (tableStorage, key, value) ->
+    oldTable = tableStorage() or {}
 
-    @_fileTableStorage table
+    newTable = findAll oldTable, (oldKey) -> oldKey isnt key
+    if value
+      newTable[key] = value
 
-  _fileTableStorage: (table) ->
+    tableStorage newTable
+
+  # fileTable holds a map of all saved files with associated data
+  _fileTableStorage: (table) =>
     @emitter.emit 'fileTable' if table isnt undefined
-    $.totalStorage "fileTableCOOKIEv4", table
+    $.totalStorage @project.storageKey, table
 
   getFileTable: ->
     findAll @_fileTableStorage(), (name) =>
@@ -71,7 +110,7 @@ module.exports = class Memory
 
   _fileStorage: (name, value) ->
     @emitter.emit 'file' if value isnt undefined
-    $.totalStorage "GolemFile_" + name, value
+    $.totalStorage @project.fileStorageKey + name, value
 
   getLastOpenFileName: ->
     lastOpen = @_lastOpenFileStorage()
@@ -81,8 +120,12 @@ module.exports = class Memory
     @_lastOpenFileStorage fileName
 
   _lastOpenFileStorage: (fileName) ->
-    @emitter.emit 'lastOpen' if fileName isnt undefined
-    $.totalStorage "lastOpenFileCOOKIE", fileName
+    if fileName
+      @project.lastOpenFile = fileName
+      @_projectsTable @project.name, @project
+      @emitter.emit 'lastOpen'
+    else
+      @project.lastOpenFile
 
   saveCommands: (timeline) ->
     @_timelineStorage timeline.newest(200)

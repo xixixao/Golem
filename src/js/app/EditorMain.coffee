@@ -291,7 +291,7 @@ module.exports = hyper class EditorMain
       # TODO: dont unrelativize the modulename here
       loaded = @memory.loadSource moduleName.replace /^\.\//, ''
       if loaded
-        worker.call 'compileModule', [loaded.value, moduleName]
+        worker.call 'compileModule', [loaded.value, moduleName, loaded.exported]
       else
         @handleSourceFailed "Could not find module #{moduleName}"
 
@@ -345,7 +345,7 @@ module.exports = hyper class EditorMain
 
   unnamedModuleName: ->
     newModuleName = "unnamed#{@unnamedModules++}"
-    @state.mode.worker.call 'compileModule', ['', newModuleName]
+    @state.mode.worker.call 'compileModule', ['', newModuleName, true]
     newModuleName
 
   createAceEditor: (value, displayId, moduleName, isTopLevel) ->
@@ -509,6 +509,12 @@ module.exports = hyper class EditorMain
         focused: to
         focusedOutputIndex: index
 
+  # Browser only for now
+  switchProject: (projectName) ->
+    @save()
+    @memory.reload projectName
+    @loadWithoutSaving @memory.getLastOpenFileName()
+
   componentWillMount: ->
     window.addEventListener 'unload', =>
       @save()
@@ -516,6 +522,7 @@ module.exports = hyper class EditorMain
     window.addEventListener 'golem-native-open-file', ({filepath}) =>
       @save()
       fileName = @memory.reload filepath
+      # TODO: check this logic:
       @loadWithoutSaving fileName or @memory.getLastOpenFileName()
 
     @setInterval @save, @state.autosaveDelay

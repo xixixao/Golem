@@ -134,3 +134,6 @@ module.exports = class FileSystemMemory extends Memory
         (fs.readdirSync filepath)[0]
     if fileName
       path.basename fileName, '.shem'
+
+  _lastOpenFileStorage: (fileName) ->
+    $.totalStorage "lastOpenFileCOOKIE", fileName
