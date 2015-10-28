@@ -33,6 +33,7 @@ class NewCommand
   @execute = ([name], state, editor) ->
     editor.displayMessage 'file', "File #{name} created."
     editor.load name
+    editor.save()
 
 class SaveCommand
   @defaultSymbols = ['save']
