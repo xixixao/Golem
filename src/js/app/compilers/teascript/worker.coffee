@@ -67,7 +67,7 @@ exports.Worker = class extends Mirror
       compiler.expand @moduleName, expression
 
     compileBuild: (moduleName) ->
-      compiler.compileModuleWithDependencies (names: [moduleName], types: ['browser'])
+      compiler.compileModuleWithDependencies moduleNameToPath moduleName
 
 # Returns a function which runs given function maximally once during given
 # duration.
@@ -107,7 +107,7 @@ class AdhocWorker extends exports.Worker
           type: (if execute then 'execute' else 'normal')
           commandSource: value
           result:
-            @compilationFn value, (names: [@moduleName], types: ['browser'])
+            @compilationFn value, moduleNameToPath @moduleName
 
       catch e
         console.log e.stack
@@ -125,6 +125,12 @@ class AdhocWorker extends exports.Worker
       else
         compiler.parseExpression
 
+moduleNameToPath = (moduleName) ->
+  names = [..., last] = moduleName.split '/'
+  if last is 'index'
+    names.pop()
+  {names, types: ('browser' for _ in names)}
+
 cache = {}
 
 cacheModule = (fn, source, moduleName) ->
@@ -132,7 +138,7 @@ cacheModule = (fn, source, moduleName) ->
     console.log "#{moduleName} was cached."
     old.result
   else
-    result = fn source, (names: [moduleName], types: ['browser'])
+    result = fn source, moduleNameToPath moduleName
     if not result.request
       cache[moduleName] =
         source: source

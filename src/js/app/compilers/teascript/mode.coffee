@@ -2225,7 +2225,8 @@ exports.Mode = class extends TextMode
   assignModuleName: (moduleName) ->
     if moduleName isnt @moduleName
       @moduleName = moduleName
-      @worker.call 'setModuleName', [moduleName]
+      # Makes the module name relative, TODO: migrate all modules to relative path
+      @worker.call 'setModuleName', ['./' + moduleName]
 
 class CustomUndoManager
   constructor: (@mode) ->
