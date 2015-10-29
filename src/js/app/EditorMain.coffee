@@ -544,7 +544,7 @@ module.exports = hyper class EditorMain
     if @state.timeline.size() < 10
       @_executeCommand @state.commandMap['intro']
     if IS_DESKTOP and not @memory.singleFile
-      @_executeCommand @state.commandMap['browse']
+      @_executeCommand @state.commandMap['modules']
     if not IS_DESKTOP
       @_executeCommand @state.commandMap['load-demos']
     window.log = @logResult

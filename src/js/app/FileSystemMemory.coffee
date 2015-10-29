@@ -67,8 +67,8 @@ module.exports = class FileSystemMemory extends Memory
         tree.exists = yes
         tree.name = tree.children.index.name
         delete tree.children.index
-        for name, child of tree.children
-          checkIndex child
+      for name, child of tree.children
+        checkIndex child
     top = children: tree
     checkIndex top
     enclosing = {}
