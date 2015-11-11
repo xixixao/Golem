@@ -134,5 +134,5 @@ module.exports = class Memory
     timeline.from (@_timelineStorage()) ? []
 
   _timelineStorage: (value) ->
-    @emitter.emit 'timeline' if value is undefined
+    @emitter.emit 'timeline' if value isnt undefined
     $.totalStorage "timelineCOOKIE", value

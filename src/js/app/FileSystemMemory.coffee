@@ -136,4 +136,5 @@ module.exports = class FileSystemMemory extends Memory
       path.basename fileName, '.shem'
 
   _lastOpenFileStorage: (fileName) ->
+    @emitter.emit 'lastOpen' if fileName isnt undefined
     $.totalStorage "lastOpenFileCOOKIE", fileName
