@@ -281,7 +281,6 @@ module.exports = hyper class EditorMain
         mode.updateAst result.ast, result.errors or []
 
     worker.on 'error', ({data: {text, source, inDependency}}) =>
-      console.log "error in source worker", text
       if inDependency or mode.editor.getValue() is source
         @handleSourceFailed text
         mode.removeErrorMarkers()

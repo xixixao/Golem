@@ -45,6 +45,7 @@ exports.Worker = class extends Mirror
         @sender._emit "ok",
           moduleName: moduleName
     catch e
+      console.log "error in source worker", e.message
       console.log e.stack
       @sender.emit "error",
         text: e.message
