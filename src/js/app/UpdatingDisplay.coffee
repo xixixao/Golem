@@ -79,11 +79,7 @@ module.exports = hyper class UpdatingDisplay
           @timesLogged = 0
           __filename = filePath
           __dirname = filePath and (requireNode 'path').dirname filePath
-          requirejs = window.require
-          window.require = requireNode
-          result = eval compiled
-          window.require = requirejs
-          result
+          result = do (require = requireNode) -> eval compiled
         catch error
           error.compiled = compiled
           error

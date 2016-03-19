@@ -17,9 +17,9 @@ highlight = (js) ->
   (hljs.highlight 'javascript', js).value
 
 stripImports = (js) ->
-  js.replace /^(.|\n)*var (\w+) = Shem\.\w+\.\2;\n/, ''
-    .replace /^(.|\n)*'use strict'\n/, '' # for Prelude
-    .replace /\nreturn \{[^\}]*\};\n\}\(\)\);$/, ''
+  js#.replace /^(.|\n)*var (\w+) = Shem\.\w+\.\2;\n/, ''
+    #.replace /^(.|\n)*'use strict'\n/, '' # for Prelude
+    #.replace /\nreturn \{[^\}]*\};\n\}\(\)\);$/, ''
 
 displayWithLineNumbers = (text) ->
   lines = text.split '\n'
