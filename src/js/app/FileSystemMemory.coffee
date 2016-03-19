@@ -11,12 +11,18 @@ findAll = (object, filter) ->
     found[k] = v
   found
 
+resolvePath = (cwd, filePath) ->
+  if path.isAbsolute filePath
+    filePath
+  else
+    path.join process.env.PWD, filePath
+
 module.exports = class FileSystemMemory extends Memory
   constructor: ->
     super
     # TODO: remove this and open last opened instead, by preserving IDE state in a file if there are no args
     # TODO: error if the arg does not exist
-    @openPath = path.join process.env.PWD, window.GolemOpenFilePath
+    @openPath = resolvePath process.env.PWD, window.GolemOpenFilePath
     @setSingleFile()
 
   _directory: ->
