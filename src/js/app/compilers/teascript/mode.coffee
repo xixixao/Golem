@@ -495,7 +495,7 @@ exports.Mode = class extends TextMode
 
   handleClick: (event) =>
     LONG_CLICK_DURATION = 200
-    if event.duration > LONG_CLICK_DURATION #event.domEvent.altKey
+    if event.duration > LONG_CLICK_DURATION or event.domEvent.altKey
       @editor.execCommand 'edit by click'
     else if event.domEvent.shiftKey
       @editor.execCommand 'expand selection by click'
