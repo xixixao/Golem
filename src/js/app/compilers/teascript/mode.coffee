@@ -214,10 +214,11 @@ exports.Mode = class extends TextMode
   #   # console.log "setting DIRTY true"
   #   @dirty = true
 
-  setContent: (string, selectedRange, moduleName, @exported) ->
+  setContent: (string, selectedRange, moduleName, filePath, @exported) ->
     # console.log "setting content"
     try
       @assignModuleName moduleName if moduleName?
+      @assignFilePath filePath if filePath?
       added = astize string, @ast
       inside = insideTangible @ast
       @mutate(
@@ -2229,6 +2230,9 @@ exports.Mode = class extends TextMode
       # Makes the module name relative, TODO: migrate all modules to relative path
       @worker.call 'setModuleName', ['./' + moduleName]
       @worker.call 'setExported', [@exported]
+
+  assignFilePath: (filePath) ->
+    @worker.call 'setFilePath', [filePath]
 
   flipExported: ->
     @exported = not @exported

@@ -112,6 +112,7 @@ module.exports = class FileSystemMemory extends Memory
         $.totalStorage "GolemFile_" + fullPath, info
       info.value = value
       info.exported = exported
+      info.filePath = fullPath
       info
 
   _writeFile: (path, content) ->

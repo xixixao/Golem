@@ -15,6 +15,8 @@ exports.Worker = class extends Mirror
 
   setModuleName: (@moduleName) ->
 
+  setFilePath: (@filePath) ->
+
   setExported: (@exported) ->
 
   compileModule: (value, moduleName, exported) ->
@@ -109,6 +111,7 @@ class AdhocWorker extends exports.Worker
         @sender.emit "ok",
           type: (if execute then 'execute' else 'normal')
           commandSource: value
+          filePath: @filePath
           result:
             @compilationFn value, moduleNameToPath @moduleName, @exported
 

@@ -466,7 +466,7 @@ module.exports = hyper class EditorMain
   commandNamed: (name) ->
     @state.commandMap[name]
 
-  handleCommandExecution: (source, moduleName, result, type) ->
+  handleCommandExecution: (source, moduleName, filePath, result, type) ->
     @_hideMessage 'command', 'runtime'
     if type is 'command'
       [symbol, args] = CommandParser result
@@ -479,6 +479,7 @@ module.exports = hyper class EditorMain
       @log
         source: source
         moduleName: moduleName
+        filePath: filePath
         ast: result.ast
         compiled: result.js#, warnings: warnings
 
@@ -587,6 +588,7 @@ module.exports = hyper class EditorMain
           ref: 'commandLine'
           worker: @state.mode.worker
           completers: [@state.mode.completer, @commandCompleter()]
+          filePath: @state.module.filePath
           moduleName: @state.module.moduleName
           onCommandExecution: @handleCommandExecution
           onCommandCompiled: @handleCommandCompiled

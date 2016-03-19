@@ -11,11 +11,11 @@ _require = require
 
 module.exports = hyper class SourceEditor
 
-  load: ({value, exported, selection, moduleName, scroll}) ->
+  load: ({value, exported, selection, moduleName, filePath, scroll}) ->
     session = @editor.session
     @undoStore[@props.module.moduleName] = session.getUndoManager() if session.getUndoManager().execute
     session.setUndoManager session.$defaultUndoManager
-    session.getMode().setContent value, selection, moduleName, exported
+    session.getMode().setContent value, selection, moduleName, filePath, exported
     session.setUndoManager @undoStore[moduleName] or session.getMode().createUndoManager?() or new UndoManager
     if scroll
       session.setScrollTop scroll.top

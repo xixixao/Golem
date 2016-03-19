@@ -23,7 +23,7 @@ module.exports = hyper class UpdatingDisplay
 
   parseValue: (value) ->
 
-  runSource: (compiled) ->
+  runSource: (compiled, filePath) ->
     if compiled isnt @compiled
       @compiled = compiled
       @cached =
@@ -77,7 +77,13 @@ module.exports = hyper class UpdatingDisplay
             value
           @timesExecuted++
           @timesLogged = 0
+          __filename = filePath
+          __dirname = filePath and (requireNode 'path').dirname filePath
+          requirejs = window.require
+          window.require = requireNode
           result = eval compiled
+          window.require = requirejs
+          result
         catch error
           error.compiled = compiled
           error
@@ -154,7 +160,8 @@ module.exports = hyper class UpdatingDisplay
     # editor.setValue @props.expression, 1
     # editor.moveCursorTo 0, 0
     mode.registerWithWorker @props.worker
-    mode.setContent @props.value.source, null, @props.value.moduleName
+    mode.setContent @props.value.source,
+      null, @props.value.moduleName, @props.value.filePath
     mode.updateAst @props.value.ast
     # mode.prefixWorker @props.source
 
@@ -167,7 +174,7 @@ module.exports = hyper class UpdatingDisplay
     @timesExecuted = 0
 
     # CommandWorker compiles either on change or on enter
-    commandWorker.on 'ok', ({data: {result, type, commandSource}}) =>
+    commandWorker.on 'ok', ({data: {result, type, filePath, commandSource}}) =>
       source = editor.getValue()
 
       # Extract the last but one node from the compound tree
@@ -184,7 +191,9 @@ module.exports = hyper class UpdatingDisplay
               firstError = result.errors[0]
               new Error firstError.message or firstError
             else
-              @runSource result.js
+              # TODO: instead of setting __filename here let the compiler
+              # properly set it up for each compiled module if running in Golem
+              @runSource result.js, filePath
           @setState
             executed: executed
 

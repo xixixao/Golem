@@ -46,7 +46,7 @@ module.exports = hyper class CommandLine
     editor.setShowPrintMargin false
     editor.renderer.setShowGutter false
     mode.registerWithWorker @props.worker
-    mode.setContent "", null, @props.moduleName
+    mode.setContent "", null, @props.moduleName, @props.filePath
 
     editor.renderer.on 'themeLoaded', =>
       @setState backgroundColor: $(@_getEditorNode()).css 'background-color'
@@ -107,7 +107,8 @@ module.exports = hyper class CommandLine
           if source.length > 0
             timeline.push source
             mode.resetEditing()
-            @props.onCommandExecution source, @props.moduleName, result, type
+            @props.onCommandExecution source,
+              @props.moduleName, @props.filePath, result, type
             @props.memory.saveCommands timeline
           else
             @props.onCommandCompiled()
