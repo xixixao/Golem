@@ -11,7 +11,7 @@ findAll = (object, filter) ->
     found[k] = v
   found
 
-resolvePath = (cwd, filePath) ->
+resolvePath = (filePath) ->
   if path.isAbsolute filePath
     filePath
   else
@@ -22,7 +22,7 @@ module.exports = class FileSystemMemory extends Memory
     super
     # TODO: remove this and open last opened instead, by preserving IDE state in a file if there are no args
     # TODO: error if the arg does not exist
-    @openPath = resolvePath process.env.PWD, window.GolemOpenFilePath
+    @openPath = resolvePath window.GolemOpenFilePath
     @setSingleFile()
 
   _directory: ->
