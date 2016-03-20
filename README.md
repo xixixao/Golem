@@ -4,6 +4,18 @@ Shem's powerful IDE. Work in progress.
 
 **Here Be Lions**
 
+## Run the desktop version
+
+```bash
+# on OS X with nwjs in /Applications
+golem path-to-folder
+
+# or explicitly point to nwjs executable
+golem -nw /Applications/Golem.app/Contents/MacOS/nwjs path-to-folder
+```
+
+Here's how to find the executable on different platforms: [How to run apps](https://github.com/nwjs/nw.js/wiki/How-to-run-apps#all-platforms).
+
 ## Demo
 
 https://www.youtube.com/watch?v=HnZipJOan54 (for now)
