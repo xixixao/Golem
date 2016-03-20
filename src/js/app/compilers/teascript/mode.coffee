@@ -1015,7 +1015,8 @@ exports.Mode = class extends TextMode
         multiSelectAction: 'forEach'
         exec: =>
           loadModule = (moduleName) =>
-            @editorInstance.executeCommand 'load', moduleName
+            @editorInstance.executeCommand 'load',
+              moduleName.replace /^\.\//, ''
           selected = @onlySelectedExpression()
           if selected and (isAtom atom = selected)
             if atom.id?
@@ -1024,13 +1025,13 @@ exports.Mode = class extends TextMode
                 if ref.imported
                   @selectInitially name: ref.imported.name
                   # TODO: don't unrelativize here, see EditorMain and mode
-                  loadModule ref.imported.module.replace /^\.\//, ''
+                  loadModule ref.imported.module
                 else
                   @mutate
                     inSelection: ref
                 break
             else if atom.label is 'module'
-              @editorInstance.executeCommand 'load', atom.symbol
+              loadModule atom.symbol
 
       # Temporary
       'insert call-site type':
