@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Default nwjs installation
+#   Use golem -nw /Some/Other/Path/To/nwjs
+# for a different location
+NWJS="/Applications/Golem.app/Contents/MacOS/nwjs"
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+REST=()
+
+while [[ $# > 0 ]]; do
+  key="$1"
+
+  case $key in
+    -nw|--node-webkit)
+      NWJS="$2"
+      shift # past argument
+    ;;
+    *)
+      REST+=("$1") # unknown option
+    ;;
+  esac
+  shift
+done
+
+script -q /dev/null "$NWJS" "$DIR" "$REST" | perl -p -e 's/^\[.+?\] //;
+  s/source: file:\/\/\/Users\/srb\/Work\/Web\/TeaTable\/dist\/([^\s\?]+)(\?b=\d+)? \((\d+)\)/\033[32;m\1:\3\033[0;m/;
+  s/\(file:\/\/\/Users\/srb\/Work\/Web\/TeaTable\/dist\/([^\)]+)\)/\033[32;m\1\033[0;m/g;
+  s/\\\\n/\n\r/g;
+  s/""(([^"]|"(?!"))+?)""/"\1"/;
+  s/("([^"]|\\\\")*")/\033[33;m\1\033[0;m/g;
+  s/js\/vendor\/ace\/ace.js:16252/from Ace worker/g'
