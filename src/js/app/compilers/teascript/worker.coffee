@@ -14,6 +14,7 @@ exports.Worker = class extends Mirror
     # @trigger = delay 700
 
   setModuleName: (@moduleName) ->
+    @validModuleName = moduleNameForCompiler @moduleName
 
   setFilePath: (@filePath) ->
 
@@ -57,19 +58,19 @@ exports.Worker = class extends Mirror
 
   methods:
     parseExpression: (source) ->
-      compiler.parseExpression @moduleName, source
+      compiler.parseExpression @validModuleName, source
 
     matchingDefinitions: (reference) ->
-      compiler.findMatchingDefinitions @moduleName, reference
+      compiler.findMatchingDefinitions @validModuleName, reference
 
     availableTypes: (inferredType) ->
-      compiler.findAvailableTypes @moduleName, inferredType
+      compiler.findAvailableTypes @validModuleName, inferredType
 
     docsFor: (reference) ->
-      compiler.findDocsFor @moduleName, reference
+      compiler.findDocsFor @validModuleName, reference
 
     expand: (expression) ->
-      compiler.expand @moduleName, expression
+      compiler.expand @validModuleName, expression
 
     compileBuild: (moduleName) ->
       compiler.compileModuleWithDependencies moduleNameToPath moduleName
@@ -131,10 +132,14 @@ class AdhocWorker extends exports.Worker
       else
         compiler.parseExpression
 
+moduleNameForCompiler = (moduleName) ->
+  if /\/index$/.test moduleName
+    moduleName[0...-6]
+  else
+    moduleName
+
 moduleNameToPath = (moduleName, exported) ->
-  names = [..., last] = moduleName.split '/'
-  if last is 'index'
-    names.pop()
+  names = (moduleNameForCompiler moduleName).split '/'
   {names, types: ('browser' for _ in names), exported}
 
 cache = {}
