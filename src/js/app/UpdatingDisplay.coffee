@@ -132,7 +132,7 @@ module.exports = hyper class UpdatingDisplay
       (_div formatted if not /^\s*$/.test formatted)
 
   formatStackTrace: (trace = '') ->
-    cutoff = compiler.builtInLibraryNumLines
+    cutoff = compiler.builtinLibraryNumLines
     trace
       .replace /\n?(?:(\w+)[^>\n]+>[^>\n]+:(\d+:\d+)|.*)(?=\n)/g, (match, name, location) ->
         if (parseInt location) > cutoff
