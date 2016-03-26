@@ -23,9 +23,9 @@ while [[ $# > 0 ]]; do
   shift
 done
 
-script -q /dev/null "$NWJS" "$DIR" "$REST" | perl -p -e 's/^\[.+?\] //;
-  s/source: file:\/\/\/Users\/srb\/Work\/Web\/TeaTable\/dist\/([^\s\?]+)(\?b=\d+)? \((\d+)\)/\033[32;m\1:\3\033[0;m/;
-  s/\(file:\/\/\/Users\/srb\/Work\/Web\/TeaTable\/dist\/([^\)]+)\)/\033[32;m\1\033[0;m/g;
+script -q /dev/null "$NWJS" "$DIR" "$REST" --enable-logging=stderr | perl -p -e 's/^\[.+?\] //;
+  s/source: chrome-extension:\/\/\w+\/dist\/([^\s\?]+)(\?b=\d+)? \((\d+)\)/\033[32;m\1:\3\033[0;m/;
+  s/\(chrome-extension:\/\/\w+\/dist\/([^\)]+)\)/\033[32;m\1\033[0;m/g;
   s/\\n/\n\r/g;
   s/""(([^"]|"(?!"))+?)""/"\1"/;
   s/("([^"]|\\\\")*")/\033[33;m\1\033[0;m/g;
