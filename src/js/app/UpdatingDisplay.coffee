@@ -9,6 +9,8 @@ CommandMode = require './CommandMode'
 {Mode} = require 'compilers/teascript/mode'
 compiler = require 'compilers/teascript/compiler'
 
+IS_DESKTOP = window.requireNode
+
 isStrictSuffix = (suffix, string) ->
   suffix.length < string.length and
     (string.indexOf suffix, string.length - suffix.length) isnt -1
@@ -81,6 +83,7 @@ module.exports = hyper class UpdatingDisplay
           __dirname = filePath and (requireNode 'path').dirname filePath
           result = do (require = requireNode) -> eval compiled
         catch error
+          error.compiled = compiled
           error
     else
       @cached
@@ -115,27 +118,30 @@ module.exports = hyper class UpdatingDisplay
       @displayError e
 
   displayError: (error) ->
-    formatted = "#{
-      if error instanceof SyntaxError
-        error.compiled
-      else
-        @formatStackTrace error.stack}"
+    _limited = (content) -> _div (style: (maxHeight: 100, overflowY: 'scroll')), content
+    cutoff = compiler.builtinLibraryNumLines
     _div
       className: 'messageDisplay'
-      style:
-        color: '#880000'
-      _div dangerouslySetInnerHTML: __html: "#{error}"
-      (_div formatted if not /^\s*$/.test formatted)
+      style: color: '#880000'
+      _div @formatStackTrace error.stack
+      _div ((error.compiled.split '\n')[cutoff...]
+        .map (line, i) -> "#{i}:\t#{line}").join '\n'
 
   formatStackTrace: (trace = '') ->
     cutoff = compiler.builtinLibraryNumLines
-    trace
-      .replace /\n?(?:(\w+)[^>\n]+>[^>\n]+:(\d+:\d+)|.*)(?=\n)/g, (match, name, location) ->
-        if (parseInt location) > cutoff
-          "#{name} #{location}\n"
-        else
-          ""
-      .replace /\n (?=\n)/g, ''
+    (if IS_DESKTOP
+      trace
+        .replace /^\s+at (\S+) \(eval at.*>:(\d+:\d+)\)$/gm, '$1 $2'
+        .replace /^\s+at.*$/gm, ''
+    else
+      trace
+        .replace /\n?(?:(\w+)[^>\n]+>[^>\n]+:(\d+:\d+)|.*)(?=\n)/g, (match, name, location) ->
+          if (parseInt location) > cutoff
+            "#{name} #{location}\n"
+          else
+            "")
+    .replace /\n ?(?=\n)/g, ''
+    .replace /(\d+):/g, (match, lineNumber) -> "#{(parseInt lineNumber) - cutoff}:"
 
   handleCommand: (name) ->
     => @props.onCommand name, @editor
