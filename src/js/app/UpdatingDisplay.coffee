@@ -81,11 +81,7 @@ module.exports = hyper class UpdatingDisplay
           __dirname = filePath and (requireNode 'path').dirname filePath
           result = do (require = requireNode) -> eval compiled
         catch error
-          """
-          #{error.stack}
-
-          #{compiled}
-          """
+          error
     else
       @cached
 
