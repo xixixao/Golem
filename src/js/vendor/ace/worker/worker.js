@@ -71,7 +71,6 @@ window.require = function(parentId, id) {
 };
 window.require.modules = {};
 window.require.tlns = {};
-console.log(window.require.modules);
 
 window.define = function(id, deps, factory) {
     if (arguments.length == 2) {
